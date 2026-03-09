@@ -5,11 +5,6 @@ export const SUMMARY_CONFIG = {
   includeEmptyColumns: true,
   linePrefix: '  - ',
   showStatusBadge: true,
-  orderedColumnIds: null,
-  includeColumnIds: null,
-  customDateText: null,
-  customHeader: null,
-  customFooter: null,
 }
 
 export const NEXT_DAY_CONFIG = {
@@ -20,6 +15,12 @@ export const NEXT_DAY_CONFIG = {
   keepStatuses: ['progress', 'review', 'blocked'],
   hideFromStandupOnLimbo: true,
 }
+
+export const DEFAULT_DAILY_TEMPLATE = `{{header}}
+
+{{columns}}
+
+{{footer}}`
 
 const THEMES_STANDUP = {
   cyberpunk: {
@@ -78,58 +79,20 @@ function sortColumns(columns, columnOrder) {
   })
 }
 
-function applyColumnIdOrder(columns, orderedColumnIds) {
-  if (!orderedColumnIds || orderedColumnIds.length === 0) return columns
-  const orderMap = new Map(orderedColumnIds.map((id, idx) => [id, idx]))
-  return [...columns].sort((a, b) => {
-    const ai = orderMap.has(a.id) ? orderMap.get(a.id) : Number.MAX_SAFE_INTEGER
-    const bi = orderMap.has(b.id) ? orderMap.get(b.id) : Number.MAX_SAFE_INTEGER
-    if (ai !== bi) return ai - bi
-    return String(a.title || '').localeCompare(String(b.title || ''))
-  })
-}
+function buildColumnsBlock(columns, cards, themePack, config) {
+  const orderedColumns = sortColumns(columns, config.columnOrder)
+  if (orderedColumns.length === 0) return themePack.noColumns
 
-export function generateStandupMessage(columns, cards, theme = 'cyberpunk', config = SUMMARY_CONFIG) {
-  const themeId = getTheme(theme)
-  const t = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
-  const baseOrderedColumns = sortColumns(columns, config.columnOrder)
-  const customOrderedColumns = applyColumnIdOrder(baseOrderedColumns, config.orderedColumnIds)
-  const orderedColumns = config.includeColumnIds
-    ? customOrderedColumns.filter((c) => config.includeColumnIds.includes(c.id))
-    : customOrderedColumns
-
-  const dateStr = config.customDateText || new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
-
-  const headerLine = config.customHeader && config.customHeader.trim().length > 0
-    ? config.customHeader.replaceAll('{date}', dateStr)
-    : t.header(dateStr)
-  const footerLine = config.customFooter && config.customFooter.trim().length > 0
-    ? config.customFooter.replaceAll('{date}', dateStr)
-    : t.footer
-
-  const lines = [headerLine, '']
-
-  if (orderedColumns.length === 0) {
-    lines.push(t.noColumns)
-    lines.push('')
-    lines.push(footerLine)
-    return lines.join('\n')
-  }
-
+  const lines = []
   orderedColumns.forEach((col) => {
     const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
     if (!config.includeEmptyColumns && colCards.length === 0) return
 
     const title = col.title || `COLUNA ${col.index || ''}`.trim()
-    lines.push(t.section(title, colCards.length))
+    lines.push(themePack.section(title, colCards.length))
 
     if (colCards.length === 0) {
-      lines.push(`  ${t.noneInColumn}`)
+      lines.push(`  ${themePack.noneInColumn}`)
     } else {
       colCards.forEach((card) => {
         const badge = config.showStatusBadge && STATUS_BADGE[card.status] ? ` ${STATUS_BADGE[card.status]}` : ''
@@ -140,8 +103,53 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk', conf
     lines.push('')
   })
 
-  lines.push(footerLine)
-  return lines.join('\n')
+  return lines.join('\n').trim()
+}
+
+function normalizeDateText(customDateText) {
+  if (customDateText && customDateText.trim()) return customDateText.trim()
+  return new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', options = {}) {
+  const themeId = getTheme(theme)
+  const themePack = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
+  const config = { ...SUMMARY_CONFIG, ...options }
+  const dateText = normalizeDateText(options.customDateText)
+
+  const columnsBlock = buildColumnsBlock(columns, cards, themePack, config)
+  const context = {
+    date: dateText,
+    header: themePack.header(dateText),
+    footer: themePack.footer,
+    columns: columnsBlock,
+  }
+
+  // Token by specific column: {{col:<columnId>}}
+  columns.forEach((col) => {
+    const block = buildColumnsBlock([col], cards, themePack, config)
+    context[`col:${col.id}`] = block
+  })
+
+  return context
+}
+
+export function renderStandupTemplate(template, context) {
+  const input = template && template.trim() ? template : DEFAULT_DAILY_TEMPLATE
+  return input.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_full, rawToken) => {
+    const token = String(rawToken).trim()
+    return context[token] ?? ''
+  }).trim()
+}
+
+export function generateStandupMessage(columns, cards, theme = 'cyberpunk', options = {}) {
+  const context = getStandupTemplateContext(columns, cards, theme, options)
+  return renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
 }
 
 export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {

@@ -1,57 +1,45 @@
-import { useState, useEffect, useMemo } from 'react'
-import { DndContext, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
-import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { generateStandupMessage, generateWeeklySummary } from '../lib/standup'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import {
+  DEFAULT_DAILY_TEMPLATE,
+  generateStandupMessage,
+  generateWeeklySummary,
+} from '../lib/standup'
 import { fetchWeeklyLogs } from '../lib/db'
 import { useTheme } from '../contexts/ThemeContext'
 
-function SortableColumnChip({ column, enabled, onToggle }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: column.id,
-  })
-
+function tokenChip(token, label, onInsert) {
   return (
     <button
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      onDoubleClick={(e) => {
-        e.preventDefault()
-        onToggle(column.id)
-      }}
+      key={token}
+      onClick={() => onInsert(token)}
+      type="button"
       style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-        cursor: isDragging ? 'grabbing' : 'grab',
         padding: '6px 10px',
         borderRadius: '999px',
-        border: `1px solid ${enabled ? 'var(--neon-cyan)' : '#555'}`,
-        background: enabled ? 'rgba(0,243,255,0.12)' : 'rgba(255,255,255,0.04)',
-        color: enabled ? 'var(--neon-cyan)' : '#888',
+        border: '1px solid var(--neon-cyan)',
+        background: 'rgba(0,243,255,0.1)',
+        color: 'var(--neon-cyan)',
         fontFamily: 'var(--font-body)',
         fontSize: '11px',
-        opacity: isDragging ? 0.5 : 1,
+        cursor: 'pointer',
       }}
-      title="Arraste para reordenar | Double-click para ativar/desativar"
-      type="button"
+      title={`Inserir ${token}`}
     >
-      {column.title}
+      {label}
     </button>
   )
 }
 
 export default function StandupModal({ columns, cards, userId, onSaveLog, onClose }) {
   const { theme } = useTheme()
-  const [tab, setTab] = useState('daily') // 'daily' | 'weekly'
+  const [tab, setTab] = useState('daily')
   const [copied, setCopied] = useState(false)
   const [weeklyLogs, setWeeklyLogs] = useState([])
   const [loadingWeekly, setLoadingWeekly] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [editTemplate, setEditTemplate] = useState(false)
-  const [headerTemplate, setHeaderTemplate] = useState('')
-  const [footerTemplate, setFooterTemplate] = useState('')
-  const [dateVariable, setDateVariable] = useState(() =>
+  const [isEditingTemplate, setIsEditingTemplate] = useState(false)
+  const [templateText, setTemplateText] = useState(DEFAULT_DAILY_TEMPLATE)
+  const [dateText, setDateText] = useState(() =>
     new Date().toLocaleDateString('pt-BR', {
       weekday: 'long',
       day: 'numeric',
@@ -59,12 +47,8 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       year: 'numeric',
     })
   )
-  const [columnOrder, setColumnOrder] = useState(() =>
-    [...columns].sort((a, b) => (a.position ?? 0) - (b.position ?? 0)).map((c) => c.id)
-  )
-  const [enabledColumns, setEnabledColumns] = useState(() => columns.map((c) => c.id))
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }))
+  const textareaRef = useRef(null)
 
   useEffect(() => {
     if (tab === 'weekly' && userId) {
@@ -76,36 +60,34 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }
   }, [tab, userId])
 
-  useEffect(() => {
-    const ids = columns.map((c) => c.id)
-    setColumnOrder((prev) => {
-      const filtered = prev.filter((id) => ids.includes(id))
-      const missing = ids.filter((id) => !filtered.includes(id))
-      return [...filtered, ...missing]
-    })
-    setEnabledColumns((prev) => {
-      const filtered = prev.filter((id) => ids.includes(id))
-      const missing = ids.filter((id) => !filtered.includes(id))
-      return [...filtered, ...missing]
-    })
-  }, [columns])
-
-  const orderedColumns = useMemo(() => {
-    const map = new Map(columns.map((c) => [c.id, c]))
-    return columnOrder.map((id) => map.get(id)).filter(Boolean)
-  }, [columns, columnOrder])
-
   const dailyMessage = useMemo(() => {
     return generateStandupMessage(columns, cards, theme, {
-      orderedColumnIds: columnOrder,
-      includeColumnIds: enabledColumns,
-      customDateText: dateVariable,
-      customHeader: headerTemplate,
-      customFooter: footerTemplate,
+      template: templateText,
+      customDateText: dateText,
     })
-  }, [columns, cards, theme, columnOrder, enabledColumns, dateVariable, headerTemplate, footerTemplate])
+  }, [columns, cards, theme, templateText, dateText])
 
   const weeklySummary = generateWeeklySummary(weeklyLogs, theme)
+
+  const insertToken = (token) => {
+    const fullToken = `{{${token}}}`
+    const el = textareaRef.current
+    if (!el) {
+      setTemplateText((prev) => `${prev}${fullToken}`)
+      return
+    }
+
+    const start = el.selectionStart ?? templateText.length
+    const end = el.selectionEnd ?? templateText.length
+    const next = `${templateText.slice(0, start)}${fullToken}${templateText.slice(end)}`
+    setTemplateText(next)
+
+    requestAnimationFrame(() => {
+      el.focus()
+      const cursor = start + fullToken.length
+      el.setSelectionRange(cursor, cursor)
+    })
+  }
 
   const copy = (text) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -120,25 +102,6 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       await onSaveLog(dailyMessage)
       setSaved(true)
     }
-  }
-
-  const toggleColumn = (columnId) => {
-    setEnabledColumns((prev) =>
-      prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]
-    )
-  }
-
-  const handleChipDragEnd = ({ active, over }) => {
-    if (!over || active.id === over.id) return
-    setColumnOrder((prev) => {
-      const oldIndex = prev.indexOf(active.id)
-      const newIndex = prev.indexOf(over.id)
-      if (oldIndex === -1 || newIndex === -1) return prev
-      const updated = [...prev]
-      const [moved] = updated.splice(oldIndex, 1)
-      updated.splice(newIndex, 0, moved)
-      return updated
-    })
   }
 
   const tabStyle = (t) => ({
@@ -183,72 +146,45 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
         <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
           {tab === 'daily' && (
             <>
-              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {tokenChip('date', '{date}', insertToken)}
+                  {tokenChip('header', '{header}', insertToken)}
+                  {tokenChip('columns', '{columns}', insertToken)}
+                  {tokenChip('footer', '{footer}', insertToken)}
+                  {columns.map((c) => tokenChip(`col:${c.id}`, `{${c.title}}`, insertToken))}
+                </div>
                 <button
-                  onClick={() => setEditTemplate((v) => !v)}
+                  onClick={() => setIsEditingTemplate((v) => !v)}
                   className="cyber-btn"
                   style={{ padding: '6px 12px', fontSize: '11px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
                 >
-                  {editTemplate ? 'Fechar edicao' : 'Editar template'}
+                  {isEditingTemplate ? 'Fechar edicao' : 'Editar template'}
                 </button>
               </div>
 
-              {editTemplate && (
+              {isEditingTemplate && (
                 <div className="cyber-card" style={{ padding: '14px', marginBottom: 16, border: '1px solid rgba(252,238,10,0.35)' }}>
-                  <p style={{ marginBottom: 8, fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>
-                    Header/Footer aceitam {'{date}'} como variavel.
-                  </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-                    <input
-                      className="cyber-input"
-                      style={{ padding: '8px 10px', fontSize: '12px' }}
-                      placeholder="Header custom (opcional)"
-                      value={headerTemplate}
-                      onChange={(e) => setHeaderTemplate(e.target.value)}
-                    />
-                    <input
-                      className="cyber-input"
-                      style={{ padding: '8px 10px', fontSize: '12px' }}
-                      placeholder="Footer custom (opcional)"
-                      value={footerTemplate}
-                      onChange={(e) => setFooterTemplate(e.target.value)}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#888', display: 'block', marginBottom: 6 }}>
-                      Data (chip variavel editavel)
-                    </label>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 10px', border: '1px solid var(--neon-cyan)', borderRadius: '999px', background: 'rgba(0,243,255,0.08)' }}>
-                      <span style={{ color: 'var(--neon-cyan)', fontSize: '11px' }}>{'{date}'}</span>
-                      <input
-                        className="cyber-input"
-                        style={{ padding: '4px 8px', fontSize: '11px', minWidth: 280 }}
-                        value={dateVariable}
-                        onChange={(e) => setDateVariable(e.target.value)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#888', display: 'block', marginBottom: 6 }}>
-                      Colunas em chips (arraste para mudar ordem, double-click para ocultar/exibir)
-                    </label>
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChipDragEnd}>
-                      <SortableContext items={columnOrder} strategy={horizontalListSortingStrategy}>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                          {orderedColumns.map((col) => (
-                            <SortableColumnChip
-                              key={col.id}
-                              column={col}
-                              enabled={enabledColumns.includes(col.id)}
-                              onToggle={toggleColumn}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  </div>
+                  <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
+                    Data variavel ({'{date}'})
+                  </label>
+                  <input
+                    className="cyber-input"
+                    value={dateText}
+                    onChange={(e) => setDateText(e.target.value)}
+                    style={{ width: '100%', padding: '8px 10px', marginBottom: 10, fontSize: '12px' }}
+                  />
+                  <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
+                    Template (use os chips para inserir variaveis no texto)
+                  </label>
+                  <textarea
+                    ref={textareaRef}
+                    className="cyber-input"
+                    value={templateText}
+                    onChange={(e) => setTemplateText(e.target.value)}
+                    rows={7}
+                    style={{ width: '100%', padding: '10px', resize: 'vertical', fontSize: '12px', whiteSpace: 'pre' }}
+                  />
                 </div>
               )}
 
