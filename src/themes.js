@@ -90,6 +90,27 @@ export const THEMES = {
       '--font-body': "'Inter', sans-serif",
     },
   },
+
+  frostpunk: {
+    id: 'frostpunk',
+    label: 'FROSTPUNK',
+    icon: '❄',
+    vars: {
+      '--neon-cyan': '#9fd3e8',
+      '--neon-pink': '#c46f5d',
+      '--neon-yellow': '#c9a959',
+      '--neon-green': '#9fcfbe',
+      '--neon-orange': '#b9804e',
+      '--neon-purple': '#7f9ca8',
+      '--bg-dark': '#0b0f13',
+      '--panel-bg': 'rgba(20,30,40,0.78)',
+      '--grid-color': 'rgba(143,171,191,0.05)',
+      '--scanline': 'rgba(0,0,0,0.12)',
+      '--col-accent': '#4a6b7a',
+      '--font-heading': "'Cinzel', serif",
+      '--font-body': "'Rajdhani', sans-serif",
+    },
+  },
 }
 
 export function applyTheme(themeId) {

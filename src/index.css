@@ -715,7 +715,8 @@ body[data-theme="liquidglass"] select option {
 
 body[data-theme="fallout"],
 body[data-theme="darkest"],
-body[data-theme="liquidglass"] {
+body[data-theme="liquidglass"],
+body[data-theme="frostpunk"] {
   line-height: 1.45;
 }
 
@@ -747,6 +748,156 @@ body[data-theme="liquidglass"] label {
 }
 body[data-theme="liquidglass"] .cyber-input::placeholder {
   color: rgba(255, 255, 255, 0.62) !important;
+}
+body[data-theme="frostpunk"] .cyber-card,
+body[data-theme="frostpunk"] .kanban-column,
+body[data-theme="frostpunk"] .cyber-input,
+body[data-theme="frostpunk"] .cyber-btn,
+body[data-theme="frostpunk"] p,
+body[data-theme="frostpunk"] span,
+body[data-theme="frostpunk"] label {
+  color: #e8f0f5 !important;
+}
+body[data-theme="frostpunk"] .cyber-input::placeholder {
+  color: rgba(224, 230, 237, 0.65) !important;
+}
+
+/* ===============================================================
+   FROSTPUNK THEME
+   =============================================================== */
+
+body[data-theme="frostpunk"] {
+  background:
+    radial-gradient(45rem 26rem at 50% -10%, rgba(109, 213, 237, 0.14), transparent 70%),
+    radial-gradient(52rem 35rem at 50% 120%, rgba(74, 107, 122, 0.25), transparent 75%),
+    linear-gradient(180deg, #0b1017 0%, #090d12 50%, #070a0f 100%) !important;
+  color: #e0e6ed;
+}
+
+body[data-theme="frostpunk"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9996;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255,255,255,0.06) 0, transparent 20%),
+    radial-gradient(circle at 80% 10%, rgba(255,255,255,0.05) 0, transparent 24%),
+    radial-gradient(circle at 50% 85%, rgba(74,107,122,0.18) 0, transparent 36%);
+}
+
+body[data-theme="frostpunk"]::after {
+  background:
+    radial-gradient(ellipse at center, transparent 50%, rgba(3, 5, 8, 0.72) 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+body[data-theme="frostpunk"] .cyber-card {
+  clip-path: none !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(132, 171, 190, 0.45) !important;
+  border-left: 3px solid #6dd5ed !important;
+  background: rgba(23, 35, 48, 0.76) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+}
+body[data-theme="frostpunk"] .cyber-card:hover {
+  border-color: rgba(154, 206, 229, 0.7) !important;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.52),
+    0 0 18px rgba(109, 213, 237, 0.2) !important;
+}
+
+body[data-theme="frostpunk"] .kanban-column {
+  background: rgba(15, 24, 34, 0.78) !important;
+  border: 1px solid rgba(132, 171, 190, 0.34) !important;
+  border-top: 2px solid #4a6b7a !important;
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+body[data-theme="frostpunk"] .cyber-btn {
+  clip-path: none !important;
+  border-radius: 10px !important;
+  border-color: rgba(132, 171, 190, 0.6) !important;
+  color: #d2e4ee !important;
+  background: rgba(33, 48, 64, 0.72) !important;
+}
+body[data-theme="frostpunk"] .cyber-btn:hover {
+  background: rgba(58, 87, 108, 0.82) !important;
+  color: #f5fbff !important;
+  box-shadow: 0 0 16px rgba(109, 213, 237, 0.28) !important;
+}
+
+body[data-theme="frostpunk"] .cyber-input {
+  border-radius: 10px !important;
+  border-color: rgba(132, 171, 190, 0.45) !important;
+  background: rgba(6, 12, 20, 0.72) !important;
+  color: #e0e6ed !important;
+  font-family: 'Rajdhani', sans-serif !important;
+}
+body[data-theme="frostpunk"] .cyber-input::placeholder {
+  color: rgba(201, 220, 233, 0.58) !important;
+}
+body[data-theme="frostpunk"] .cyber-input:focus {
+  border-color: #9fd3e8 !important;
+  box-shadow: 0 0 14px rgba(109, 213, 237, 0.2) !important;
+}
+
+body[data-theme="frostpunk"] [class^="tag-"],
+body[data-theme="frostpunk"] [class*=" tag-"],
+body[data-theme="frostpunk"] [class^="status-"],
+body[data-theme="frostpunk"] [class*=" status-"],
+body[data-theme="frostpunk"] [class^="priority-"],
+body[data-theme="frostpunk"] [class*=" priority-"] {
+  border-color: rgba(132, 171, 190, 0.35) !important;
+  background: rgba(83, 118, 140, 0.2) !important;
+  color: #ecf4f8 !important;
+}
+
+body[data-theme="frostpunk"] .modal-backdrop {
+  background: rgba(2, 4, 8, 0.78) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+body[data-theme="frostpunk"] ::-webkit-scrollbar-track { background: #060b11 !important; }
+body[data-theme="frostpunk"] ::-webkit-scrollbar-thumb { background: #4a6b7a !important; }
+body[data-theme="frostpunk"] ::-webkit-scrollbar-thumb:hover { background: #6dd5ed !important; }
+
+body[data-theme="frostpunk"] select option {
+  background: #12202b;
+  color: #e0e6ed;
+}
+
+.frost-snow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  overflow: hidden;
+}
+
+.frost-snowflake {
+  position: absolute;
+  top: -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.95), rgba(255,255,255,0.55) 60%, transparent 75%);
+  filter: drop-shadow(0 0 6px rgba(177, 228, 247, 0.35));
+  animation-name: frostSnowFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes frostSnowFall {
+  0% {
+    transform: translate3d(0, -10vh, 0);
+  }
+  100% {
+    transform: translate3d(var(--drift-x), 110vh, 0);
+  }
 }
 
 
