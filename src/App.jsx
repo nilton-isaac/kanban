@@ -5,7 +5,7 @@ import EisenhowerMatrix from './components/EisenhowerMatrix'
 import AuthScreen from './components/AuthScreen'
 import StandupModal from './components/StandupModal'
 import FloatingThemeSelector from './components/FloatingThemeSelector'
-import { supabase } from './lib/supabase'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { fetchColumns, fetchCards, upsertColumn, upsertCard, deleteColumn as dbDeleteColumn, deleteCard as dbDeleteCard, saveStandupLog } from './lib/db'
 import { applyNextDay } from './lib/standup'
 
@@ -91,6 +91,11 @@ export default function App() {
 
   // ── Auth ──────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setSession(null)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
     })
@@ -265,6 +270,33 @@ export default function App() {
   }, [session])
 
   // ── Loading / Auth guard ──────────────────────────────────────────────────────
+  if (!isSupabaseConfigured) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div className="cyber-card" style={{ maxWidth: 720, width: '100%', padding: 24, background: 'var(--panel-bg)' }}>
+          <h2 style={{ color: 'var(--neon-pink)', fontFamily: 'var(--font-heading)', letterSpacing: '2px', fontSize: '16px', marginBottom: 12 }}>
+            SUPABASE NAO CONFIGURADO
+          </h2>
+          <p style={{ color: '#b7b7b7', fontFamily: 'var(--font-body)', fontSize: '13px', marginBottom: 8 }}>
+            Defina estas variaveis:
+          </p>
+          <p style={{ color: 'var(--neon-cyan)', fontFamily: 'monospace', fontSize: '12px', marginBottom: 6 }}>
+            VITE_SUPABASE_URL
+          </p>
+          <p style={{ color: 'var(--neon-cyan)', fontFamily: 'monospace', fontSize: '12px', marginBottom: 14 }}>
+            VITE_SUPABASE_ANON_KEY
+          </p>
+          <p style={{ color: '#8a8a8a', fontFamily: 'var(--font-body)', fontSize: '12px', marginBottom: 6 }}>
+            Local: arquivo .env.local na raiz do projeto + reiniciar o servidor.
+          </p>
+          <p style={{ color: '#8a8a8a', fontFamily: 'var(--font-body)', fontSize: '12px' }}>
+            Vercel: Project Settings {'>'} Environment Variables (Production e Preview).
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   if (session === undefined) {
     return (
       <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
