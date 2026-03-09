@@ -1245,11 +1245,11 @@ body[data-theme="darksouls"] select option {
 
 body[data-theme="royale"] {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(30, 30, 35, 0.78) 0%, transparent 60%),
-    radial-gradient(ellipse at 0% 50%, rgba(20, 20, 25, 0.45) 0%, transparent 50%),
-    radial-gradient(ellipse at 100% 50%, rgba(20, 20, 25, 0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 0%, rgba(58, 58, 66, 0.62) 0%, transparent 62%),
+    radial-gradient(ellipse at 0% 50%, rgba(36, 36, 42, 0.34) 0%, transparent 52%),
+    radial-gradient(ellipse at 100% 50%, rgba(36, 36, 42, 0.34) 0%, transparent 52%),
     url("data:image/svg+xml,%3Csvg width='96' height='96' viewBox='0 0 96 96' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231a1a1a' fill-opacity='0.22'%3E%3Cpath d='M48 0L96 48L48 96L0 48Z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
-    #0a0a0c !important;
+    linear-gradient(180deg, #232329 0%, #19191e 55%, #111116 100%) !important;
   color: #e8e6e3;
 }
 
@@ -1260,12 +1260,12 @@ body[data-theme="royale"]::before {
   pointer-events: none;
   z-index: 9996;
   background:
-    radial-gradient(ellipse at center, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.38) 100%);
+    radial-gradient(ellipse at center, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.22) 100%);
 }
 
 body[data-theme="royale"]::after {
   background:
-    radial-gradient(ellipse at center, transparent 10%, rgba(0,0,0,0.48) 100%) !important;
+    radial-gradient(ellipse at center, transparent 18%, rgba(0,0,0,0.34) 100%) !important;
   background-size: 100% 100% !important;
 }
 
@@ -1274,7 +1274,7 @@ body[data-theme="royale"] .cyber-card {
   border-radius: 0 !important;
   border: 2px solid #2a2a2f !important;
   border-top: 2px solid #e5c943 !important;
-  background: linear-gradient(180deg, #1a1a1e 0%, #0f0f12 100%) !important;
+  background: linear-gradient(180deg, #26262c 0%, #1a1a1f 100%) !important;
   box-shadow:
     0 5px 25px rgba(0,0,0,0.6),
     0 0 6px rgba(229, 201, 67, 0.12) !important;
@@ -1322,11 +1322,11 @@ body[data-theme="royale"] .cyber-card:hover::after {
 }
 
 body[data-theme="royale"] .kanban-column {
-  background: rgba(0,0,0,0.35) !important;
+  background: rgba(18,18,22,0.42) !important;
   border: 1px dashed #2a2a2f !important;
   border-top: 2px solid #e5c943 !important;
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.03),
+    inset 0 0 0 1px rgba(255,255,255,0.05),
     0 4px 20px rgba(0,0,0,0.5) !important;
 }
 
@@ -1348,7 +1348,7 @@ body[data-theme="royale"] .cyber-btn:hover {
 body[data-theme="royale"] .cyber-input {
   border-radius: 0 !important;
   border: 1px solid #2a2a2f !important;
-  background: rgba(0,0,0,0.55) !important;
+  background: rgba(8,8,10,0.42) !important;
   color: #e8e6e3 !important;
 }
 body[data-theme="royale"] .cyber-input:focus {
