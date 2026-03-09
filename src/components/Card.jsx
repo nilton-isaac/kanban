@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
+import { useTheme } from '../contexts/ThemeContext'
 
 const STATUS_ICONS = {
   todo:     { icon: '○', color: '#555' },
@@ -18,6 +19,8 @@ const PRIORITY_DOTS = {
 }
 
 export default function Card({ card, onEdit, onDelete, onInlineEdit }) {
+  const { theme } = useTheme()
+  const isNier = theme === 'nier'
   const [hovered, setHovered] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(card.title)
@@ -172,7 +175,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit }) {
               setIsEditingTitle(true)
             }}
             className="font-bold leading-tight cursor-pointer transition-colors"
-            style={{ fontSize: '13px', color: '#ddd' }}
+            style={{ fontSize: '13px', color: isNier ? '#2f2b27' : '#ddd' }}
             title="Click para abrir · Double-click para editar nome"
           >
             {card.title}
