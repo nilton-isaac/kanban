@@ -102,7 +102,7 @@ export default function Board({
             title="Adicionar coluna"
           >
             <span>+</span>
-            <span style={{ fontSize: '8px', fontFamily: 'Orbitron', letterSpacing: '1px', writingMode: 'vertical-rl' }}>COLUNA</span>
+            <span style={{ fontSize: '8px', fontFamily: 'var(--font-heading)', letterSpacing: '1px', writingMode: 'vertical-rl' }}>COLUNA</span>
           </button>
         </div>
       </main>

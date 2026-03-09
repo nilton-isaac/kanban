@@ -109,7 +109,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit }) {
             }}
           />
           {card.urgent && (
-            <span style={{ fontSize: '9px', color: 'var(--neon-pink)', fontFamily: 'Orbitron', letterSpacing: '0.5px' }}>URG</span>
+            <span style={{ fontSize: '9px', color: 'var(--neon-pink)', fontFamily: 'var(--font-heading)', letterSpacing: '0.5px' }}>URG</span>
           )}
         </div>
 

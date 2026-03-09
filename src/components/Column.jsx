@@ -49,7 +49,7 @@ export default function Column({ column, cards, onAddCard, onEditCard, onDeleteC
             onBlur={saveTitle}
             onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') setEditing(false) }}
             className="cyber-input flex-1 p-1 text-sm rounded-sm mr-2"
-            style={{ fontFamily: 'Orbitron', fontSize: '13px', color: colors.text }}
+            style={{ fontFamily: 'var(--font-heading)', fontSize: '13px', color: colors.text }}
           />
         ) : (
           <div
@@ -157,12 +157,12 @@ export default function Column({ column, cards, onAddCard, onEditCard, onDeleteC
 const menuItemStyle = {
   display: 'block', width: '100%', padding: '7px 12px',
   textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer',
-  color: '#aaa', fontFamily: "'Share Tech Mono', monospace", fontSize: '12px',
+  color: '#aaa', fontFamily: 'var(--font-body)', fontSize: '12px',
 }
 
 function smallBtnStyle(color) {
   return {
     padding: '2px 10px', background: 'none', border: `1px solid ${color}`,
-    color, cursor: 'pointer', fontSize: '11px', fontFamily: "'Share Tech Mono', monospace", borderRadius: '2px',
+    color, cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)', borderRadius: '2px',
   }
 }

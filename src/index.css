@@ -280,3 +280,331 @@ body[data-theme="detective"] .cyber-btn {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ☢  FALLOUT THEME — PIP-BOY TERMINAL AESTHETIC
+   ═══════════════════════════════════════════════════════════════ */
+
+body[data-theme="fallout"] {
+  color: #4cff00;
+  font-size: 1.08em;
+}
+
+/* Heavy CRT scanlines layer */
+body[data-theme="fallout"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 8, 0, 0.35) 3px,
+    rgba(0, 8, 0, 0.35) 4px
+  );
+  z-index: 9997;
+  pointer-events: none;
+}
+
+/* Replace default scanline with CRT vignette + phosphor glow */
+body[data-theme="fallout"]::after {
+  background:
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.7) 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(76,255,0,0.015) 0px,
+      rgba(76,255,0,0.015) 1px,
+      transparent 1px,
+      transparent 4px
+    ) !important;
+  background-size: 100% 100%, 100% 4px !important;
+}
+
+/* ── Fallout Cards: terminal window ── */
+body[data-theme="fallout"] .cyber-card {
+  clip-path: none !important;
+  background: rgba(0, 12, 0, 0.97) !important;
+  border: 1px solid rgba(76, 255, 0, 0.5) !important;
+  border-left: 4px solid #4cff00 !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  box-shadow:
+    0 0 10px rgba(76, 255, 0, 0.08),
+    inset 0 0 30px rgba(0, 0, 0, 0.6),
+    inset 1px 0 0 rgba(76, 255, 0, 0.05) !important;
+}
+body[data-theme="fallout"] .cyber-card:hover {
+  transform: none !important;
+  border-left-color: #88ff44 !important;
+  box-shadow:
+    0 0 20px rgba(76, 255, 0, 0.2),
+    inset 0 0 30px rgba(0, 0, 0, 0.4) !important;
+}
+body[data-theme="fallout"] .cyber-card.dragging {
+  border: 2px dashed #ffcc00 !important;
+}
+
+/* ── Fallout Columns: sector panels ── */
+body[data-theme="fallout"] .kanban-column {
+  background: rgba(0, 7, 0, 0.92) !important;
+  border: 1px solid rgba(76, 255, 0, 0.3) !important;
+  border-top: 3px solid #4cff00 !important;
+  box-shadow:
+    0 0 15px rgba(76, 255, 0, 0.05),
+    inset 0 0 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ── Fallout Buttons: terminal style ── */
+body[data-theme="fallout"] .cyber-btn {
+  clip-path: none !important;
+  border-radius: 0 !important;
+  letter-spacing: 3px !important;
+  background: rgba(0, 15, 0, 0.8) !important;
+}
+body[data-theme="fallout"] .cyber-btn:hover {
+  background: #4cff00 !important;
+  color: #000 !important;
+  box-shadow: 0 0 20px rgba(76, 255, 0, 0.6) !important;
+}
+
+/* ── Fallout Inputs ── */
+body[data-theme="fallout"] .cyber-input {
+  border-radius: 0 !important;
+  border-color: rgba(76, 255, 0, 0.4) !important;
+  background: rgba(0, 8, 0, 0.95) !important;
+  color: #4cff00 !important;
+  caret-color: #4cff00;
+}
+body[data-theme="fallout"] .cyber-input::placeholder { color: rgba(76,255,0,0.25) !important; }
+body[data-theme="fallout"] .cyber-input:focus {
+  border-color: #4cff00 !important;
+  box-shadow: 0 0 12px rgba(76, 255, 0, 0.35) !important;
+}
+
+/* ── Fallout Tags/Status/Priority: monochrome green ── */
+body[data-theme="fallout"] [class^="tag-"],
+body[data-theme="fallout"] [class*=" tag-"] {
+  background: rgba(76, 255, 0, 0.1) !important;
+  color: #4cff00 !important;
+  border-color: rgba(76, 255, 0, 0.35) !important;
+  font-family: 'VT323', monospace !important;
+  font-size: 13px !important;
+  letter-spacing: 1px !important;
+}
+body[data-theme="fallout"] [class^="status-"],
+body[data-theme="fallout"] [class*=" status-"] {
+  background: rgba(76, 255, 0, 0.1) !important;
+  color: #4cff00 !important;
+  border-color: rgba(76, 255, 0, 0.3) !important;
+}
+body[data-theme="fallout"] .status-blocked {
+  background: rgba(255, 204, 0, 0.12) !important;
+  color: #ffcc00 !important;
+  border-color: rgba(255, 204, 0, 0.4) !important;
+}
+body[data-theme="fallout"] .status-done {
+  background: rgba(0, 255, 136, 0.1) !important;
+  color: #00ff88 !important;
+  border-color: rgba(0, 255, 136, 0.35) !important;
+}
+body[data-theme="fallout"] [class^="priority-"],
+body[data-theme="fallout"] [class*=" priority-"] {
+  background: rgba(76, 255, 0, 0.08) !important;
+  color: #4cff00 !important;
+  border-color: rgba(76, 255, 0, 0.25) !important;
+}
+body[data-theme="fallout"] .priority-critical {
+  background: rgba(255, 204, 0, 0.1) !important;
+  color: #ffcc00 !important;
+  border-color: rgba(255, 204, 0, 0.35) !important;
+}
+
+/* ── Fallout Scrollbar ── */
+body[data-theme="fallout"] ::-webkit-scrollbar-track { background: #000800 !important; }
+body[data-theme="fallout"] ::-webkit-scrollbar-thumb { background: #4cff00 !important; }
+body[data-theme="fallout"] ::-webkit-scrollbar-thumb:hover { background: #88ff44 !important; }
+
+/* ── Fallout Modal ── */
+body[data-theme="fallout"] .modal-backdrop {
+  background: rgba(0, 5, 0, 0.9) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+/* ── Fallout glitch: green only ── */
+body[data-theme="fallout"] .glitch-wrapper::before { text-shadow: -1px 0 #00aa00; }
+body[data-theme="fallout"] .glitch-wrapper::after  { text-shadow: -1px 0 #88ff44; }
+
+/* ── Fallout progress bars ── */
+body[data-theme="fallout"] [style*="neon-cyan"] {
+  /* progress fill becomes green - handled via CSS var */
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   🔎  DETECTIVE THEME — NOIR CASE FILE AESTHETIC
+   ═══════════════════════════════════════════════════════════════ */
+
+body[data-theme="detective"] {
+  color: #b8956a;
+}
+
+/* Film grain overlay */
+body[data-theme="detective"]::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.055;
+  z-index: 9997;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* Replace scanline with vignette */
+body[data-theme="detective"]::after {
+  background:
+    radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.75) 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+/* ── Detective Cards: manila case file ── */
+body[data-theme="detective"] .cyber-card {
+  clip-path: none !important;
+  background: rgba(38, 28, 16, 0.98) !important;
+  border: none !important;
+  border-top: 3px solid #d4a84b !important;
+  border-right: 1px solid #3d2b10 !important;
+  border-bottom: 2px solid #3d2b10 !important;
+  border-left: 1px solid #3d2b10 !important;
+  border-radius: 1px !important;
+  backdrop-filter: none !important;
+  box-shadow:
+    2px 4px 12px rgba(0,0,0,0.65),
+    0 1px 0 rgba(212,168,75,0.08),
+    inset 0 0 40px rgba(0,0,0,0.2) !important;
+}
+body[data-theme="detective"] .cyber-card:hover {
+  border-top-color: #e8c88c !important;
+  box-shadow:
+    3px 6px 20px rgba(0,0,0,0.75),
+    0 0 15px rgba(212,168,75,0.1) !important;
+  transform: translateY(-2px) !important;
+}
+body[data-theme="detective"] .cyber-card.dragging {
+  border: 2px dashed #8b5e3c !important;
+}
+
+/* Paper-on-desk tilt effect */
+body[data-theme="detective"] .cyber-card:nth-child(3n+1) { transform: rotate(-0.3deg); }
+body[data-theme="detective"] .cyber-card:nth-child(3n+2) { transform: rotate(0.25deg); }
+body[data-theme="detective"] .cyber-card:nth-child(3n)   { transform: rotate(-0.15deg); }
+body[data-theme="detective"] .cyber-card:nth-child(3n+1):hover { transform: rotate(-0.3deg) translateY(-2px); }
+body[data-theme="detective"] .cyber-card:nth-child(3n+2):hover { transform: rotate(0.25deg) translateY(-2px); }
+body[data-theme="detective"] .cyber-card:nth-child(3n):hover   { transform: rotate(-0.15deg) translateY(-2px); }
+
+/* ── Detective Columns: case dividers ── */
+body[data-theme="detective"] .kanban-column {
+  background: rgba(20, 14, 7, 0.94) !important;
+  border: 1px solid #2e1f0a !important;
+  border-top: 4px solid #d4a84b !important;
+  border-radius: 0 !important;
+  box-shadow: 3px 5px 25px rgba(0,0,0,0.55) !important;
+}
+
+/* ── Detective Buttons: stamp/typewriter ── */
+body[data-theme="detective"] .cyber-btn {
+  clip-path: none !important;
+  border-radius: 1px !important;
+  letter-spacing: 3px !important;
+  background: rgba(28, 20, 10, 0.9) !important;
+}
+body[data-theme="detective"] .cyber-btn:hover {
+  background: #d4a84b !important;
+  color: #1a0f00 !important;
+  box-shadow: 0 0 15px rgba(212, 168, 75, 0.5) !important;
+}
+
+/* ── Detective Inputs ── */
+body[data-theme="detective"] .cyber-input {
+  border-radius: 1px !important;
+  background: rgba(22, 15, 6, 0.95) !important;
+  border-color: #3d2b10 !important;
+  color: #c8a96e !important;
+  caret-color: #d4a84b;
+}
+body[data-theme="detective"] .cyber-input::placeholder { color: rgba(180,140,90,0.3) !important; }
+body[data-theme="detective"] .cyber-input:focus {
+  border-color: #d4a84b !important;
+  box-shadow: 0 0 10px rgba(212, 168, 75, 0.2) !important;
+}
+
+/* ── Detective Tags: rubber stamp style ── */
+body[data-theme="detective"] [class^="tag-"],
+body[data-theme="detective"] [class*=" tag-"] {
+  background: rgba(212, 168, 75, 0.1) !important;
+  color: #c8a96e !important;
+  border-color: rgba(139, 94, 60, 0.5) !important;
+  font-family: 'Special Elite', cursive !important;
+  font-size: 10px !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  border-radius: 1px !important;
+}
+body[data-theme="detective"] [class^="status-"],
+body[data-theme="detective"] [class*=" status-"] {
+  background: rgba(212, 168, 75, 0.08) !important;
+  color: #c8a96e !important;
+  border-color: rgba(139, 94, 60, 0.4) !important;
+  font-family: 'Special Elite', cursive !important;
+  letter-spacing: 1px !important;
+}
+body[data-theme="detective"] .status-blocked {
+  background: rgba(180, 40, 40, 0.12) !important;
+  color: #e07070 !important;
+  border-color: rgba(180, 40, 40, 0.4) !important;
+}
+body[data-theme="detective"] .status-done {
+  background: rgba(107, 140, 66, 0.12) !important;
+  color: #8ab55a !important;
+  border-color: rgba(107, 140, 66, 0.35) !important;
+}
+body[data-theme="detective"] [class^="priority-"],
+body[data-theme="detective"] [class*=" priority-"] {
+  background: rgba(212, 168, 75, 0.08) !important;
+  color: #c8a96e !important;
+  border-color: rgba(139, 94, 60, 0.35) !important;
+}
+body[data-theme="detective"] .priority-critical {
+  background: rgba(180, 40, 40, 0.1) !important;
+  color: #e07070 !important;
+  border-color: rgba(180, 40, 40, 0.4) !important;
+}
+
+/* ── Detective Scrollbar ── */
+body[data-theme="detective"] ::-webkit-scrollbar-track { background: #0a0703 !important; }
+body[data-theme="detective"] ::-webkit-scrollbar-thumb { background: #5c3e20 !important; }
+body[data-theme="detective"] ::-webkit-scrollbar-thumb:hover { background: #d4a84b !important; }
+
+/* ── Detective Modal ── */
+body[data-theme="detective"] .modal-backdrop {
+  background: rgba(5, 3, 1, 0.88) !important;
+  backdrop-filter: blur(3px) !important;
+}
+
+/* ── Detective glitch: amber tones ── */
+body[data-theme="detective"] .glitch-wrapper::before { text-shadow: -1px 0 #8b5e3c; }
+body[data-theme="detective"] .glitch-wrapper::after  { text-shadow: -1px 0 #e8c88c; }
+
+/* ── Detective select elements ── */
+body[data-theme="detective"] select option {
+  background: #1c1006;
+  color: #c8a96e;
+}
+
+/* ── Fallout select elements ── */
+body[data-theme="fallout"] select option {
+  background: #000c00;
+  color: #4cff00;
+}

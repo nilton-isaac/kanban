@@ -18,11 +18,11 @@ export default function CardPreview({ card }) {
           <img src={card.images[0].src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} />
         </div>
       )}
-      <div style={{ fontSize: '12px', fontFamily: 'Orbitron', color: '#fff', fontWeight: 'bold', marginBottom: 4 }}>
+      <div style={{ fontSize: '12px', fontFamily: 'var(--font-heading)', color: '#fff', fontWeight: 'bold', marginBottom: 4 }}>
         {card.title}
       </div>
       {card.description && (
-        <p style={{ fontSize: '11px', color: '#666', fontFamily: 'Share Tech Mono' }}>
+        <p style={{ fontSize: '11px', color: '#666', fontFamily: 'var(--font-body)' }}>
           {card.description.slice(0, 60)}{card.description.length > 60 ? '...' : ''}
         </p>
       )}

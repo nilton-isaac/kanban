@@ -4,6 +4,7 @@ import Header from './components/Header'
 import EisenhowerMatrix from './components/EisenhowerMatrix'
 import AuthScreen from './components/AuthScreen'
 import StandupModal from './components/StandupModal'
+import FloatingThemeSelector from './components/FloatingThemeSelector'
 import { supabase } from './lib/supabase'
 import { fetchColumns, fetchCards, upsertColumn, upsertCard, deleteColumn as dbDeleteColumn, deleteCard as dbDeleteCard, saveStandupLog } from './lib/db'
 import { applyNextDay } from './lib/standup'
@@ -285,6 +286,7 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-full min-h-screen">
+      <FloatingThemeSelector />
       <Header
         viewMode={viewMode}
         onViewModeChange={setViewMode}
