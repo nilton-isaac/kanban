@@ -150,15 +150,24 @@ export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', o
   const columnBlocks = []
 
   // Token by specific column: {{col:<columnId>}} or {{col:<columnTitle>}} or {{<columnTitle>}}
-  columns.forEach((col) => {
+  columns.forEach((col, idx) => {
     const block = buildColumnsBlock([col], cards, themePack, config)
     const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
     const title = String(col.title || '').trim()
     const normalizedTitle = normalizeKey(title)
+    const byPosition = String(col.position ?? idx)
+    const byIndex = String(col.index ?? idx + 1)
 
+    // Stable and legacy aliases:
+    // - col:<id> (recommended)
+    // - col:<title> / <title> (legacy)
+    // - colpos:<n> / colindex:<n> / colrole:<role> (extra resiliency)
     context[`col:${col.id}`] = block
     context[`col:${title}`] = block
     context[`col:${normalizedTitle}`] = block
+    context[`colpos:${byPosition}`] = block
+    context[`colindex:${byIndex}`] = block
+    if (col.role) context[`colrole:${col.role}`] = block
     context[title] = block
     context[normalizedTitle] = block
 
@@ -275,7 +284,10 @@ export function renderStandupTemplate(template, context) {
 
 export function generateStandupMessage(columns, cards, theme = 'cyberpunk', options = {}) {
   const context = getStandupTemplateContext(columns, cards, theme, options)
-  return renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
+  const primary = renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
+  if (primary && primary.trim()) return primary
+  // Guardrail: never return empty standup due to stale/mismatched template tokens.
+  return renderStandupTemplate(DEFAULT_DAILY_TEMPLATE, context)
 }
 
 export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {
