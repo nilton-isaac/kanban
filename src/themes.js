@@ -10,7 +10,7 @@ export const THEMES = {
   cyberpunk: {
     id: 'cyberpunk',
     label: 'CYBERPUNK',
-    icon: '⚡',
+    icon: 'CP',
     vars: {
       '--neon-cyan': '#00f3ff',
       '--neon-pink': '#ff00ff',
@@ -31,7 +31,7 @@ export const THEMES = {
   fallout: {
     id: 'fallout',
     label: 'FALLOUT',
-    icon: '☢',
+    icon: 'FO',
     vars: {
       '--neon-cyan': '#4cff00',
       '--neon-pink': '#00cc00',
@@ -52,7 +52,7 @@ export const THEMES = {
   darkest: {
     id: 'darkest',
     label: 'DARKEST',
-    icon: '🗡',
+    icon: 'DK',
     vars: {
       '--neon-cyan': '#c9a959',
       '--neon-pink': '#8b1a1a',
@@ -73,7 +73,7 @@ export const THEMES = {
   liquidglass: {
     id: 'liquidglass',
     label: 'LIQUID',
-    icon: '💧',
+    icon: 'LG',
     vars: {
       '--neon-cyan': '#cfeaff',
       '--neon-pink': '#ff9fcf',
@@ -94,7 +94,7 @@ export const THEMES = {
   frostpunk: {
     id: 'frostpunk',
     label: 'FROSTPUNK',
-    icon: '❄',
+    icon: 'FR',
     vars: {
       '--neon-cyan': '#9fd3e8',
       '--neon-pink': '#c46f5d',
@@ -115,19 +115,19 @@ export const THEMES = {
   nier: {
     id: 'nier',
     label: 'NIER',
-    icon: 'N',
+    icon: 'NR',
     vars: {
-      '--neon-cyan': '#2b2b2b',
-      '--neon-pink': '#5c5c5c',
-      '--neon-yellow': '#70664f',
-      '--neon-green': '#4a5f4a',
-      '--neon-orange': '#8a6b50',
-      '--neon-purple': '#8c8c8c',
-      '--bg-dark': '#e8e4d9',
-      '--panel-bg': 'rgba(220,216,204,0.9)',
-      '--grid-color': 'rgba(43,43,43,0.05)',
-      '--scanline': 'rgba(0,0,0,0.06)',
-      '--col-accent': '#2b2b2b',
+      '--neon-cyan': '#4f4b46',
+      '--neon-pink': '#67625c',
+      '--neon-yellow': '#7d735f',
+      '--neon-green': '#5f7260',
+      '--neon-orange': '#8c7259',
+      '--neon-purple': '#918a80',
+      '--bg-dark': '#e9e4d8',
+      '--panel-bg': 'rgba(223,216,201,0.92)',
+      '--grid-color': 'rgba(79,75,70,0.04)',
+      '--scanline': 'rgba(0,0,0,0.04)',
+      '--col-accent': '#4f4b46',
       '--font-heading': "'Rajdhani', 'Noto Sans JP', sans-serif",
       '--font-body': "'Rajdhani', 'Noto Sans JP', sans-serif",
     },

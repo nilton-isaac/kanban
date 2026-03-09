@@ -501,24 +501,24 @@ function AddCardModal({ columnId, columns, onSave, onClose }) {
               {columns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </Field>
-          <Field label="TÃ­tulo *" color="var(--neon-cyan)">
+          <Field label="Título *" color="var(--neon-cyan)">
             <input autoFocus type="text" value={title} onChange={e => setTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
-              className="cyber-input w-full p-3 rounded-sm" placeholder="TÃ­tulo da tarefa..." />
+              className="cyber-input w-full p-3 rounded-sm" placeholder="Título da tarefa..." />
           </Field>
-          <Field label="DescriÃ§Ã£o" color="var(--neon-pink)">
+          <Field label="Descrição" color="var(--neon-pink)">
             <textarea value={description} onChange={e => setDescription(e.target.value)}
               className="cyber-input w-full p-3 rounded-sm h-20 resize-none" placeholder="Detalhes..." />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="ResponsÃ¡vel" color="var(--neon-yellow)">
+            <Field label="Responsável" color="var(--neon-yellow)">
               <input type="text" value={assigneeName} onChange={e => setAssigneeName(e.target.value)}
                 className="cyber-input w-full p-2 rounded-sm" placeholder="@usuario" />
             </Field>
             <Field label="Prioridade" color="var(--neon-green)">
               <select value={priority} onChange={e => setPriority(e.target.value)} className="cyber-input w-full p-2 rounded-sm">
-                <option value="low">Baixa</option><option value="medium">MÃ©dia</option>
-                <option value="high">Alta</option><option value="critical">CrÃ­tica</option>
+                <option value="low">Baixa</option><option value="medium">Média</option>
+                <option value="high">Alta</option><option value="critical">Crítica</option>
               </select>
             </Field>
           </div>
@@ -547,11 +547,11 @@ const TAG_COLORS = ['cyan', 'pink', 'yellow', 'green', 'orange', 'purple']
 const STATUS_OPTIONS = [
   { value: 'todo', label: 'A Fazer' }, { value: 'progress', label: 'Em Progresso' },
   { value: 'review', label: 'Em Review' }, { value: 'blocked', label: 'Bloqueado' },
-  { value: 'done', label: 'ConcluÃ­do' },
+  { value: 'done', label: 'Concluído' },
 ]
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Baixa' }, { value: 'medium', label: 'MÃ©dia' },
-  { value: 'high', label: 'Alta' }, { value: 'critical', label: 'CrÃ­tica' },
+  { value: 'low', label: 'Baixa' }, { value: 'medium', label: 'Média' },
+  { value: 'high', label: 'Alta' }, { value: 'critical', label: 'Crítica' },
 ]
 
 function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImage }) {
@@ -626,7 +626,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
           <div style={{ width: '100%', height: '130px', position: 'relative', flexShrink: 0 }}>
             <img src={banner} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--panel-bg) 0%, transparent 60%)' }} />
-            <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 24, height: 24, fontSize: '12px', borderRadius: '2px' }}>âœ•</button>
+            <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 24, height: 24, fontSize: '12px', borderRadius: '2px' }}>✕</button>
           </div>
         )}
 
@@ -634,7 +634,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #222', flexShrink: 0, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <input value={title} onChange={e => setTitle(e.target.value)} className="cyber-input flex-1 p-2 rounded-sm font-bold"
             style={{ fontFamily: 'var(--font-heading)', fontSize: '15px' }} />
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '20px', lineHeight: 1, flexShrink: 0 }}>âœ•</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '20px', lineHeight: 1, flexShrink: 0 }}>✕</button>
         </div>
 
         {/* Tabs */}
@@ -652,7 +652,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
           {/* INFO */}
           {activeTab === 'info' && (
             <div className="space-y-4">
-              <Field label="DescriÃ§Ã£o" color="var(--neon-pink)">
+              <Field label="Descrição" color="var(--neon-pink)">
                 <textarea value={description} onChange={e => setDescription(e.target.value)}
                   className="cyber-input w-full p-3 rounded-sm resize-none" rows={4} />
               </Field>
@@ -686,11 +686,11 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
               <div>
                 <label style={LABEL_STYLE('#555')}>Visibilidade no Standup</label>
                 <ToggleBtn active={excluded} onClick={() => setExcluded(v => !v)} color="var(--neon-pink)">
-                  {excluded ? 'EXCLUÃDO DO STANDUP' : 'INCLUÃDO NO STANDUP'}
+                  {excluded ? 'EXCLUÍDO DO STANDUP' : 'INCLUÍDO NO STANDUP'}
                 </ToggleBtn>
               </div>
               <p style={{ fontSize: '10px', color: '#333', fontFamily: 'var(--font-body)' }}>
-                ID: {card.id} Â· {new Date(card.createdAt).toLocaleString('pt-BR')}
+                ID: {card.id} · {new Date(card.createdAt).toLocaleString('pt-BR')}
               </p>
             </div>
           )}
@@ -707,12 +707,12 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 <div key={task.id} className="flex items-center gap-3 group" style={{ padding: '5px 0', borderBottom: '1px solid #111' }}>
                   <button onClick={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
                     style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, cursor: 'pointer', border: `1px solid ${task.done ? 'var(--neon-green)' : '#444'}`, background: task.done ? 'var(--neon-green)' : 'transparent', color: '#000', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {task.done ? 'âœ“' : ''}
+                    {task.done ? '✓' : ''}
                   </button>
                   <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-body)', color: task.done ? '#444' : '#ccc', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</span>
                   <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333', fontSize: '12px' }}
                     onMouseEnter={e => e.currentTarget.style.color = 'var(--neon-pink)'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#333'}>âœ•</button>
+                    onMouseLeave={e => e.currentTarget.style.color = '#333'}>✕</button>
                 </div>
               ))}
               {tasks.length === 0 && <p style={{ color: '#333', fontSize: '12px', fontFamily: 'var(--font-body)', textAlign: 'center', padding: '16px 0' }}>Sem subtasks.</p>}
@@ -732,7 +732,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 {tags.map(tag => (
                   <span key={tag.id} className={`tag-${tag.color} px-2 py-1 rounded text-xs flex items-center gap-1`}>
                     {tag.name}
-                    <button onClick={() => setTags(p => p.filter(t => t.id !== tag.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '11px' }}>âœ•</button>
+                    <button onClick={() => setTags(p => p.filter(t => t.id !== tag.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '11px' }}>✕</button>
                   </span>
                 ))}
                 {tags.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem tags.</p>}
@@ -756,10 +756,10 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                   <div key={a.id} className="flex items-center gap-2 px-3 py-1.5 rounded" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #222' }}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: `var(--neon-${a.color})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 'bold', color: '#000' }}>{a.name.charAt(0).toUpperCase()}</div>
                     <span style={{ fontSize: '13px', color: `var(--neon-${a.color})` }}>{a.name}</span>
-                    <button onClick={() => setAssignees(p => p.filter(x => x.id !== a.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', fontSize: '12px' }}>âœ•</button>
+                    <button onClick={() => setAssignees(p => p.filter(x => x.id !== a.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', fontSize: '12px' }}>✕</button>
                   </div>
                 ))}
-                {assignees.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem responsÃ¡veis.</p>}
+                {assignees.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem responsáveis.</p>}
               </div>
               <div className="flex gap-2 border-t border-gray-800 pt-3">
                 <input value={newAssigneeName} onChange={e => setNewAssigneeName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addAssignee()}
@@ -780,11 +780,11 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 {banner ? (
                   <div style={{ position: 'relative', height: 90 }}>
                     <img src={banner} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid rgba(0,243,255,0.3)' }} />
-                    <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.8)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>âœ•</button>
+                    <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.8)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>✕</button>
                   </div>
                 ) : (
                   <label className="cyber-btn flex items-center justify-center gap-2 py-2 cursor-pointer text-sm" style={{ display: 'flex', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}>
-                    ðŸ“· Upload Banner
+                    📷 Upload Banner
                     <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
                   </label>
                 )}
@@ -803,7 +803,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                           style={{ width: '100%', height: 80, objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(0,243,255,0.2)', borderRadius: 2 }} />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 2 }}>
                           <button onClick={() => setBanner(img.src)} style={{ background: 'rgba(252,238,10,0.2)', border: '1px solid var(--neon-yellow)', color: 'var(--neon-yellow)', cursor: 'pointer', fontSize: '9px', padding: '3px 5px', borderRadius: 2, fontFamily: 'var(--font-heading)' }}>BANNER</button>
-                          <button onClick={() => setImages(p => p.filter(i => i.id !== img.id))} style={{ background: 'rgba(255,0,255,0.2)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>âœ•</button>
+                          <button onClick={() => setImages(p => p.filter(i => i.id !== img.id))} style={{ background: 'rgba(255,0,255,0.2)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>✕</button>
                         </div>
                       </div>
                     ))}
@@ -822,7 +822,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
             <div className="flex gap-2 items-center">
               <span style={{ fontSize: '11px', color: 'var(--neon-pink)', fontFamily: 'var(--font-body)' }}>Confirmar?</span>
               <button onClick={onDelete} style={{ padding: '5px 10px', background: 'none', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>Sim</button>
-              <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #444', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>NÃ£o</button>
+              <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #444', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>Não</button>
             </div>
           )}
           <div className="flex gap-3">
@@ -896,5 +896,6 @@ const LABEL_STYLE = (color) => ({
   fontFamily: 'var(--font-body)', textTransform: 'uppercase',
   letterSpacing: '2px', marginBottom: 6,
 })
+
 
 
