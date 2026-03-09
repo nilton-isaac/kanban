@@ -189,7 +189,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {tokenChip('columns', '{columns}', insertToken)}
                   {tokenChip('footer', '{footer}', insertToken)}
                   {tokenChip('js: cols.length', '{js: cols.length}', insertToken)}
-                  {columns.map((c) => tokenChip(`col:${c.title}`, `{${c.title}}`, insertToken))}
+                  {columns.map((c) => tokenChip(`col:${c.id}`, `{${c.title}}`, insertToken))}
                 </div>
                 <button
                   onClick={() => setIsEditingTemplate((v) => !v)}
@@ -221,7 +221,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   </label>
                   <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#7f7f7f', marginBottom: 6 }}>
                     Scripts: {'{{js: expressao}}'} ou {'{{#script}} return ... {{/script}}'}.
-                    Variaveis de script: cols, cards, date, header, footer, columns, col('NOME').
+                    Variaveis de script: cols, cards, date, header, footer, columns, col('ID_OU_NOME').
                   </p>
                   <textarea
                     ref={textareaRef}
