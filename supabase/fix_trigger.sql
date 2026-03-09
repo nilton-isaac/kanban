@@ -1,9 +1,17 @@
 -- ============================================================
 -- FIX: "Database error saving new user"
--- Execute este SQL no Supabase Dashboard > SQL Editor
+-- Execute in Supabase Dashboard > SQL Editor
 -- ============================================================
 
--- Recria a função com search_path correto + tratamento de erro
+-- Safety: ensure profiles table exists before creating trigger/function
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT,
+  theme TEXT NOT NULL DEFAULT 'cyberpunk',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Recreate function with proper search_path + error handling
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -15,14 +23,15 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
-  -- Não deixa o auth falhar mesmo se o profile der erro
+  -- Avoid blocking auth signup flow if profile insert fails
   RAISE LOG 'handle_new_user error: %', SQLERRM;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- Recria o trigger
+-- Recreate trigger
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
