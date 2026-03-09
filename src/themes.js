@@ -1,5 +1,7 @@
 const LEGACY_THEME_ALIAS = {
   detective: 'darkest',
+  darkwouls: 'darksouls',
+  darksouls_theme: 'darksouls',
 }
 
 export function normalizeThemeId(themeId) {
@@ -130,6 +132,48 @@ export const THEMES = {
       '--col-accent': '#4f4b46',
       '--font-heading': "'Rajdhani', 'Noto Sans JP', sans-serif",
       '--font-body': "'Rajdhani', 'Noto Sans JP', sans-serif",
+    },
+  },
+
+  darksouls: {
+    id: 'darksouls',
+    label: 'DARKSOULS',
+    icon: 'DS',
+    vars: {
+      '--neon-cyan': '#c9a959',
+      '--neon-pink': '#8b0000',
+      '--neon-yellow': '#e3c98b',
+      '--neon-green': '#8d9a6d',
+      '--neon-orange': '#b56b3d',
+      '--neon-purple': '#5d6879',
+      '--bg-dark': '#090909',
+      '--panel-bg': 'rgba(19,19,19,0.88)',
+      '--grid-color': 'rgba(201,169,89,0.05)',
+      '--scanline': 'rgba(0,0,0,0.2)',
+      '--col-accent': '#c9a959',
+      '--font-heading': "'Cinzel', serif",
+      '--font-body': "'Lato', 'Rajdhani', sans-serif",
+    },
+  },
+
+  royale: {
+    id: 'royale',
+    label: 'ROYALE',
+    icon: 'RY',
+    vars: {
+      '--neon-cyan': '#4fc3f7',
+      '--neon-pink': '#f06292',
+      '--neon-yellow': '#ffd166',
+      '--neon-green': '#74d680',
+      '--neon-orange': '#ff9e57',
+      '--neon-purple': '#7c8cff',
+      '--bg-dark': '#0b1830',
+      '--panel-bg': 'rgba(17,34,63,0.84)',
+      '--grid-color': 'rgba(79,195,247,0.05)',
+      '--scanline': 'rgba(0,0,0,0.08)',
+      '--col-accent': '#ffd166',
+      '--font-heading': "'Cinzel', serif",
+      '--font-body': "'Rajdhani', sans-serif",
     },
   },
 }

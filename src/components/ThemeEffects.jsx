@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 
 const FLAKE_COUNT = 48
+const EMBER_COUNT = 28
+const SPARK_COUNT = 18
 
 export default function ThemeEffects() {
   const { theme } = useTheme()
@@ -16,6 +18,33 @@ export default function ThemeEffects() {
         delay: Math.random() * 8,
         drift: -16 + Math.random() * 32,
         opacity: 0.18 + Math.random() * 0.45,
+      })),
+    []
+  )
+
+  const embers = useMemo(
+    () =>
+      Array.from({ length: EMBER_COUNT }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        size: 2 + Math.random() * 4,
+        duration: 7 + Math.random() * 8,
+        delay: Math.random() * 6,
+        drift: -42 + Math.random() * 84,
+        opacity: 0.25 + Math.random() * 0.5,
+      })),
+    []
+  )
+
+  const sparks = useMemo(
+    () =>
+      Array.from({ length: SPARK_COUNT }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        size: 8 + Math.random() * 18,
+        duration: 3.8 + Math.random() * 4.5,
+        delay: Math.random() * 5,
+        opacity: 0.16 + Math.random() * 0.3,
       })),
     []
   )
@@ -47,6 +76,56 @@ export default function ThemeEffects() {
       <div className="nier-overlay" aria-hidden="true">
         <div className="nier-deco-line nier-deco-top" />
         <div className="nier-deco-line nier-deco-bottom" />
+      </div>
+    )
+  }
+
+  if (theme === 'darksouls') {
+    return (
+      <div className="darksouls-overlay" aria-hidden="true">
+        <div className="darksouls-bonfire-glow" />
+        <div className="darksouls-embers">
+          {embers.map(ember => (
+            <span
+              key={ember.id}
+              className="darksouls-ember"
+              style={{
+                left: `${ember.left}%`,
+                width: `${ember.size}px`,
+                height: `${ember.size}px`,
+                opacity: ember.opacity,
+                animationDuration: `${ember.duration}s`,
+                animationDelay: `${ember.delay}s`,
+                '--drift-x': `${ember.drift}px`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (theme === 'royale') {
+    return (
+      <div className="royale-overlay" aria-hidden="true">
+        <div className="royale-light-ray royale-light-ray-left" />
+        <div className="royale-light-ray royale-light-ray-right" />
+        <div className="royale-sparks">
+          {sparks.map(spark => (
+            <span
+              key={spark.id}
+              className="royale-spark"
+              style={{
+                left: `${spark.left}%`,
+                width: `${spark.size}px`,
+                height: `${spark.size}px`,
+                opacity: spark.opacity,
+                animationDuration: `${spark.duration}s`,
+                animationDelay: `${spark.delay}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
     )
   }

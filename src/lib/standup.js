@@ -60,6 +60,20 @@ const THEMES_STANDUP = {
     noColumns: 'NO COLUMN DATA.',
     footer: '// END OF TRANSMISSION',
   },
+  darksouls: {
+    header: (date) => `LORDRAN TASK LOG // ${date.toUpperCase()}`,
+    section: (title, count) => `- ${title} (${count})`,
+    noneInColumn: 'No embers found.',
+    noColumns: 'No covenant columns found.',
+    footer: '"Praise the Sun."',
+  },
+  royale: {
+    header: (date) => `ROYALE WAR ROOM // ${date.toUpperCase()}`,
+    section: (title, count) => `* ${title} [${count}]`,
+    noneInColumn: 'No troops in this lane.',
+    noColumns: 'No lanes configured.',
+    footer: '// VICTORY PATH OPEN',
+  },
 }
 
 const STATUS_BADGE = {
@@ -395,6 +409,8 @@ export function generateWeeklySummary(logs, theme = 'cyberpunk') {
     darkest: `CRONICA DA SEMANA // ${first} -> ${last}`,
     liquidglass: `WEEKLY FLOW // ${first} -> ${last}`,
     nier: `YORHA WEEKLY LOG // ${first} -> ${last}`,
+    darksouls: `LORDRAN WEEKLY CHRONICLE // ${first} -> ${last}`,
+    royale: `ROYALE WEEKLY WAR ROOM // ${first} -> ${last}`,
   }
 
   const lines = [headers[themeId] || headers.cyberpunk, '']

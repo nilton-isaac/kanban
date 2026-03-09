@@ -1,4 +1,4 @@
-import { Zap, Radiation, Sword, Droplets, Snowflake, Cpu } from 'lucide-react'
+import { Zap, Radiation, Sword, Droplets, Snowflake, Cpu, Flame, Crown } from 'lucide-react'
 
 const THEME_ICON_MAP = {
   cyberpunk: Zap,
@@ -7,6 +7,8 @@ const THEME_ICON_MAP = {
   liquidglass: Droplets,
   frostpunk: Snowflake,
   nier: Cpu,
+  darksouls: Flame,
+  royale: Crown,
 }
 
 export function ThemeIcon({ themeId, size = 14, strokeWidth = 2, style }) {
