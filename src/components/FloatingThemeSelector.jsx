@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
+import { ThemeIcon } from '../lib/themeIcons'
 
 export default function FloatingThemeSelector() {
   const { theme, setTheme } = useTheme()
@@ -61,7 +62,7 @@ export default function FloatingThemeSelector() {
               textAlign: 'left',
             }}
           >
-            <span style={{ fontSize: '16px', lineHeight: 1 }}>{t.icon}</span>
+            <ThemeIcon themeId={t.id} size={15} />
             <span>{t.label}</span>
           </button>
         ))}
@@ -90,7 +91,7 @@ export default function FloatingThemeSelector() {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: '16px', lineHeight: 1 }}>{current.icon}</span>
+        <ThemeIcon themeId={current.id} size={15} />
         <span style={{
           fontSize: '7px',
           fontFamily: 'var(--font-body)',

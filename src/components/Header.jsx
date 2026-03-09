@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
+import { ThemeIcon } from '../lib/themeIcons'
 
 export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError }) {
   const [time, setTime] = useState(new Date())
@@ -30,8 +31,12 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
         backgroundSize: '40px 40px',
       }} />
 
-      <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, var(--neon-cyan), transparent)', animation: 'scanLine 4s linear infinite', pointerEvents: 'none' }} />
-      <style>{`@keyframes scanLine { 0%{top:0%;opacity:1} 95%{top:100%;opacity:.3} 100%{top:0%;opacity:0} }`}</style>
+      {theme !== 'nier' && (
+        <>
+          <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, var(--neon-cyan), transparent)', animation: 'scanLine 4s linear infinite', pointerEvents: 'none' }} />
+          <style>{`@keyframes scanLine { 0%{top:0%;opacity:1} 95%{top:100%;opacity:.3} 100%{top:0%;opacity:0} }`}</style>
+        </>
+      )}
 
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-dark) 0%, transparent 80%)' }} />
 
@@ -44,7 +49,8 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
           KANBAN_NINE
         </h1>
         <p style={{ marginTop: 2, fontSize: '10px', letterSpacing: '2px', fontFamily: 'var(--font-body)', color: 'var(--neon-cyan)' }}>
-          {t?.icon} {t?.label} // KANBAN NINE v2.2
+          <ThemeIcon themeId={theme} size={12} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 4 }} />
+          {t?.label} // KANBAN NINE v2.2
         </p>
       </div>
 
@@ -86,7 +92,7 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
               onBlur={() => setTimeout(() => setThemeMenuOpen(false), 200)}
               style={hdrBtn('var(--neon-purple)')}
             >
-              <Palette size={12} /> {t?.icon} TEMA
+              <Palette size={12} /> <ThemeIcon themeId={theme} size={12} /> TEMA
             </button>
             {themeMenuOpen && (
               <div style={{ position: 'absolute', right: 0, top: '110%', background: 'var(--panel-bg)', border: '1px solid #333', zIndex: 200, minWidth: '180px' }}>
@@ -100,7 +106,10 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
                       fontFamily: 'var(--font-body)', fontSize: '12px',
                       borderLeft: theme === th.id ? '2px solid var(--neon-cyan)' : '2px solid transparent',
                     }}>
-                    {th.icon} {th.label}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                      <ThemeIcon themeId={th.id} size={12} />
+                      {th.label}
+                    </span>
                   </button>
                 ))}
               </div>

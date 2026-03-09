@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
+import { ThemeIcon } from '../lib/themeIcons'
 
 export default function AuthScreen() {
   const { theme } = useTheme()
@@ -146,7 +147,10 @@ export default function AuthScreen() {
               }}
               title={th.label}
             >
-              {th.icon} {th.label}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <ThemeIcon themeId={th.id} size={12} />
+                {th.label}
+              </span>
             </button>
           ))}
         </div>

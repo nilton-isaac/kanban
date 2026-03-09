@@ -47,7 +47,6 @@ export default function ThemeEffects() {
       <div className="nier-overlay" aria-hidden="true">
         <div className="nier-deco-line nier-deco-top" />
         <div className="nier-deco-line nier-deco-bottom" />
-        <div className="nier-sweep-line" />
       </div>
     )
   }
