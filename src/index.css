@@ -1264,9 +1264,7 @@ body[data-theme="royale"]::before {
 }
 
 body[data-theme="royale"]::after {
-  background:
-    radial-gradient(ellipse at center, transparent 18%, rgba(0,0,0,0.34) 100%) !important;
-  background-size: 100% 100% !important;
+  background: none !important;
 }
 
 body[data-theme="royale"] .cyber-card {
@@ -1396,7 +1394,7 @@ body[data-theme="royale"] select option {
 .royale-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.58) 100%);
+  background: none;
 }
 
 .royale-sparks {
