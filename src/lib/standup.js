@@ -5,6 +5,11 @@ export const SUMMARY_CONFIG = {
   includeEmptyColumns: true,
   linePrefix: '  - ',
   showStatusBadge: true,
+  orderedColumnIds: null,
+  includeColumnIds: null,
+  customDateText: null,
+  customHeader: null,
+  customFooter: null,
 }
 
 export const NEXT_DAY_CONFIG = {
@@ -73,24 +78,46 @@ function sortColumns(columns, columnOrder) {
   })
 }
 
+function applyColumnIdOrder(columns, orderedColumnIds) {
+  if (!orderedColumnIds || orderedColumnIds.length === 0) return columns
+  const orderMap = new Map(orderedColumnIds.map((id, idx) => [id, idx]))
+  return [...columns].sort((a, b) => {
+    const ai = orderMap.has(a.id) ? orderMap.get(a.id) : Number.MAX_SAFE_INTEGER
+    const bi = orderMap.has(b.id) ? orderMap.get(b.id) : Number.MAX_SAFE_INTEGER
+    if (ai !== bi) return ai - bi
+    return String(a.title || '').localeCompare(String(b.title || ''))
+  })
+}
+
 export function generateStandupMessage(columns, cards, theme = 'cyberpunk', config = SUMMARY_CONFIG) {
   const themeId = getTheme(theme)
   const t = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
-  const orderedColumns = sortColumns(columns, config.columnOrder)
+  const baseOrderedColumns = sortColumns(columns, config.columnOrder)
+  const customOrderedColumns = applyColumnIdOrder(baseOrderedColumns, config.orderedColumnIds)
+  const orderedColumns = config.includeColumnIds
+    ? customOrderedColumns.filter((c) => config.includeColumnIds.includes(c.id))
+    : customOrderedColumns
 
-  const dateStr = new Date().toLocaleDateString('pt-BR', {
+  const dateStr = config.customDateText || new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
 
-  const lines = [t.header(dateStr), '']
+  const headerLine = config.customHeader && config.customHeader.trim().length > 0
+    ? config.customHeader.replaceAll('{date}', dateStr)
+    : t.header(dateStr)
+  const footerLine = config.customFooter && config.customFooter.trim().length > 0
+    ? config.customFooter.replaceAll('{date}', dateStr)
+    : t.footer
+
+  const lines = [headerLine, '']
 
   if (orderedColumns.length === 0) {
     lines.push(t.noColumns)
     lines.push('')
-    lines.push(t.footer)
+    lines.push(footerLine)
     return lines.join('\n')
   }
 
@@ -113,7 +140,7 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk', conf
     lines.push('')
   })
 
-  lines.push(t.footer)
+  lines.push(footerLine)
   return lines.join('\n')
 }
 
