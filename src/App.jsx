@@ -7,7 +7,7 @@ import StandupModal from './components/StandupModal'
 import FloatingThemeSelector from './components/FloatingThemeSelector'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { fetchColumns, fetchCards, upsertColumn, upsertCard, deleteColumn as dbDeleteColumn, deleteCard as dbDeleteCard, saveStandupLog } from './lib/db'
-import { applyNextDay } from './lib/standup'
+import { applyNextDay, getNextDayImpact } from './lib/standup'
 
 const LOCAL_KEY = 'cyberdaily-kanban-v4'
 const LOCAL_IMAGES_KEY = 'cyberdaily-images-v1'
@@ -211,6 +211,24 @@ export default function App() {
     })
   }, [])
 
+  const reorderColumns = useCallback((activeColumnId, overColumnId) => {
+    setColumns(prev => {
+      const oldIndex = prev.findIndex(c => c.id === activeColumnId)
+      const newIndex = prev.findIndex(c => c.id === overColumnId)
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return prev
+
+      const reordered = [...prev]
+      const [moved] = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+
+      return reordered.map((col, idx) => ({
+        ...col,
+        position: idx,
+        index: String(idx + 1).padStart(2, '0'),
+      }))
+    })
+  }, [])
+
   const handleOpenEdit = useCallback((card) => {
     setCards(prev => {
       const latest = prev.find(c => c.id === card.id) || card
@@ -305,6 +323,7 @@ export default function App() {
           onDeleteCard={removeCard}
           onMoveCard={moveCard}
           onReorderColumn={reorderColumn}
+          onReorderColumns={reorderColumns}
           onAddColumn={() => setAddColumnModal(true)}
           onUpdateColumn={updateColumn}
           onDeleteColumn={removeColumn}
@@ -382,27 +401,66 @@ export default function App() {
 
 // â”€â”€ Confirm Next Day Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ConfirmNextDayModal({ columns, cards, onConfirm, onClose }) {
-  const todayCol = columns.find(c => c.role === 'today')
-  const todayCards = todayCol ? cards.filter(c => c.columnId === todayCol.id) : []
-  const doneCount = todayCards.filter(c => c.status === 'done').length
-  const limboCount = todayCards.filter(c => c.status === 'todo').length
-  const carryCount = todayCards.filter(c => !['done', 'todo'].includes(c.status)).length
+  const impact = getNextDayImpact(columns, cards)
+
+  // Troque apenas a ordem desses IDs para mudar a ordem da lista no modal.
+  const NEXT_DAY_RULES_ORDER = ['done', 'limbo', 'keep']
+
+  const rulesMap = {
+    done: {
+      color: 'var(--neon-green)',
+      text: `✓ ${impact.doneCount} tarefa(s) concluida(s) -> movem para ${impact.doneTargetTitle || 'coluna de ontem'}`,
+    },
+    limbo: {
+      color: 'var(--neon-pink)',
+      text: `✕ ${impact.limboCount} tarefa(s) nao iniciada(s) -> saem dos proximos standups`,
+    },
+    keep: {
+      color: 'var(--neon-cyan)',
+      text: `⟳ ${impact.keepCount} tarefa(s) em andamento/review/bloqueio -> permanecem em ${impact.sourceColumnTitle || 'coluna atual'}`,
+    },
+  }
 
   return (
     <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="cyber-card fade-in" style={{ background: 'var(--panel-bg)', padding: '28px', maxWidth: '440px', width: '100%' }}>
+      <div className="cyber-card fade-in" style={{ background: 'var(--panel-bg)', padding: '28px', maxWidth: '520px', width: '100%' }}>
         <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--neon-yellow)', fontSize: '16px', letterSpacing: '2px', marginBottom: 16 }}>
-          ðŸ“… VIRAR DIA
+          VIRAR DIA
         </h3>
-        <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: '#aaa', lineHeight: 2, marginBottom: 20 }}>
-          <p>O seguinte irÃ¡ acontecer:</p>
-          <p style={{ color: 'var(--neon-green)' }}>âœ“ {doneCount} card(s) concluÃ­dos â†’ movem para ONTEM</p>
-          <p style={{ color: 'var(--neon-pink)' }}>âœ• {limboCount} card(s) nÃ£o iniciados â†’ excluÃ­dos dos prÃ³ximos standups</p>
-          <p style={{ color: 'var(--neon-cyan)' }}>âŸ³ {carryCount} card(s) em progresso/review/bloqueado â†’ permanecem em HOJE</p>
-        </div>
+        {!impact.hasSourceColumn ? (
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: '#bbb', lineHeight: 1.7, marginBottom: 20 }}>
+            <p>Nenhuma coluna com role <strong>today</strong> foi encontrada.</p>
+            <p style={{ color: '#888', marginTop: 8 }}>
+              Defina uma coluna como "today" para habilitar a virada de dia automaticamente.
+            </p>
+          </div>
+        ) : (
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: '#aaa', lineHeight: 1.8, marginBottom: 20 }}>
+            <p style={{ marginBottom: 10 }}>O que vai acontecer:</p>
+            {NEXT_DAY_RULES_ORDER.map(ruleId => (
+              <p key={ruleId} style={{ color: rulesMap[ruleId].color }}>
+                {rulesMap[ruleId].text}
+              </p>
+            ))}
+          </div>
+        )}
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="cyber-btn" style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-pink)', borderColor: 'var(--neon-pink)' }}>Cancelar</button>
-          <button onClick={onConfirm} className="cyber-btn" style={{ padding: '8px 20px', fontSize: '12px', background: 'var(--neon-yellow)', color: '#000' }}>
+          <button onClick={onClose} className="cyber-btn" style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-pink)', borderColor: 'var(--neon-pink)' }}>
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!impact.hasSourceColumn}
+            className="cyber-btn"
+            style={{
+              padding: '8px 20px',
+              fontSize: '12px',
+              background: impact.hasSourceColumn ? 'var(--neon-yellow)' : 'rgba(255,255,255,0.15)',
+              color: impact.hasSourceColumn ? '#000' : '#666',
+              borderColor: impact.hasSourceColumn ? 'var(--neon-yellow)' : '#555',
+              cursor: impact.hasSourceColumn ? 'pointer' : 'not-allowed',
+            }}
+          >
             Confirmar
           </button>
         </div>

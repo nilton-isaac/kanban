@@ -22,6 +22,7 @@ export default function Column({
   onDeleteColumn,
   onClearColumn,
   onInlineEdit,
+  dragHandleProps,
 }) {
   const colors = COLOR_MAP[column.color] || COLOR_MAP.cyan
   const [editing, setEditing] = useState(false)
@@ -74,6 +75,23 @@ export default function Column({
             }}
             title="Double-click para renomear"
           >
+            <button
+              type="button"
+              title="Arrastar coluna"
+              {...dragHandleProps}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'grab',
+                color: '#666',
+                fontSize: '14px',
+                lineHeight: 1,
+                padding: 0,
+                marginRight: '2px',
+              }}
+            >
+              ::
+            </button>
             <span className="text-xs font-mono" style={{ color: colors.text, opacity: 0.5 }}>{column.index}.</span>
             <h2 className="font-orbitron font-bold truncate" style={{ color: colors.text, fontSize: '14px' }}>
               {column.title}

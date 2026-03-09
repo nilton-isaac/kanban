@@ -1,5 +1,21 @@
 import { normalizeThemeId } from '../themes'
 
+export const SUMMARY_CONFIG = {
+  columnOrder: 'position', // position | alphabetical
+  includeEmptyColumns: true,
+  linePrefix: '  - ',
+  showStatusBadge: true,
+}
+
+export const NEXT_DAY_CONFIG = {
+  sourceRole: 'today',
+  doneTargetRole: 'yesterday',
+  doneStatuses: ['done'],
+  limboStatuses: ['todo'],
+  keepStatuses: ['progress', 'review', 'blocked'],
+  hideFromStandupOnLimbo: true,
+}
+
 const THEMES_STANDUP = {
   cyberpunk: {
     header: (date) => `CYBER STANDUP // ${date.toUpperCase()}`,
@@ -43,8 +59,13 @@ function getTheme(themeId) {
   return normalizeThemeId(themeId)
 }
 
-function orderColumns(columns) {
-  return [...columns].sort((a, b) => {
+function sortColumns(columns, columnOrder) {
+  const ordered = [...columns]
+  if (columnOrder === 'alphabetical') {
+    return ordered.sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')))
+  }
+
+  return ordered.sort((a, b) => {
     const pa = a.position ?? 0
     const pb = b.position ?? 0
     if (pa !== pb) return pa - pb
@@ -52,10 +73,10 @@ function orderColumns(columns) {
   })
 }
 
-export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
+export function generateStandupMessage(columns, cards, theme = 'cyberpunk', config = SUMMARY_CONFIG) {
   const themeId = getTheme(theme)
   const t = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
-  const orderedColumns = orderColumns(columns)
+  const orderedColumns = sortColumns(columns, config.columnOrder)
 
   const dateStr = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -75,6 +96,8 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
 
   orderedColumns.forEach((col) => {
     const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
+    if (!config.includeEmptyColumns && colCards.length === 0) return
+
     const title = col.title || `COLUNA ${col.index || ''}`.trim()
     lines.push(t.section(title, colCards.length))
 
@@ -82,8 +105,8 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
       lines.push(`  ${t.noneInColumn}`)
     } else {
       colCards.forEach((card) => {
-        const badge = STATUS_BADGE[card.status] ? ` ${STATUS_BADGE[card.status]}` : ''
-        lines.push(`  - ${card.title}${badge}`)
+        const badge = config.showStatusBadge && STATUS_BADGE[card.status] ? ` ${STATUS_BADGE[card.status]}` : ''
+        lines.push(`${config.linePrefix}${card.title}${badge}`)
       })
     }
 
@@ -92,6 +115,25 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
 
   lines.push(t.footer)
   return lines.join('\n')
+}
+
+export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {
+  const sourceColumn = columns.find((c) => c.role === config.sourceRole)
+  const doneTargetColumn = columns.find((c) => c.role === config.doneTargetRole)
+  const sourceCards = sourceColumn ? cards.filter((c) => c.columnId === sourceColumn.id) : []
+
+  const doneCount = sourceCards.filter((c) => config.doneStatuses.includes(c.status)).length
+  const limboCount = sourceCards.filter((c) => config.limboStatuses.includes(c.status)).length
+  const keepCount = sourceCards.filter((c) => config.keepStatuses.includes(c.status)).length
+
+  return {
+    hasSourceColumn: Boolean(sourceColumn),
+    sourceColumnTitle: sourceColumn?.title || null,
+    doneTargetTitle: doneTargetColumn?.title || null,
+    doneCount,
+    limboCount,
+    keepCount,
+  }
 }
 
 export function generateWeeklySummary(logs, theme = 'cyberpunk') {
@@ -127,21 +169,21 @@ export function generateWeeklySummary(logs, theme = 'cyberpunk') {
   return lines.join('\n').trim()
 }
 
-export function applyNextDay(columns, cards) {
-  const yesterdayCol = columns.find((c) => c.role === 'yesterday')
-  const todayCol = columns.find((c) => c.role === 'today')
+export function applyNextDay(columns, cards, config = NEXT_DAY_CONFIG) {
+  const sourceColumn = columns.find((c) => c.role === config.sourceRole)
+  const doneTargetColumn = columns.find((c) => c.role === config.doneTargetRole)
 
-  if (!todayCol) return cards
+  if (!sourceColumn) return cards
 
   return cards.map((card) => {
-    if (card.columnId !== todayCol.id) return card
+    if (card.columnId !== sourceColumn.id) return card
 
-    if (card.status === 'done') {
-      return yesterdayCol ? { ...card, columnId: yesterdayCol.id } : card
+    if (config.doneStatuses.includes(card.status)) {
+      return doneTargetColumn ? { ...card, columnId: doneTargetColumn.id } : card
     }
 
-    if (card.status === 'todo') {
-      return { ...card, excluded_from_standup: true }
+    if (config.limboStatuses.includes(card.status)) {
+      return config.hideFromStandupOnLimbo ? { ...card, excluded_from_standup: true } : card
     }
 
     return card
