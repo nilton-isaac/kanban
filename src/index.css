@@ -1,8 +1,8 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ── Default theme vars (Cyberpunk) — overridden by applyTheme() ── */
+/* â”€â”€ Default theme vars (Cyberpunk) â€” overridden by applyTheme() â”€â”€ */
 :root {
   --neon-cyan:    #00f3ff;
   --neon-pink:    #ff00ff;
@@ -47,8 +47,8 @@ body[data-theme="fallout"] {
   background-size: 40px 40px, 40px 40px, 100% 100%;
 }
 
-/* Detective theme body extras */
-body[data-theme="detective"] {
+/* Darkest theme body extras */
+body[data-theme="darkest"] {
   background-image:
     radial-gradient(ellipse at center, rgba(212,168,75,0.04) 0%, transparent 70%),
     linear-gradient(var(--grid-color) 1px, transparent 1px),
@@ -99,12 +99,12 @@ body::after {
   border: 2px dashed var(--neon-yellow);
 }
 
-/* Detective theme: no clip-path (looks more like paper) */
-body[data-theme="detective"] .cyber-card {
+/* Darkest theme: no clip-path (looks more like paper) */
+body[data-theme="darkest"] .cyber-card {
   clip-path: none;
   border-radius: 2px;
 }
-body[data-theme="detective"] .cyber-btn {
+body[data-theme="darkest"] .cyber-btn {
   clip-path: none;
   border-radius: 2px;
 }
@@ -281,9 +281,9 @@ body[data-theme="detective"] .cyber-btn {
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   ☢  FALLOUT THEME — PIP-BOY TERMINAL AESTHETIC
-   ═══════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   â˜¢  FALLOUT THEME â€” PIP-BOY TERMINAL AESTHETIC
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 body[data-theme="fallout"] {
   color: #4cff00;
@@ -320,7 +320,7 @@ body[data-theme="fallout"]::after {
   background-size: 100% 100%, 100% 4px !important;
 }
 
-/* ── Fallout Cards: terminal window ── */
+/* â”€â”€ Fallout Cards: terminal window â”€â”€ */
 body[data-theme="fallout"] .cyber-card {
   clip-path: none !important;
   background: rgba(0, 12, 0, 0.97) !important;
@@ -344,7 +344,7 @@ body[data-theme="fallout"] .cyber-card.dragging {
   border: 2px dashed #ffcc00 !important;
 }
 
-/* ── Fallout Columns: sector panels ── */
+/* â”€â”€ Fallout Columns: sector panels â”€â”€ */
 body[data-theme="fallout"] .kanban-column {
   background: rgba(0, 7, 0, 0.92) !important;
   border: 1px solid rgba(76, 255, 0, 0.3) !important;
@@ -354,7 +354,7 @@ body[data-theme="fallout"] .kanban-column {
     inset 0 0 40px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* ── Fallout Buttons: terminal style ── */
+/* â”€â”€ Fallout Buttons: terminal style â”€â”€ */
 body[data-theme="fallout"] .cyber-btn {
   clip-path: none !important;
   border-radius: 0 !important;
@@ -367,7 +367,7 @@ body[data-theme="fallout"] .cyber-btn:hover {
   box-shadow: 0 0 20px rgba(76, 255, 0, 0.6) !important;
 }
 
-/* ── Fallout Inputs ── */
+/* â”€â”€ Fallout Inputs â”€â”€ */
 body[data-theme="fallout"] .cyber-input {
   border-radius: 0 !important;
   border-color: rgba(76, 255, 0, 0.4) !important;
@@ -381,7 +381,7 @@ body[data-theme="fallout"] .cyber-input:focus {
   box-shadow: 0 0 12px rgba(76, 255, 0, 0.35) !important;
 }
 
-/* ── Fallout Tags/Status/Priority: monochrome green ── */
+/* â”€â”€ Fallout Tags/Status/Priority: monochrome green â”€â”€ */
 body[data-theme="fallout"] [class^="tag-"],
 body[data-theme="fallout"] [class*=" tag-"] {
   background: rgba(76, 255, 0, 0.1) !important;
@@ -419,37 +419,37 @@ body[data-theme="fallout"] .priority-critical {
   border-color: rgba(255, 204, 0, 0.35) !important;
 }
 
-/* ── Fallout Scrollbar ── */
+/* â”€â”€ Fallout Scrollbar â”€â”€ */
 body[data-theme="fallout"] ::-webkit-scrollbar-track { background: #000800 !important; }
 body[data-theme="fallout"] ::-webkit-scrollbar-thumb { background: #4cff00 !important; }
 body[data-theme="fallout"] ::-webkit-scrollbar-thumb:hover { background: #88ff44 !important; }
 
-/* ── Fallout Modal ── */
+/* â”€â”€ Fallout Modal â”€â”€ */
 body[data-theme="fallout"] .modal-backdrop {
   background: rgba(0, 5, 0, 0.9) !important;
   backdrop-filter: blur(2px) !important;
 }
 
-/* ── Fallout glitch: green only ── */
+/* â”€â”€ Fallout glitch: green only â”€â”€ */
 body[data-theme="fallout"] .glitch-wrapper::before { text-shadow: -1px 0 #00aa00; }
 body[data-theme="fallout"] .glitch-wrapper::after  { text-shadow: -1px 0 #88ff44; }
 
-/* ── Fallout progress bars ── */
+/* â”€â”€ Fallout progress bars â”€â”€ */
 body[data-theme="fallout"] [style*="neon-cyan"] {
   /* progress fill becomes green - handled via CSS var */
 }
 
 
-/* ═══════════════════════════════════════════════════════════════
-   🔎  DETECTIVE THEME — NOIR CASE FILE AESTHETIC
-   ═══════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ðŸ”Ž  Darkest THEME â€” NOIR CASE FILE AESTHETIC
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-body[data-theme="detective"] {
+body[data-theme="darkest"] {
   color: #b8956a;
 }
 
 /* Film grain overlay */
-body[data-theme="detective"]::before {
+body[data-theme="darkest"]::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -463,14 +463,14 @@ body[data-theme="detective"]::before {
 }
 
 /* Replace scanline with vignette */
-body[data-theme="detective"]::after {
+body[data-theme="darkest"]::after {
   background:
     radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.75) 100%) !important;
   background-size: 100% 100% !important;
 }
 
-/* ── Detective Cards: manila case file ── */
-body[data-theme="detective"] .cyber-card {
+/* â”€â”€ Darkest Cards: manila case file â”€â”€ */
+body[data-theme="darkest"] .cyber-card {
   clip-path: none !important;
   background: rgba(38, 28, 16, 0.98) !important;
   border: none !important;
@@ -485,27 +485,27 @@ body[data-theme="detective"] .cyber-card {
     0 1px 0 rgba(212,168,75,0.08),
     inset 0 0 40px rgba(0,0,0,0.2) !important;
 }
-body[data-theme="detective"] .cyber-card:hover {
+body[data-theme="darkest"] .cyber-card:hover {
   border-top-color: #e8c88c !important;
   box-shadow:
     3px 6px 20px rgba(0,0,0,0.75),
     0 0 15px rgba(212,168,75,0.1) !important;
   transform: translateY(-2px) !important;
 }
-body[data-theme="detective"] .cyber-card.dragging {
+body[data-theme="darkest"] .cyber-card.dragging {
   border: 2px dashed #8b5e3c !important;
 }
 
 /* Paper-on-desk tilt effect */
-body[data-theme="detective"] .cyber-card:nth-child(3n+1) { transform: rotate(-0.3deg); }
-body[data-theme="detective"] .cyber-card:nth-child(3n+2) { transform: rotate(0.25deg); }
-body[data-theme="detective"] .cyber-card:nth-child(3n)   { transform: rotate(-0.15deg); }
-body[data-theme="detective"] .cyber-card:nth-child(3n+1):hover { transform: rotate(-0.3deg) translateY(-2px); }
-body[data-theme="detective"] .cyber-card:nth-child(3n+2):hover { transform: rotate(0.25deg) translateY(-2px); }
-body[data-theme="detective"] .cyber-card:nth-child(3n):hover   { transform: rotate(-0.15deg) translateY(-2px); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n+1) { transform: rotate(-0.3deg); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n+2) { transform: rotate(0.25deg); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n)   { transform: rotate(-0.15deg); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n+1):hover { transform: rotate(-0.3deg) translateY(-2px); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n+2):hover { transform: rotate(0.25deg) translateY(-2px); }
+body[data-theme="darkest"] .cyber-card:nth-child(3n):hover   { transform: rotate(-0.15deg) translateY(-2px); }
 
-/* ── Detective Columns: case dividers ── */
-body[data-theme="detective"] .kanban-column {
+/* â”€â”€ Darkest Columns: case dividers â”€â”€ */
+body[data-theme="darkest"] .kanban-column {
   background: rgba(20, 14, 7, 0.94) !important;
   border: 1px solid #2e1f0a !important;
   border-top: 4px solid #d4a84b !important;
@@ -513,98 +513,200 @@ body[data-theme="detective"] .kanban-column {
   box-shadow: 3px 5px 25px rgba(0,0,0,0.55) !important;
 }
 
-/* ── Detective Buttons: stamp/typewriter ── */
-body[data-theme="detective"] .cyber-btn {
+/* â”€â”€ Darkest Buttons: stamp/typewriter â”€â”€ */
+body[data-theme="darkest"] .cyber-btn {
   clip-path: none !important;
   border-radius: 1px !important;
   letter-spacing: 3px !important;
   background: rgba(28, 20, 10, 0.9) !important;
 }
-body[data-theme="detective"] .cyber-btn:hover {
+body[data-theme="darkest"] .cyber-btn:hover {
   background: #d4a84b !important;
   color: #1a0f00 !important;
   box-shadow: 0 0 15px rgba(212, 168, 75, 0.5) !important;
 }
 
-/* ── Detective Inputs ── */
-body[data-theme="detective"] .cyber-input {
+/* â”€â”€ Darkest Inputs â”€â”€ */
+body[data-theme="darkest"] .cyber-input {
   border-radius: 1px !important;
   background: rgba(22, 15, 6, 0.95) !important;
   border-color: #3d2b10 !important;
   color: #c8a96e !important;
   caret-color: #d4a84b;
 }
-body[data-theme="detective"] .cyber-input::placeholder { color: rgba(180,140,90,0.3) !important; }
-body[data-theme="detective"] .cyber-input:focus {
+body[data-theme="darkest"] .cyber-input::placeholder { color: rgba(180,140,90,0.3) !important; }
+body[data-theme="darkest"] .cyber-input:focus {
   border-color: #d4a84b !important;
   box-shadow: 0 0 10px rgba(212, 168, 75, 0.2) !important;
 }
 
-/* ── Detective Tags: rubber stamp style ── */
-body[data-theme="detective"] [class^="tag-"],
-body[data-theme="detective"] [class*=" tag-"] {
+/* â”€â”€ Darkest Tags: rubber stamp style â”€â”€ */
+body[data-theme="darkest"] [class^="tag-"],
+body[data-theme="darkest"] [class*=" tag-"] {
   background: rgba(212, 168, 75, 0.1) !important;
   color: #c8a96e !important;
   border-color: rgba(139, 94, 60, 0.5) !important;
-  font-family: 'Special Elite', cursive !important;
+  font-family: 'Cinzel', serif !important;
   font-size: 10px !important;
   letter-spacing: 1.5px !important;
   text-transform: uppercase !important;
   border-radius: 1px !important;
 }
-body[data-theme="detective"] [class^="status-"],
-body[data-theme="detective"] [class*=" status-"] {
+body[data-theme="darkest"] [class^="status-"],
+body[data-theme="darkest"] [class*=" status-"] {
   background: rgba(212, 168, 75, 0.08) !important;
   color: #c8a96e !important;
   border-color: rgba(139, 94, 60, 0.4) !important;
-  font-family: 'Special Elite', cursive !important;
+  font-family: 'Cinzel', serif !important;
   letter-spacing: 1px !important;
 }
-body[data-theme="detective"] .status-blocked {
+body[data-theme="darkest"] .status-blocked {
   background: rgba(180, 40, 40, 0.12) !important;
   color: #e07070 !important;
   border-color: rgba(180, 40, 40, 0.4) !important;
 }
-body[data-theme="detective"] .status-done {
+body[data-theme="darkest"] .status-done {
   background: rgba(107, 140, 66, 0.12) !important;
   color: #8ab55a !important;
   border-color: rgba(107, 140, 66, 0.35) !important;
 }
-body[data-theme="detective"] [class^="priority-"],
-body[data-theme="detective"] [class*=" priority-"] {
+body[data-theme="darkest"] [class^="priority-"],
+body[data-theme="darkest"] [class*=" priority-"] {
   background: rgba(212, 168, 75, 0.08) !important;
   color: #c8a96e !important;
   border-color: rgba(139, 94, 60, 0.35) !important;
 }
-body[data-theme="detective"] .priority-critical {
+body[data-theme="darkest"] .priority-critical {
   background: rgba(180, 40, 40, 0.1) !important;
   color: #e07070 !important;
   border-color: rgba(180, 40, 40, 0.4) !important;
 }
 
-/* ── Detective Scrollbar ── */
-body[data-theme="detective"] ::-webkit-scrollbar-track { background: #0a0703 !important; }
-body[data-theme="detective"] ::-webkit-scrollbar-thumb { background: #5c3e20 !important; }
-body[data-theme="detective"] ::-webkit-scrollbar-thumb:hover { background: #d4a84b !important; }
+/* â”€â”€ Darkest Scrollbar â”€â”€ */
+body[data-theme="darkest"] ::-webkit-scrollbar-track { background: #0a0703 !important; }
+body[data-theme="darkest"] ::-webkit-scrollbar-thumb { background: #5c3e20 !important; }
+body[data-theme="darkest"] ::-webkit-scrollbar-thumb:hover { background: #d4a84b !important; }
 
-/* ── Detective Modal ── */
-body[data-theme="detective"] .modal-backdrop {
+/* â”€â”€ Darkest Modal â”€â”€ */
+body[data-theme="darkest"] .modal-backdrop {
   background: rgba(5, 3, 1, 0.88) !important;
   backdrop-filter: blur(3px) !important;
 }
 
-/* ── Detective glitch: amber tones ── */
-body[data-theme="detective"] .glitch-wrapper::before { text-shadow: -1px 0 #8b5e3c; }
-body[data-theme="detective"] .glitch-wrapper::after  { text-shadow: -1px 0 #e8c88c; }
+/* â”€â”€ Darkest glitch: amber tones â”€â”€ */
+body[data-theme="darkest"] .glitch-wrapper::before { text-shadow: -1px 0 #8b5e3c; }
+body[data-theme="darkest"] .glitch-wrapper::after  { text-shadow: -1px 0 #e8c88c; }
 
-/* ── Detective select elements ── */
-body[data-theme="detective"] select option {
+/* â”€â”€ Darkest select elements â”€â”€ */
+body[data-theme="darkest"] select option {
   background: #1c1006;
   color: #c8a96e;
 }
 
-/* ── Fallout select elements ── */
+/* â”€â”€ Fallout select elements â”€â”€ */
 body[data-theme="fallout"] select option {
   background: #000c00;
   color: #4cff00;
 }
+
+/* ===============================================================
+   LIQUID GLASS THEME
+   =============================================================== */
+
+body[data-theme="liquidglass"] {
+  background:
+    radial-gradient(35rem 35rem at 10% 5%, rgba(102, 126, 234, 0.35), transparent 70%),
+    radial-gradient(38rem 38rem at 90% 90%, rgba(245, 87, 108, 0.28), transparent 70%),
+    radial-gradient(28rem 28rem at 50% 55%, rgba(79, 172, 254, 0.25), transparent 70%),
+    linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+body[data-theme="liquidglass"]::after {
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(7, 10, 18, 0.55) 100%) !important;
+  background-size: 100% 100% !important;
+}
+
+body[data-theme="liquidglass"] .cyber-card {
+  clip-path: none !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  box-shadow:
+    0 8px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+body[data-theme="liquidglass"] .cyber-card:hover {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.34),
+    0 0 25px rgba(207, 234, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+body[data-theme="liquidglass"] .kanban-column {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-top: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow:
+    0 14px 30px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(18px);
+}
+
+body[data-theme="liquidglass"] .cyber-btn {
+  clip-path: none !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+body[data-theme="liquidglass"] .cyber-btn:hover {
+  background: rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+}
+
+body[data-theme="liquidglass"] .cyber-input {
+  border-radius: 12px !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+body[data-theme="liquidglass"] .cyber-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+body[data-theme="liquidglass"] .cyber-input:focus {
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2) !important;
+}
+
+body[data-theme="liquidglass"] [class^="tag-"],
+body[data-theme="liquidglass"] [class*=" tag-"],
+body[data-theme="liquidglass"] [class^="status-"],
+body[data-theme="liquidglass"] [class*=" status-"],
+body[data-theme="liquidglass"] [class^="priority-"],
+body[data-theme="liquidglass"] [class*=" priority-"] {
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+body[data-theme="liquidglass"] .modal-backdrop {
+  background: rgba(6, 10, 20, 0.65) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+body[data-theme="liquidglass"] ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05) !important; }
+body[data-theme="liquidglass"] ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.22) !important; }
+body[data-theme="liquidglass"] ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.35) !important; }
+
+body[data-theme="liquidglass"] select option {
+  background: #1e2b45;
+  color: #f2f8ff;
+}
+
+

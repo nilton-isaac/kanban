@@ -1,17 +1,19 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { applyTheme } from '../themes'
+import { applyTheme, normalizeThemeId } from '../themes'
 
 const ThemeContext = createContext({ theme: 'cyberpunk', setTheme: () => {} })
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
-    return localStorage.getItem('cyberdaily-theme') || 'cyberpunk'
+    const savedTheme = localStorage.getItem('cyberdaily-theme') || 'cyberpunk'
+    return normalizeThemeId(savedTheme)
   })
 
   const setTheme = (id) => {
-    setThemeState(id)
-    localStorage.setItem('cyberdaily-theme', id)
-    applyTheme(id)
+    const normalizedId = normalizeThemeId(id)
+    setThemeState(normalizedId)
+    localStorage.setItem('cyberdaily-theme', normalizedId)
+    applyTheme(normalizedId)
   }
 
   useEffect(() => {
