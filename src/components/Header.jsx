@@ -17,6 +17,8 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
   const userInitial = session?.user?.email?.charAt(0).toUpperCase() || '?'
   const t = THEMES[theme]
 
+  const disableScanline = theme === 'nier' || theme === 'darksouls' || theme === 'royale'
+
   return (
     <header style={{
       position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0,
@@ -31,7 +33,7 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
         backgroundSize: '40px 40px',
       }} />
 
-      {theme !== 'nier' && (
+      {!disableScanline && (
         <>
           <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, var(--neon-cyan), transparent)', animation: 'scanLine 4s linear infinite', pointerEvents: 'none' }} />
           <style>{`@keyframes scanLine { 0%{top:0%;opacity:1} 95%{top:100%;opacity:.3} 100%{top:0%;opacity:0} }`}</style>
