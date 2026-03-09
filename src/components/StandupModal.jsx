@@ -4,7 +4,7 @@ import {
   generateStandupMessage,
   generateWeeklySummary,
 } from '../lib/standup'
-import { fetchWeeklyLogs } from '../lib/db'
+import { fetchWeeklyLogs, fetchProfile, updateProfile } from '../lib/db'
 import { useTheme } from '../contexts/ThemeContext'
 
 function tokenChip(token, label, onInsert) {
@@ -49,6 +49,25 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
   )
 
   const textareaRef = useRef(null)
+  const [loadingTemplate, setLoadingTemplate] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
+  const [templateSaved, setTemplateSaved] = useState(false)
+
+  useEffect(() => {
+    if (!userId) return
+    setLoadingTemplate(true)
+    fetchProfile(userId)
+      .then((profile) => {
+        if (profile?.standup_template) {
+          setTemplateText(profile.standup_template)
+        }
+        if (profile?.standup_template_date) {
+          setDateText(profile.standup_template_date)
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoadingTemplate(false))
+  }, [userId])
 
   useEffect(() => {
     if (tab === 'weekly' && userId) {
@@ -101,6 +120,23 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     if (userId && onSaveLog) {
       await onSaveLog(dailyMessage)
       setSaved(true)
+    }
+  }
+
+  const saveTemplate = async () => {
+    if (!userId) return
+    setSavingTemplate(true)
+    try {
+      await updateProfile(userId, {
+        standup_template: templateText,
+        standup_template_date: dateText,
+      })
+      setTemplateSaved(true)
+      setTimeout(() => setTemplateSaved(false), 2000)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSavingTemplate(false)
     }
   }
 
@@ -165,6 +201,11 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
 
               {isEditingTemplate && (
                 <div className="cyber-card" style={{ padding: '14px', marginBottom: 16, border: '1px solid rgba(252,238,10,0.35)' }}>
+                  {loadingTemplate && (
+                    <p style={{ color: '#777', fontSize: '11px', fontFamily: 'var(--font-body)', marginBottom: 8 }}>
+                      Carregando template salvo...
+                    </p>
+                  )}
                   <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
                     Data variavel ({'{date}'})
                   </label>
@@ -185,6 +226,18 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                     rows={7}
                     style={{ width: '100%', padding: '10px', resize: 'vertical', fontSize: '12px', whiteSpace: 'pre' }}
                   />
+                  {userId && (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+                      <button
+                        onClick={saveTemplate}
+                        className="cyber-btn"
+                        disabled={savingTemplate}
+                        style={{ padding: '7px 14px', fontSize: '11px', background: 'var(--neon-green)', color: '#000' }}
+                      >
+                        {savingTemplate ? 'Salvando...' : templateSaved ? 'Template salvo!' : 'Salvar template'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

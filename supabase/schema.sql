@@ -10,8 +10,13 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
   theme TEXT NOT NULL DEFAULT 'cyberpunk',
+  standup_template TEXT,
+  standup_template_date TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS standup_template TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS standup_template_date TEXT;
 
 -- Kanban columns
 CREATE TABLE IF NOT EXISTS public.kanban_columns (
