@@ -92,7 +92,7 @@ function buildColumnsBlock(columns, cards, themePack, config) {
 
   const lines = []
   orderedColumns.forEach((col) => {
-    const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
+    const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
     if (!config.includeEmptyColumns && colCards.length === 0) return
 
     const title = col.title || `COLUNA ${col.index || ''}`.trim()
@@ -152,7 +152,7 @@ export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', o
   // Token by specific column: {{col:<columnId>}} or {{col:<columnTitle>}} or {{<columnTitle>}}
   columns.forEach((col, idx) => {
     const block = buildColumnsBlock([col], cards, themePack, config)
-    const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
+    const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
     const title = String(col.title || '').trim()
     const normalizedTitle = normalizeKey(title)
     const byPosition = String(col.position ?? idx)
@@ -285,9 +285,24 @@ export function renderStandupTemplate(template, context) {
 export function generateStandupMessage(columns, cards, theme = 'cyberpunk', options = {}) {
   const context = getStandupTemplateContext(columns, cards, theme, options)
   const primary = renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
-  if (primary && primary.trim()) return primary
+  if (primary && primary.trim() && templateHasVisibleCards(primary, cards)) return primary
   // Guardrail: never return empty standup due to stale/mismatched template tokens.
   return renderStandupTemplate(DEFAULT_DAILY_TEMPLATE, context)
+}
+
+function isExcludedFromStandup(card) {
+  const value = card?.excluded_from_standup
+  if (value === true) return true
+  if (value === false || value == null) return false
+  const normalized = String(value).trim().toLowerCase()
+  return normalized === 'true' || normalized === '1' || normalized === 'yes'
+}
+
+function templateHasVisibleCards(renderedText, cards) {
+  const visibleCards = (cards || []).filter((c) => !isExcludedFromStandup(c))
+  if (visibleCards.length === 0) return true
+  const text = String(renderedText || '').toLowerCase()
+  return visibleCards.some((c) => text.includes(String(c.title || '').toLowerCase()))
 }
 
 export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {
