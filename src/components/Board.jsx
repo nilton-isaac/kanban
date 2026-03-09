@@ -21,6 +21,7 @@ export default function Board({
   onAddColumn,
   onUpdateColumn,
   onDeleteColumn,
+  onClearColumn,
   onInlineEdit,
 }) {
   const [activeCard, setActiveCard] = useState(null)
@@ -86,6 +87,7 @@ export default function Board({
                 onDeleteCard={onDeleteCard}
                 onUpdateColumn={onUpdateColumn}
                 onDeleteColumn={onDeleteColumn}
+                onClearColumn={onClearColumn}
                 onInlineEdit={onInlineEdit}
               />
             )

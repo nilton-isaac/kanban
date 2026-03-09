@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+﻿import { useState, useEffect, useCallback, useRef } from 'react'
 import Board from './components/Board'
 import Header from './components/Header'
 import EisenhowerMatrix from './components/EisenhowerMatrix'
@@ -12,42 +12,8 @@ import { applyNextDay } from './lib/standup'
 const LOCAL_KEY = 'cyberdaily-kanban-v4'
 const LOCAL_IMAGES_KEY = 'cyberdaily-images-v1'
 
-// ── Default columns with roles ─────────────────────────────────────────────────
-const DEFAULT_COLUMNS = [
-  { id: 'col-ontem',    title: 'ONTEM',    color: 'pink',   index: '01', role: 'yesterday', position: 0 },
-  { id: 'col-hoje',     title: 'HOJE',     color: 'cyan',   index: '02', role: 'today',     position: 1 },
-  { id: 'col-bloqueios',title: 'BLOQUEIOS',color: 'yellow', index: '03', role: 'blocker',   position: 2 },
-]
-
-const DEFAULT_CARDS = [
-  {
-    id: 'card-demo1', columnId: 'col-ontem', title: 'Refatorar Auth Module',
-    description: 'Implementar JWT rotation.', banner: null, images: [],
-    tags: [{ id: 't1', name: 'Backend', color: 'cyan' }],
-    assignees: [{ id: 'a1', name: 'Neo', color: 'cyan' }],
-    tasks: [{ id: 'tk1', title: 'JWT middleware', done: true }, { id: 'tk2', title: 'Refresh token', done: true }],
-    status: 'done', priority: 'high', urgent: false, important: true,
-    dueDate: '', excluded_from_standup: false, position: 0, createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'card-demo2', columnId: 'col-hoje', title: 'Daily Meeting',
-    description: 'Sync com o time às 10h.', banner: null, images: [],
-    tags: [{ id: 't3', name: 'Reunião', color: 'green' }],
-    assignees: [{ id: 'a2', name: 'Trinity', color: 'pink' }],
-    tasks: [],
-    status: 'progress', priority: 'medium', urgent: true, important: true,
-    dueDate: '', excluded_from_standup: false, position: 0, createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'card-demo3', columnId: 'col-bloqueios', title: 'Servidor DB Offline',
-    description: 'Cluster PostgreSQL caiu.', banner: null, images: [],
-    tags: [{ id: 't4', name: 'Infra', color: 'orange' }],
-    assignees: [{ id: 'a4', name: 'Oracle', color: 'purple' }],
-    tasks: [{ id: 'tk4', title: 'Contatar infra', done: true }],
-    status: 'blocked', priority: 'critical', urgent: true, important: false,
-    dueDate: '', excluded_from_standup: false, position: 0, createdAt: new Date().toISOString(),
-  },
-]
+const DEFAULT_COLUMNS = []
+const DEFAULT_CARDS = []
 
 function loadLocalState() {
   try {
@@ -89,7 +55,7 @@ export default function App() {
   const syncTimer = useRef(null)
   const isCloud = !!session?.user
 
-  // ── Auth ──────────────────────────────────────────────────────────────────────
+  // â”€â”€ Auth â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!isSupabaseConfigured) {
       setSession(null)
@@ -105,7 +71,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ── Load data ─────────────────────────────────────────────────────────────────
+  // â”€â”€ Load data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (session === undefined) return
 
@@ -114,22 +80,14 @@ export default function App() {
       setLoadingData(true)
       Promise.all([fetchColumns(session.user.id), fetchCards(session.user.id)])
         .then(([cols, cds]) => {
-          if (cols.length === 0) {
-            // First login: push defaults
-            setColumns(DEFAULT_COLUMNS)
-            setCards(DEFAULT_CARDS)
-            DEFAULT_COLUMNS.forEach(c => upsertColumn(c, session.user.id))
-            DEFAULT_CARDS.forEach(c => upsertCard(c, session.user.id))
-          } else {
-            setColumns(cols)
-            // Merge cloud cards with local images
-            const imgs = loadLocalImages()
-            setCards(cds.map(c => ({
-              ...c,
-              banner: imgs[c.id]?.banner || null,
-              images: imgs[c.id]?.images || [],
-            })))
-          }
+          setColumns(cols)
+          // Merge cloud cards with local images
+          const imgs = loadLocalImages()
+          setCards(cds.map(c => ({
+            ...c,
+            banner: imgs[c.id]?.banner || null,
+            images: imgs[c.id]?.images || [],
+          })))
         })
         .catch(err => setSyncError(err.message))
         .finally(() => setLoadingData(false))
@@ -141,7 +99,7 @@ export default function App() {
     }
   }, [session])
 
-  // ── Persist locally (always) + sync to cloud (debounced) ─────────────────────
+  // â”€â”€ Persist locally (always) + sync to cloud (debounced) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (columns.length === 0 && cards.length === 0) return
     // Always save to localStorage (fast)
@@ -156,12 +114,12 @@ export default function App() {
     }
   }, [columns, cards, isCloud]) // eslint-disable-line
 
-  // ── Save images locally only (too big for DB) ─────────────────────────────────
+  // â”€â”€ Save images locally only (too big for DB) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     saveLocalImages(localImages)
   }, [localImages])
 
-  // ── Column actions ────────────────────────────────────────────────────────────
+  // â”€â”€ Column actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addColumn = useCallback((title, color) => {
     const newCol = {
       id: 'col-' + Date.now(),
@@ -182,10 +140,18 @@ export default function App() {
   const removeColumn = useCallback((colId) => {
     setColumns(prev => prev.filter(c => c.id !== colId))
     setCards(prev => prev.filter(c => c.columnId !== colId))
-    if (isCloud) dbDeleteColumn(colId).catch(console.error)
-  }, [isCloud])
+    if (isCloud && session?.user?.id) dbDeleteColumn(colId, session.user.id).catch(console.error)
+  }, [isCloud, session])
 
-  // ── Card actions ──────────────────────────────────────────────────────────────
+  const clearColumnCards = useCallback((colId) => {
+    const toRemove = cards.filter(c => c.columnId === colId).map(c => c.id)
+    setCards(prev => prev.filter(c => c.columnId !== colId))
+    if (isCloud && session?.user?.id) {
+      toRemove.forEach(cardId => dbDeleteCard(cardId, session.user.id).catch(console.error))
+    }
+  }, [cards, isCloud, session])
+
+  // â”€â”€ Card actions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const addCard = useCallback((cardData) => {
     const newCard = {
       id: 'card-' + Date.now(),
@@ -216,8 +182,8 @@ export default function App() {
 
   const removeCard = useCallback((cardId) => {
     setCards(prev => prev.filter(c => c.id !== cardId))
-    if (isCloud) dbDeleteCard(cardId).catch(console.error)
-  }, [isCloud])
+    if (isCloud && session?.user?.id) dbDeleteCard(cardId, session.user.id).catch(console.error)
+  }, [isCloud, session])
 
   const moveCard = useCallback((cardId, newColumnId, newIndex) => {
     setCards(prev => {
@@ -254,7 +220,7 @@ export default function App() {
     })
   }, [localImages])
 
-  // ── Next Day logic ────────────────────────────────────────────────────────────
+  // â”€â”€ Next Day logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleNextDay = () => {
     const updatedCards = applyNextDay(columns, cards)
     setCards(updatedCards)
@@ -263,13 +229,13 @@ export default function App() {
     setTimeout(() => setNextDayDone(false), 3000)
   }
 
-  // ── Standup log save ──────────────────────────────────────────────────────────
+  // â”€â”€ Standup log save â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleSaveStandupLog = useCallback(async (message) => {
     if (!session?.user) return
     await saveStandupLog(session.user.id, message)
   }, [session])
 
-  // ── Loading / Auth guard ──────────────────────────────────────────────────────
+  // â”€â”€ Loading / Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!isSupabaseConfigured) {
     return (
       <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -342,6 +308,7 @@ export default function App() {
           onAddColumn={() => setAddColumnModal(true)}
           onUpdateColumn={updateColumn}
           onDeleteColumn={removeColumn}
+          onClearColumn={clearColumnCards}
           onInlineEdit={(id, title) => updateCard(id, { title })}
         />
       ) : (
@@ -354,7 +321,7 @@ export default function App() {
         />
       )}
 
-      {/* ── Modals ── */}
+      {/* â”€â”€ Modals â”€â”€ */}
       {addCardModal && (
         <AddCardModal
           columnId={addCardModal.columnId}
@@ -413,7 +380,7 @@ export default function App() {
   )
 }
 
-// ── Confirm Next Day Modal ────────────────────────────────────────────────────
+// â”€â”€ Confirm Next Day Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ConfirmNextDayModal({ columns, cards, onConfirm, onClose }) {
   const todayCol = columns.find(c => c.role === 'today')
   const todayCards = todayCol ? cards.filter(c => c.columnId === todayCol.id) : []
@@ -425,13 +392,13 @@ function ConfirmNextDayModal({ columns, cards, onConfirm, onClose }) {
     <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="cyber-card fade-in" style={{ background: 'var(--panel-bg)', padding: '28px', maxWidth: '440px', width: '100%' }}>
         <h3 style={{ fontFamily: 'var(--font-heading)', color: 'var(--neon-yellow)', fontSize: '16px', letterSpacing: '2px', marginBottom: 16 }}>
-          📅 VIRAR DIA
+          ðŸ“… VIRAR DIA
         </h3>
         <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: '#aaa', lineHeight: 2, marginBottom: 20 }}>
-          <p>O seguinte irá acontecer:</p>
-          <p style={{ color: 'var(--neon-green)' }}>✓ {doneCount} card(s) concluídos → movem para ONTEM</p>
-          <p style={{ color: 'var(--neon-pink)' }}>✕ {limboCount} card(s) não iniciados → excluídos dos próximos standups</p>
-          <p style={{ color: 'var(--neon-cyan)' }}>⟳ {carryCount} card(s) em progresso/review/bloqueado → permanecem em HOJE</p>
+          <p>O seguinte irÃ¡ acontecer:</p>
+          <p style={{ color: 'var(--neon-green)' }}>âœ“ {doneCount} card(s) concluÃ­dos â†’ movem para ONTEM</p>
+          <p style={{ color: 'var(--neon-pink)' }}>âœ• {limboCount} card(s) nÃ£o iniciados â†’ excluÃ­dos dos prÃ³ximos standups</p>
+          <p style={{ color: 'var(--neon-cyan)' }}>âŸ³ {carryCount} card(s) em progresso/review/bloqueado â†’ permanecem em HOJE</p>
         </div>
         <div className="flex justify-end gap-3">
           <button onClick={onClose} className="cyber-btn" style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-pink)', borderColor: 'var(--neon-pink)' }}>Cancelar</button>
@@ -444,7 +411,7 @@ function ConfirmNextDayModal({ columns, cards, onConfirm, onClose }) {
   )
 }
 
-// ── Add Card Modal ────────────────────────────────────────────────────────────
+// â”€â”€ Add Card Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AddCardModal({ columnId, columns, onSave, onClose }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -474,24 +441,24 @@ function AddCardModal({ columnId, columns, onSave, onClose }) {
               {columns.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
             </select>
           </Field>
-          <Field label="Título *" color="var(--neon-cyan)">
+          <Field label="TÃ­tulo *" color="var(--neon-cyan)">
             <input autoFocus type="text" value={title} onChange={e => setTitle(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSave()}
-              className="cyber-input w-full p-3 rounded-sm" placeholder="Título da tarefa..." />
+              className="cyber-input w-full p-3 rounded-sm" placeholder="TÃ­tulo da tarefa..." />
           </Field>
-          <Field label="Descrição" color="var(--neon-pink)">
+          <Field label="DescriÃ§Ã£o" color="var(--neon-pink)">
             <textarea value={description} onChange={e => setDescription(e.target.value)}
               className="cyber-input w-full p-3 rounded-sm h-20 resize-none" placeholder="Detalhes..." />
           </Field>
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Responsável" color="var(--neon-yellow)">
+            <Field label="ResponsÃ¡vel" color="var(--neon-yellow)">
               <input type="text" value={assigneeName} onChange={e => setAssigneeName(e.target.value)}
                 className="cyber-input w-full p-2 rounded-sm" placeholder="@usuario" />
             </Field>
             <Field label="Prioridade" color="var(--neon-green)">
               <select value={priority} onChange={e => setPriority(e.target.value)} className="cyber-input w-full p-2 rounded-sm">
-                <option value="low">Baixa</option><option value="medium">Média</option>
-                <option value="high">Alta</option><option value="critical">Crítica</option>
+                <option value="low">Baixa</option><option value="medium">MÃ©dia</option>
+                <option value="high">Alta</option><option value="critical">CrÃ­tica</option>
               </select>
             </Field>
           </div>
@@ -515,16 +482,16 @@ function AddCardModal({ columnId, columns, onSave, onClose }) {
   )
 }
 
-// ── Edit Card Modal ───────────────────────────────────────────────────────────
+// â”€â”€ Edit Card Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const TAG_COLORS = ['cyan', 'pink', 'yellow', 'green', 'orange', 'purple']
 const STATUS_OPTIONS = [
   { value: 'todo', label: 'A Fazer' }, { value: 'progress', label: 'Em Progresso' },
   { value: 'review', label: 'Em Review' }, { value: 'blocked', label: 'Bloqueado' },
-  { value: 'done', label: 'Concluído' },
+  { value: 'done', label: 'ConcluÃ­do' },
 ]
 const PRIORITY_OPTIONS = [
-  { value: 'low', label: 'Baixa' }, { value: 'medium', label: 'Média' },
-  { value: 'high', label: 'Alta' }, { value: 'critical', label: 'Crítica' },
+  { value: 'low', label: 'Baixa' }, { value: 'medium', label: 'MÃ©dia' },
+  { value: 'high', label: 'Alta' }, { value: 'critical', label: 'CrÃ­tica' },
 ]
 
 function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImage }) {
@@ -599,7 +566,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
           <div style={{ width: '100%', height: '130px', position: 'relative', flexShrink: 0 }}>
             <img src={banner} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--panel-bg) 0%, transparent 60%)' }} />
-            <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 24, height: 24, fontSize: '12px', borderRadius: '2px' }}>✕</button>
+            <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 24, height: 24, fontSize: '12px', borderRadius: '2px' }}>âœ•</button>
           </div>
         )}
 
@@ -607,7 +574,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #222', flexShrink: 0, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <input value={title} onChange={e => setTitle(e.target.value)} className="cyber-input flex-1 p-2 rounded-sm font-bold"
             style={{ fontFamily: 'var(--font-heading)', fontSize: '15px' }} />
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '20px', lineHeight: 1, flexShrink: 0 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '20px', lineHeight: 1, flexShrink: 0 }}>âœ•</button>
         </div>
 
         {/* Tabs */}
@@ -625,7 +592,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
           {/* INFO */}
           {activeTab === 'info' && (
             <div className="space-y-4">
-              <Field label="Descrição" color="var(--neon-pink)">
+              <Field label="DescriÃ§Ã£o" color="var(--neon-pink)">
                 <textarea value={description} onChange={e => setDescription(e.target.value)}
                   className="cyber-input w-full p-3 rounded-sm resize-none" rows={4} />
               </Field>
@@ -659,11 +626,11 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
               <div>
                 <label style={LABEL_STYLE('#555')}>Visibilidade no Standup</label>
                 <ToggleBtn active={excluded} onClick={() => setExcluded(v => !v)} color="var(--neon-pink)">
-                  {excluded ? 'EXCLUÍDO DO STANDUP' : 'INCLUÍDO NO STANDUP'}
+                  {excluded ? 'EXCLUÃDO DO STANDUP' : 'INCLUÃDO NO STANDUP'}
                 </ToggleBtn>
               </div>
               <p style={{ fontSize: '10px', color: '#333', fontFamily: 'var(--font-body)' }}>
-                ID: {card.id} · {new Date(card.createdAt).toLocaleString('pt-BR')}
+                ID: {card.id} Â· {new Date(card.createdAt).toLocaleString('pt-BR')}
               </p>
             </div>
           )}
@@ -680,12 +647,12 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 <div key={task.id} className="flex items-center gap-3 group" style={{ padding: '5px 0', borderBottom: '1px solid #111' }}>
                   <button onClick={() => setTasks(p => p.map(t => t.id === task.id ? { ...t, done: !t.done } : t))}
                     style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, cursor: 'pointer', border: `1px solid ${task.done ? 'var(--neon-green)' : '#444'}`, background: task.done ? 'var(--neon-green)' : 'transparent', color: '#000', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {task.done ? '✓' : ''}
+                    {task.done ? 'âœ“' : ''}
                   </button>
                   <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-body)', color: task.done ? '#444' : '#ccc', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</span>
                   <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333', fontSize: '12px' }}
                     onMouseEnter={e => e.currentTarget.style.color = 'var(--neon-pink)'}
-                    onMouseLeave={e => e.currentTarget.style.color = '#333'}>✕</button>
+                    onMouseLeave={e => e.currentTarget.style.color = '#333'}>âœ•</button>
                 </div>
               ))}
               {tasks.length === 0 && <p style={{ color: '#333', fontSize: '12px', fontFamily: 'var(--font-body)', textAlign: 'center', padding: '16px 0' }}>Sem subtasks.</p>}
@@ -705,7 +672,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 {tags.map(tag => (
                   <span key={tag.id} className={`tag-${tag.color} px-2 py-1 rounded text-xs flex items-center gap-1`}>
                     {tag.name}
-                    <button onClick={() => setTags(p => p.filter(t => t.id !== tag.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '11px' }}>✕</button>
+                    <button onClick={() => setTags(p => p.filter(t => t.id !== tag.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '11px' }}>âœ•</button>
                   </span>
                 ))}
                 {tags.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem tags.</p>}
@@ -729,10 +696,10 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                   <div key={a.id} className="flex items-center gap-2 px-3 py-1.5 rounded" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #222' }}>
                     <div style={{ width: 28, height: 28, borderRadius: '50%', background: `var(--neon-${a.color})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 'bold', color: '#000' }}>{a.name.charAt(0).toUpperCase()}</div>
                     <span style={{ fontSize: '13px', color: `var(--neon-${a.color})` }}>{a.name}</span>
-                    <button onClick={() => setAssignees(p => p.filter(x => x.id !== a.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', fontSize: '12px' }}>✕</button>
+                    <button onClick={() => setAssignees(p => p.filter(x => x.id !== a.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#444', fontSize: '12px' }}>âœ•</button>
                   </div>
                 ))}
-                {assignees.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem responsáveis.</p>}
+                {assignees.length === 0 && <p style={{ color: '#444', fontSize: '12px' }}>Sem responsÃ¡veis.</p>}
               </div>
               <div className="flex gap-2 border-t border-gray-800 pt-3">
                 <input value={newAssigneeName} onChange={e => setNewAssigneeName(e.target.value)} onKeyDown={e => e.key === 'Enter' && addAssignee()}
@@ -753,11 +720,11 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                 {banner ? (
                   <div style={{ position: 'relative', height: 90 }}>
                     <img src={banner} alt="banner" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 2, border: '1px solid rgba(0,243,255,0.3)' }} />
-                    <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.8)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>✕</button>
+                    <button onClick={() => setBanner(null)} style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.8)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>âœ•</button>
                   </div>
                 ) : (
                   <label className="cyber-btn flex items-center justify-center gap-2 py-2 cursor-pointer text-sm" style={{ display: 'flex', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}>
-                    📷 Upload Banner
+                    ðŸ“· Upload Banner
                     <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
                   </label>
                 )}
@@ -776,7 +743,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                           style={{ width: '100%', height: 80, objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(0,243,255,0.2)', borderRadius: 2 }} />
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1 items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', borderRadius: 2 }}>
                           <button onClick={() => setBanner(img.src)} style={{ background: 'rgba(252,238,10,0.2)', border: '1px solid var(--neon-yellow)', color: 'var(--neon-yellow)', cursor: 'pointer', fontSize: '9px', padding: '3px 5px', borderRadius: 2, fontFamily: 'var(--font-heading)' }}>BANNER</button>
-                          <button onClick={() => setImages(p => p.filter(i => i.id !== img.id))} style={{ background: 'rgba(255,0,255,0.2)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>✕</button>
+                          <button onClick={() => setImages(p => p.filter(i => i.id !== img.id))} style={{ background: 'rgba(255,0,255,0.2)', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', width: 22, height: 22, fontSize: '11px', borderRadius: 2 }}>âœ•</button>
                         </div>
                       </div>
                     ))}
@@ -795,7 +762,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
             <div className="flex gap-2 items-center">
               <span style={{ fontSize: '11px', color: 'var(--neon-pink)', fontFamily: 'var(--font-body)' }}>Confirmar?</span>
               <button onClick={onDelete} style={{ padding: '5px 10px', background: 'none', border: '1px solid var(--neon-pink)', color: 'var(--neon-pink)', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>Sim</button>
-              <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #444', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>Não</button>
+              <button onClick={() => setConfirmDelete(false)} style={{ padding: '5px 10px', background: 'none', border: '1px solid #444', color: '#888', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--font-body)' }}>NÃ£o</button>
             </div>
           )}
           <div className="flex gap-3">
@@ -808,7 +775,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
   )
 }
 
-// ── Add Column Modal ───────────────────────────────────────────────────────────
+// â”€â”€ Add Column Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const COL_COLORS = ['pink', 'cyan', 'yellow', 'green', 'orange', 'purple']
 
 function AddColumnModal({ onSave, onClose }) {
@@ -842,7 +809,7 @@ function AddColumnModal({ onSave, onClose }) {
   )
 }
 
-// ── Shared small components ────────────────────────────────────────────────────
+// â”€â”€ Shared small components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Field({ label, color, children }) {
   return (
     <div>
@@ -869,3 +836,5 @@ const LABEL_STYLE = (color) => ({
   fontFamily: 'var(--font-body)', textTransform: 'uppercase',
   letterSpacing: '2px', marginBottom: 6,
 })
+
+

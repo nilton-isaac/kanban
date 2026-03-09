@@ -62,7 +62,7 @@ export default function AuthScreen() {
             color: '#fff', letterSpacing: '4px',
             textShadow: '0 0 20px var(--neon-cyan)',
           }}>
-            CYBER_DAILY
+            KANBAN_NINE
           </h1>
           <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--neon-cyan)', letterSpacing: '3px', marginTop: 6 }}>
             {mode === 'login' ? 'ACESSO AO SISTEMA' : 'REGISTRO DE OPERADOR'}

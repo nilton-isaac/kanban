@@ -2,57 +2,60 @@ import { normalizeThemeId } from '../themes'
 
 const THEMES_STANDUP = {
   cyberpunk: {
-    header: (date) => `⚡ CYBER_STANDUP // ${date.toUpperCase()}`,
-    done: '✅ [ONTEM - REALIZADO]',
-    today: '🔄 [HOJE - EM EXECUCAO]',
-    blocker: '🚫 [BLOQUEIOS ATIVOS]',
-    none: '- nada registrado -',
+    header: (date) => `CYBER STANDUP // ${date.toUpperCase()}`,
+    section: (title, count) => `[${title}] (${count})`,
+    noneInColumn: '- sem itens -',
+    noColumns: 'Nenhuma coluna cadastrada.',
     footer: '// END TRANSMISSION',
   },
   fallout: {
-    header: (date) => `☢ PIP-BOY STANDUP // ${date.toUpperCase()}`,
-    done: '>_ ONTEM - MISSOES CONCLUIDAS:',
-    today: '>_ HOJE - MISSOES ATIVAS:',
-    blocker: '>_ ALERTAS DE BLOQUEIO:',
-    none: '--- sem registros ---',
+    header: (date) => `PIP-BOY STANDUP // ${date.toUpperCase()}`,
+    section: (title, count) => `>_ ${title} [${count}]`,
+    noneInColumn: '--- sem registros ---',
+    noColumns: 'Nenhuma coluna cadastrada.',
     footer: '[ VAULT-TEC APPROVED ]',
   },
   darkest: {
-    header: (date) => `🗡 REGISTRO DA MASMORRA // ${date.toUpperCase()}`,
-    done: '◆ ONTEM - FEITOS CONCLUIDOS:',
-    today: '◆ HOJE - MISSOES EM CURSO:',
-    blocker: '◆ AFLICOES E BLOQUEIOS:',
-    none: 'Nenhum evento registrado.',
+    header: (date) => `REGISTRO DA MASMORRA // ${date.toUpperCase()}`,
+    section: (title, count) => `* ${title} (${count})`,
+    noneInColumn: 'Nenhum feito registrado.',
+    noColumns: 'Nenhuma coluna cadastrada.',
     footer: '- Arquivado no Tomo da Guilda -',
   },
   liquidglass: {
-    header: (date) => `💧 GLASSBOARD STANDUP // ${date.toUpperCase()}`,
-    done: '• YESTERDAY - COMPLETED',
-    today: '• TODAY - IN MOTION',
-    blocker: '• BLOCKERS',
-    none: 'Nothing to report.',
+    header: (date) => `GLASSBOARD STANDUP // ${date.toUpperCase()}`,
+    section: (title, count) => `- ${title} (${count})`,
+    noneInColumn: 'No items.',
+    noColumns: 'No columns yet.',
     footer: '// smooth close',
   },
+}
+
+const STATUS_BADGE = {
+  done: '[DONE]',
+  blocked: '[BLOCKED]',
+  progress: '[IN PROGRESS]',
+  review: '[REVIEW]',
+  todo: '[TODO]',
 }
 
 function getTheme(themeId) {
   return normalizeThemeId(themeId)
 }
 
+function orderColumns(columns) {
+  return [...columns].sort((a, b) => {
+    const pa = a.position ?? 0
+    const pb = b.position ?? 0
+    if (pa !== pb) return pa - pb
+    return String(a.index || a.title || '').localeCompare(String(b.index || b.title || ''))
+  })
+}
+
 export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
   const themeId = getTheme(theme)
   const t = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
-
-  const yesterdayCol = columns.find((c) => c.role === 'yesterday')
-  const todayCol = columns.find((c) => c.role === 'today')
-  const blockerCol = columns.find((c) => c.role === 'blocker')
-
-  const relevant = (col) =>
-    col ? cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup) : []
-
-  const yesterdayCards = relevant(yesterdayCol)
-  const todayCards = relevant(todayCol)
-  const blockerCards = relevant(blockerCol)
+  const orderedColumns = orderColumns(columns)
 
   const dateStr = new Date().toLocaleDateString('pt-BR', {
     weekday: 'long',
@@ -61,34 +64,31 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk') {
     year: 'numeric',
   })
 
-  const lines = []
-  lines.push(t.header(dateStr))
-  lines.push('')
+  const lines = [t.header(dateStr), '']
 
-  lines.push(t.done)
-  if (yesterdayCards.length > 0) {
-    yesterdayCards.forEach((c) => lines.push(`  • ${c.title}${c.status === 'done' ? ' ✓' : ''}`))
-  } else {
-    lines.push(`  ${t.none}`)
-  }
-  lines.push('')
-
-  lines.push(t.today)
-  if (todayCards.length > 0) {
-    todayCards.forEach((c) => {
-      const badge = c.status === 'done' ? ' ✓' : c.status === 'blocked' ? ' 🚫' : ''
-      lines.push(`  • ${c.title}${badge}`)
-    })
-  } else {
-    lines.push(`  ${t.none}`)
-  }
-  lines.push('')
-
-  if (blockerCards.length > 0) {
-    lines.push(t.blocker)
-    blockerCards.forEach((c) => lines.push(`  • ${c.title}`))
+  if (orderedColumns.length === 0) {
+    lines.push(t.noColumns)
     lines.push('')
+    lines.push(t.footer)
+    return lines.join('\n')
   }
+
+  orderedColumns.forEach((col) => {
+    const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
+    const title = col.title || `COLUNA ${col.index || ''}`.trim()
+    lines.push(t.section(title, colCards.length))
+
+    if (colCards.length === 0) {
+      lines.push(`  ${t.noneInColumn}`)
+    } else {
+      colCards.forEach((card) => {
+        const badge = STATUS_BADGE[card.status] ? ` ${STATUS_BADGE[card.status]}` : ''
+        lines.push(`  - ${card.title}${badge}`)
+      })
+    }
+
+    lines.push('')
+  })
 
   lines.push(t.footer)
   return lines.join('\n')
@@ -104,10 +104,10 @@ export function generateWeeklySummary(logs, theme = 'cyberpunk') {
   const last = new Date(logs[logs.length - 1].log_date).toLocaleDateString('pt-BR')
 
   const headers = {
-    cyberpunk: `📊 RESUMO SEMANAL // ${first} -> ${last}`,
-    fallout: `☢ RELATORIO SEMANAL VAULT-TEC // ${first} -> ${last}`,
-    darkest: `🗡 CRONICA DA SEMANA // ${first} -> ${last}`,
-    liquidglass: `💧 WEEKLY FLOW // ${first} -> ${last}`,
+    cyberpunk: `RESUMO SEMANAL // ${first} -> ${last}`,
+    fallout: `RELATORIO SEMANAL VAULT-TEC // ${first} -> ${last}`,
+    darkest: `CRONICA DA SEMANA // ${first} -> ${last}`,
+    liquidglass: `WEEKLY FLOW // ${first} -> ${last}`,
   }
 
   const lines = [headers[themeId] || headers.cyberpunk, '']

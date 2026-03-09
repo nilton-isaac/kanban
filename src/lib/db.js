@@ -25,8 +25,12 @@ export async function upsertColumn(col, userId) {
   if (error) throw error
 }
 
-export async function deleteColumn(colId) {
-  const { error } = await supabase.from('kanban_columns').delete().eq('id', colId)
+export async function deleteColumn(colId, userId) {
+  const { error } = await supabase
+    .from('kanban_columns')
+    .delete()
+    .eq('id', colId)
+    .eq('user_id', userId)
   if (error) throw error
 }
 
@@ -74,8 +78,12 @@ export async function upsertCard(card, userId) {
   if (error) throw error
 }
 
-export async function deleteCard(cardId) {
-  const { error } = await supabase.from('kanban_cards').delete().eq('id', cardId)
+export async function deleteCard(cardId, userId) {
+  const { error } = await supabase
+    .from('kanban_cards')
+    .delete()
+    .eq('id', cardId)
+    .eq('user_id', userId)
   if (error) throw error
 }
 

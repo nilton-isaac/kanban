@@ -38,15 +38,15 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
 
       {/* ── Left: Title ── */}
       <div style={{ position: 'absolute', bottom: 12, left: 24, zIndex: 10 }}>
-        <h1 className="glitch-wrapper" data-text="CYBER_DAILY" style={{
+        <h1 className="glitch-wrapper" data-text="KANBAN_NINE" style={{
           fontFamily: 'var(--font-heading)', fontWeight: 900, color: '#fff',
           fontSize: 'clamp(20px, 3.5vw, 36px)', letterSpacing: '4px',
           textShadow: '0 0 20px var(--neon-cyan)',
         }}>
-          CYBER_DAILY
+          KANBAN_NINE
         </h1>
         <p style={{ marginTop: 2, fontSize: '10px', letterSpacing: '2px', fontFamily: 'var(--font-body)', color: 'var(--neon-cyan)' }}>
-          {t?.icon} {t?.label} // KANBAN v2.1
+          {t?.icon} {t?.label} // KANBAN NINE v2.1
         </p>
       </div>
 
@@ -140,7 +140,7 @@ function hdrBtn(color) {
   return {
     padding: '5px 10px', background: 'rgba(0,0,0,0.5)',
     border: `1px solid ${color}55`,
-    color, fontFamily: "'Orbitron', sans-serif", fontSize: '10px',
+    color, fontFamily: 'var(--font-heading)', fontSize: '10px',
     letterSpacing: '0.5px', cursor: 'pointer', transition: 'all 0.2s',
     whiteSpace: 'nowrap',
   }

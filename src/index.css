@@ -709,4 +709,44 @@ body[data-theme="liquidglass"] select option {
   color: #f2f8ff;
 }
 
+/* ===============================================================
+   Cross-theme legibility guards
+   =============================================================== */
+
+body[data-theme="fallout"],
+body[data-theme="darkest"],
+body[data-theme="liquidglass"] {
+  line-height: 1.45;
+}
+
+body[data-theme="fallout"] .cyber-card,
+body[data-theme="fallout"] .kanban-column,
+body[data-theme="fallout"] .cyber-input,
+body[data-theme="fallout"] .cyber-btn {
+  font-size: 14px;
+}
+
+body[data-theme="darkest"] .cyber-card,
+body[data-theme="darkest"] .kanban-column,
+body[data-theme="darkest"] .cyber-input,
+body[data-theme="darkest"] .cyber-btn {
+  color: #e8dcc5 !important;
+}
+body[data-theme="darkest"] .cyber-input::placeholder {
+  color: rgba(232, 220, 197, 0.55) !important;
+}
+
+body[data-theme="liquidglass"] .cyber-card,
+body[data-theme="liquidglass"] .kanban-column,
+body[data-theme="liquidglass"] .cyber-input,
+body[data-theme="liquidglass"] .cyber-btn,
+body[data-theme="liquidglass"] p,
+body[data-theme="liquidglass"] span,
+body[data-theme="liquidglass"] label {
+  color: rgba(255, 255, 255, 0.94) !important;
+}
+body[data-theme="liquidglass"] .cyber-input::placeholder {
+  color: rgba(255, 255, 255, 0.62) !important;
+}
+
 
