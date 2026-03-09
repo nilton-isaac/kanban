@@ -111,6 +111,27 @@ export const THEMES = {
       '--font-body': "'Rajdhani', sans-serif",
     },
   },
+
+  nier: {
+    id: 'nier',
+    label: 'NIER',
+    icon: 'N',
+    vars: {
+      '--neon-cyan': '#2b2b2b',
+      '--neon-pink': '#5c5c5c',
+      '--neon-yellow': '#70664f',
+      '--neon-green': '#4a5f4a',
+      '--neon-orange': '#8a6b50',
+      '--neon-purple': '#8c8c8c',
+      '--bg-dark': '#e8e4d9',
+      '--panel-bg': 'rgba(220,216,204,0.9)',
+      '--grid-color': 'rgba(43,43,43,0.05)',
+      '--scanline': 'rgba(0,0,0,0.06)',
+      '--col-accent': '#2b2b2b',
+      '--font-heading': "'Rajdhani', 'Noto Sans JP', sans-serif",
+      '--font-body': "'Rajdhani', 'Noto Sans JP', sans-serif",
+    },
+  },
 }
 
 export function applyTheme(themeId) {

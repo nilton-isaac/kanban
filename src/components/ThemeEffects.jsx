@@ -20,25 +20,37 @@ export default function ThemeEffects() {
     []
   )
 
-  if (theme !== 'frostpunk') return null
+  if (theme === 'frostpunk') {
+    return (
+      <div className="frost-snow" aria-hidden="true">
+        {flakes.map(flake => (
+          <span
+            key={flake.id}
+            className="frost-snowflake"
+            style={{
+              left: `${flake.left}%`,
+              width: `${flake.size}px`,
+              height: `${flake.size}px`,
+              opacity: flake.opacity,
+              animationDuration: `${flake.duration}s`,
+              animationDelay: `${flake.delay}s`,
+              '--drift-x': `${flake.drift}px`,
+            }}
+          />
+        ))}
+      </div>
+    )
+  }
 
-  return (
-    <div className="frost-snow" aria-hidden="true">
-      {flakes.map(flake => (
-        <span
-          key={flake.id}
-          className="frost-snowflake"
-          style={{
-            left: `${flake.left}%`,
-            width: `${flake.size}px`,
-            height: `${flake.size}px`,
-            opacity: flake.opacity,
-            animationDuration: `${flake.duration}s`,
-            animationDelay: `${flake.delay}s`,
-            '--drift-x': `${flake.drift}px`,
-          }}
-        />
-      ))}
-    </div>
-  )
+  if (theme === 'nier') {
+    return (
+      <div className="nier-overlay" aria-hidden="true">
+        <div className="nier-deco-line nier-deco-top" />
+        <div className="nier-deco-line nier-deco-bottom" />
+        <div className="nier-sweep-line" />
+      </div>
+    )
+  }
+
+  return null
 }

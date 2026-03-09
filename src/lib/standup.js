@@ -51,6 +51,13 @@ const THEMES_STANDUP = {
     noColumns: 'No columns yet.',
     footer: '// smooth close',
   },
+  nier: {
+    header: (date) => `YORHA MISSION LOG // ${date.toUpperCase()}`,
+    section: (title, count) => `> ${title} [${count}]`,
+    noneInColumn: 'NO DATA.',
+    noColumns: 'NO COLUMN DATA.',
+    footer: '// END OF TRANSMISSION',
+  },
 }
 
 const STATUS_BADGE = {
@@ -304,6 +311,7 @@ export function generateWeeklySummary(logs, theme = 'cyberpunk') {
     fallout: `RELATORIO SEMANAL VAULT-TEC // ${first} -> ${last}`,
     darkest: `CRONICA DA SEMANA // ${first} -> ${last}`,
     liquidglass: `WEEKLY FLOW // ${first} -> ${last}`,
+    nier: `YORHA WEEKLY LOG // ${first} -> ${last}`,
   }
 
   const lines = [headers[themeId] || headers.cyberpunk, '']
