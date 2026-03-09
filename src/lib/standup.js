@@ -1,5 +1,7 @@
 import { normalizeThemeId } from '../themes'
 
+const STANDUP_DEBUG = true
+
 export const SUMMARY_CONFIG = {
   columnOrder: 'position', // position | alphabetical
   includeEmptyColumns: true,
@@ -285,9 +287,25 @@ export function renderStandupTemplate(template, context) {
 export function generateStandupMessage(columns, cards, theme = 'cyberpunk', options = {}) {
   const context = getStandupTemplateContext(columns, cards, theme, options)
   const primary = renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
-  if (primary && primary.trim() && templateHasVisibleCards(primary, cards)) return primary
+  const hasVisible = templateHasVisibleCards(primary, cards)
+  if (primary && primary.trim() && hasVisible) {
+    debugStandup('primary', { columns, cards, theme, options, context, primary, hasVisible, fallbackUsed: false })
+    return primary
+  }
   // Guardrail: never return empty standup due to stale/mismatched template tokens.
-  return renderStandupTemplate(DEFAULT_DAILY_TEMPLATE, context)
+  const fallback = renderStandupTemplate(DEFAULT_DAILY_TEMPLATE, context)
+  debugStandup('fallback', {
+    columns,
+    cards,
+    theme,
+    options,
+    context,
+    primary,
+    hasVisible,
+    fallback,
+    fallbackUsed: true,
+  })
+  return fallback
 }
 
 function isExcludedFromStandup(card) {
@@ -303,6 +321,44 @@ function templateHasVisibleCards(renderedText, cards) {
   if (visibleCards.length === 0) return true
   const text = String(renderedText || '').toLowerCase()
   return visibleCards.some((c) => text.includes(String(c.title || '').toLowerCase()))
+}
+
+function debugStandup(stage, payload) {
+  if (!STANDUP_DEBUG || typeof window === 'undefined') return
+
+  try {
+    const cols = (payload.columns || []).map((c, idx) => ({
+      idx,
+      id: c.id,
+      title: c.title,
+      role: c.role,
+      position: c.position,
+      index: c.index,
+    }))
+    const cds = (payload.cards || []).map((c, idx) => ({
+      idx,
+      id: c.id,
+      title: c.title,
+      columnId: c.columnId,
+      status: c.status,
+      excluded_from_standup: c.excluded_from_standup,
+      excluded_normalized: isExcludedFromStandup(c),
+    }))
+
+    console.groupCollapsed(`[standup:${stage}] cols=${cols.length} cards=${cds.length} theme=${payload.theme}`)
+    console.log('template', payload.options?.template || DEFAULT_DAILY_TEMPLATE)
+    console.log('customDateText', payload.options?.customDateText)
+    console.table(cols)
+    console.table(cds)
+    console.log('context.columns (rendered block)', payload.context?.columns)
+    console.log('primary result', payload.primary)
+    console.log('hasVisible', payload.hasVisible)
+    console.log('fallbackUsed', payload.fallbackUsed)
+    if (payload.fallbackUsed) console.log('fallback result', payload.fallback)
+    console.groupEnd()
+  } catch (err) {
+    console.error('[standup:debug-error]', err)
+  }
 }
 
 export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {
