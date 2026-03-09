@@ -116,6 +116,14 @@ function normalizeDateText(customDateText) {
   })
 }
 
+function normalizeKey(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
 export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', options = {}) {
   const themeId = getTheme(theme)
   const themePack = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
@@ -128,22 +136,133 @@ export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', o
     header: themePack.header(dateText),
     footer: themePack.footer,
     columns: columnsBlock,
+    cards_count: cards.length,
+    columns_count: columns.length,
   }
 
-  // Token by specific column: {{col:<columnId>}}
+  const columnBlocks = []
+
+  // Token by specific column: {{col:<columnId>}} or {{col:<columnTitle>}} or {{<columnTitle>}}
   columns.forEach((col) => {
     const block = buildColumnsBlock([col], cards, themePack, config)
+    const colCards = cards.filter((c) => c.columnId === col.id && !c.excluded_from_standup)
+    const title = String(col.title || '').trim()
+    const normalizedTitle = normalizeKey(title)
+
     context[`col:${col.id}`] = block
+    context[`col:${title}`] = block
+    context[`col:${normalizedTitle}`] = block
+    context[title] = block
+    context[normalizedTitle] = block
+
+    columnBlocks.push({
+      id: col.id,
+      title,
+      count: colCards.length,
+      cards: colCards.map((c) => ({
+        id: c.id,
+        title: c.title,
+        status: c.status,
+        priority: c.priority,
+      })),
+      block,
+    })
   })
+
+  context.__runtime = {
+    columns: columnBlocks,
+    cards: cards.map((c) => ({
+      id: c.id,
+      title: c.title,
+      status: c.status,
+      priority: c.priority,
+      columnId: c.columnId,
+    })),
+  }
 
   return context
 }
 
+function runInlineExpression(expression, context) {
+  try {
+    const scope = {
+      date: context.date,
+      header: context.header,
+      footer: context.footer,
+      columns: context.columns,
+      cards_count: context.cards_count,
+      columns_count: context.columns_count,
+      cols: context.__runtime?.columns || [],
+      cards: context.__runtime?.cards || [],
+      col: (idOrName) => {
+        const key = String(idOrName || '')
+        return (
+          context[`col:${key}`] ||
+          context[`col:${normalizeKey(key)}`] ||
+          context[key] ||
+          context[normalizeKey(key)] ||
+          ''
+        )
+      },
+    }
+
+    const fn = new Function('scope', `with (scope) { return (${expression}); }`)
+    const result = fn(scope)
+    return result == null ? '' : String(result)
+  } catch {
+    return '[script-error]'
+  }
+}
+
+function runBlockScript(code, context) {
+  try {
+    const scope = {
+      date: context.date,
+      header: context.header,
+      footer: context.footer,
+      columns: context.columns,
+      cards_count: context.cards_count,
+      columns_count: context.columns_count,
+      cols: context.__runtime?.columns || [],
+      cards: context.__runtime?.cards || [],
+      col: (idOrName) => {
+        const key = String(idOrName || '')
+        return (
+          context[`col:${key}`] ||
+          context[`col:${normalizeKey(key)}`] ||
+          context[key] ||
+          context[normalizeKey(key)] ||
+          ''
+        )
+      },
+    }
+
+    const fn = new Function('scope', `with (scope) { ${code} }`)
+    const result = fn(scope)
+    return result == null ? '' : String(result)
+  } catch {
+    return '[script-error]'
+  }
+}
+
 export function renderStandupTemplate(template, context) {
   const input = template && template.trim() ? template : DEFAULT_DAILY_TEMPLATE
-  return input.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_full, rawToken) => {
+  const withScriptBlocks = input.replace(/\{\{#script\}\}([\s\S]*?)\{\{\/script\}\}/g, (_full, scriptCode) => {
+    return runBlockScript(scriptCode, context)
+  })
+
+  return withScriptBlocks.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_full, rawToken) => {
     const token = String(rawToken).trim()
-    return context[token] ?? ''
+    if (token.startsWith('js:')) {
+      return runInlineExpression(token.slice(3).trim(), context)
+    }
+
+    return (
+      context[token] ??
+      context[token.toLowerCase()] ??
+      context[normalizeKey(token)] ??
+      ''
+    )
   }).trim()
 }
 

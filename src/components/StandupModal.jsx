@@ -188,7 +188,8 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {tokenChip('header', '{header}', insertToken)}
                   {tokenChip('columns', '{columns}', insertToken)}
                   {tokenChip('footer', '{footer}', insertToken)}
-                  {columns.map((c) => tokenChip(`col:${c.id}`, `{${c.title}}`, insertToken))}
+                  {tokenChip('js: cols.length', '{js: cols.length}', insertToken)}
+                  {columns.map((c) => tokenChip(`col:${c.title}`, `{${c.title}}`, insertToken))}
                 </div>
                 <button
                   onClick={() => setIsEditingTemplate((v) => !v)}
@@ -218,6 +219,10 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
                     Template (use os chips para inserir variaveis no texto)
                   </label>
+                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#7f7f7f', marginBottom: 6 }}>
+                    Scripts: {'{{js: expressao}}'} ou {'{{#script}} return ... {{/script}}'}.
+                    Variaveis de script: cols, cards, date, header, footer, columns, col('NOME').
+                  </p>
                   <textarea
                     ref={textareaRef}
                     className="cyber-input"
