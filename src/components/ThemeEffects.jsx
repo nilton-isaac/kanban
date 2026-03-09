@@ -41,10 +41,11 @@ export default function ThemeEffects() {
       Array.from({ length: SPARK_COUNT }, (_, i) => ({
         id: i,
         left: Math.random() * 100,
-        size: 8 + Math.random() * 18,
-        duration: 3.8 + Math.random() * 4.5,
+        size: 2 + Math.random() * 5,
+        duration: 6 + Math.random() * 7,
         delay: Math.random() * 5,
-        opacity: 0.16 + Math.random() * 0.3,
+        drift: -22 + Math.random() * 44,
+        opacity: 0.2 + Math.random() * 0.4,
       })),
     []
   )
@@ -108,8 +109,7 @@ export default function ThemeEffects() {
   if (theme === 'royale') {
     return (
       <div className="royale-overlay" aria-hidden="true">
-        <div className="royale-light-ray royale-light-ray-left" />
-        <div className="royale-light-ray royale-light-ray-right" />
+        <div className="royale-vignette" />
         <div className="royale-sparks">
           {sparks.map(spark => (
             <span
@@ -122,6 +122,7 @@ export default function ThemeEffects() {
                 opacity: spark.opacity,
                 animationDuration: `${spark.duration}s`,
                 animationDelay: `${spark.delay}s`,
+                '--drift-x': `${spark.drift}px`,
               }}
             />
           ))}

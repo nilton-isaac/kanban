@@ -1051,10 +1051,11 @@ body[data-theme="nier"] select option {
 
 body[data-theme="darksouls"] {
   background:
-    radial-gradient(circle at 50% 110%, rgba(201, 169, 89, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.42) 0%, rgba(0, 0, 0, 0.88) 70%),
-    linear-gradient(180deg, #0a0a0a 0%, #050505 100%) !important;
-  color: #d6d2ca;
+    radial-gradient(circle at 50% 100%, rgba(201, 169, 89, 0.12) 0%, transparent 38%),
+    radial-gradient(circle at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.82) 100%),
+    url("https://image.qwenlm.ai/public_source/f76c5364-6207-4269-93cf-7a811a8b317a/102fc446f-404f-4123-a71c-4b43557c5283.png") center / cover fixed no-repeat,
+    #050505 !important;
+  color: #ccc7bd;
 }
 
 body[data-theme="darksouls"]::before {
@@ -1064,8 +1065,8 @@ body[data-theme="darksouls"]::before {
   pointer-events: none;
   z-index: 9996;
   background:
-    radial-gradient(circle at 50% 92%, rgba(201,169,89,0.12) 0%, transparent 36%),
-    radial-gradient(circle at 12% 18%, rgba(255,255,255,0.02), transparent 20%);
+    radial-gradient(circle at 50% 94%, rgba(201,169,89,0.16) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.42));
 }
 
 body[data-theme="darksouls"]::after {
@@ -1078,51 +1079,77 @@ body[data-theme="darksouls"]::after {
 body[data-theme="darksouls"] .cyber-card {
   clip-path: none !important;
   border-radius: 0 !important;
-  border: 1px solid rgba(95, 82, 56, 0.75) !important;
+  border: 1px solid #3d3d3d !important;
   border-left: 3px solid #c9a959 !important;
-  background: rgba(28, 28, 28, 0.92) !important;
+  background: rgba(30, 30, 30, 0.9) !important;
   box-shadow:
     0 10px 22px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 body[data-theme="darksouls"] .cyber-card:hover {
-  transform: translateX(4px) !important;
-  border-color: rgba(201, 169, 89, 0.72) !important;
+  transform: translateX(5px) !important;
+  border-color: #c9a959 !important;
   box-shadow:
     0 10px 24px rgba(0, 0, 0, 0.62),
     0 0 14px rgba(201, 169, 89, 0.18) !important;
 }
 
 body[data-theme="darksouls"] .kanban-column {
-  background: rgba(18, 18, 18, 0.86) !important;
-  border: 1px solid rgba(61, 61, 61, 0.92) !important;
-  border-top: 3px solid #8a7335 !important;
+  background: rgba(20, 20, 20, 0.86) !important;
+  border: 1px solid #3d3d3d !important;
+  border-top: 3px solid #c9a959 !important;
   box-shadow: 0 0 28px rgba(0, 0, 0, 0.62) !important;
+  position: relative;
+}
+
+body[data-theme="darksouls"] .kanban-column::before,
+body[data-theme="darksouls"] .kanban-column::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #c9a959;
+}
+
+body[data-theme="darksouls"] .kanban-column::before {
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+body[data-theme="darksouls"] .kanban-column::after {
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
 }
 
 body[data-theme="darksouls"] .cyber-btn {
   clip-path: none !important;
   border-radius: 0 !important;
-  border-color: rgba(138, 115, 53, 0.85) !important;
-  color: #d6b86f !important;
-  background: linear-gradient(180deg, rgba(58, 58, 58, 0.78) 0%, rgba(26, 26, 26, 0.96) 100%) !important;
+  border-color: #8a7335 !important;
+  color: #c9a959 !important;
+  background: linear-gradient(180deg, rgba(60, 60, 60, 0.8) 0%, rgba(30, 30, 30, 0.92) 100%) !important;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 body[data-theme="darksouls"] .cyber-btn:hover {
-  color: #f0e4c5 !important;
-  background: linear-gradient(180deg, rgba(76, 76, 76, 0.84) 0%, rgba(34, 34, 34, 0.98) 100%) !important;
-  box-shadow: 0 0 14px rgba(201, 169, 89, 0.24) !important;
+  color: #fff !important;
+  border-color: #c9a959 !important;
+  background: linear-gradient(180deg, rgba(80, 80, 80, 0.86) 0%, rgba(40, 40, 40, 1) 100%) !important;
+  box-shadow: 0 0 15px rgba(201, 169, 89, 0.3) !important;
 }
 
 body[data-theme="darksouls"] .cyber-input {
   border-radius: 0 !important;
-  border: 1px solid rgba(92, 74, 43, 0.8) !important;
-  background: rgba(8, 8, 8, 0.72) !important;
-  color: #e3d4b3 !important;
+  border: 1px solid #3d3d3d !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: #fff !important;
 }
 body[data-theme="darksouls"] .cyber-input:focus {
   border-color: #c9a959 !important;
-  box-shadow: 0 0 10px rgba(201, 169, 89, 0.2) !important;
+  box-shadow: 0 0 10px rgba(201, 169, 89, 0.3) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
 }
 body[data-theme="darksouls"] .cyber-input::placeholder {
   color: rgba(201, 169, 89, 0.5) !important;
@@ -1140,8 +1167,8 @@ body[data-theme="darksouls"] [class*=" priority-"] {
 }
 
 body[data-theme="darksouls"] .modal-backdrop {
-  background: rgba(0, 0, 0, 0.84) !important;
-  backdrop-filter: blur(6px) !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
 body[data-theme="darksouls"] ::-webkit-scrollbar-track { background: #070707 !important; }
@@ -1168,7 +1195,7 @@ body[data-theme="darksouls"] select option {
   width: 700px;
   height: 700px;
   transform: translateX(-50%);
-  background: radial-gradient(circle, rgba(201,169,89,0.2) 0%, rgba(201,169,89,0.08) 35%, transparent 70%);
+  background: radial-gradient(circle, rgba(201,169,89,0.15) 0%, transparent 70%);
   animation: darksoulsBonfirePulse 4.2s ease-in-out infinite;
 }
 
@@ -1219,10 +1246,11 @@ body[data-theme="darksouls"] select option {
 
 body[data-theme="royale"] {
   background:
-    radial-gradient(50rem 26rem at 50% -10%, rgba(79, 195, 247, 0.25) 0%, transparent 65%),
-    radial-gradient(45rem 26rem at 50% 112%, rgba(255, 209, 102, 0.18) 0%, transparent 70%),
-    linear-gradient(180deg, #0e1e3a 0%, #0b1830 45%, #071323 100%) !important;
-  color: #e9f3ff;
+    radial-gradient(ellipse at 50% 0%, rgba(30, 30, 35, 0.78) 0%, transparent 60%),
+    radial-gradient(ellipse at 0% 50%, rgba(20, 20, 25, 0.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 50%, rgba(20, 20, 25, 0.45) 0%, transparent 50%),
+    #0a0a0c !important;
+  color: #e8e6e3;
 }
 
 body[data-theme="royale"]::before {
@@ -1232,68 +1260,104 @@ body[data-theme="royale"]::before {
   pointer-events: none;
   z-index: 9996;
   background:
-    radial-gradient(circle at 16% 10%, rgba(255,255,255,0.09), transparent 23%),
-    radial-gradient(circle at 82% 14%, rgba(255,255,255,0.08), transparent 24%),
-    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.32) 100%);
+    radial-gradient(ellipse at center, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.58) 100%);
 }
 
 body[data-theme="royale"]::after {
   background:
-    radial-gradient(ellipse at center, transparent 42%, rgba(3, 7, 16, 0.75) 100%) !important;
+    radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.6) 100%) !important;
   background-size: 100% 100% !important;
 }
 
 body[data-theme="royale"] .cyber-card {
   clip-path: none !important;
-  border-radius: 12px !important;
-  border: 1px solid rgba(79, 195, 247, 0.48) !important;
-  border-top: 2px solid rgba(255, 209, 102, 0.75) !important;
-  background: linear-gradient(180deg, rgba(32, 58, 100, 0.86) 0%, rgba(19, 37, 70, 0.9) 100%) !important;
+  border-radius: 0 !important;
+  border: 2px solid #2a2a2f !important;
+  border-top: 2px solid #e5c943 !important;
+  background: linear-gradient(180deg, #1a1a1e 0%, #0f0f12 100%) !important;
   box-shadow:
-    0 12px 24px rgba(0, 0, 0, 0.4),
-    0 0 10px rgba(79, 195, 247, 0.12) !important;
+    0 5px 25px rgba(0,0,0,0.6),
+    0 0 6px rgba(229, 201, 67, 0.12) !important;
+  position: relative;
+  overflow: visible;
 }
+
+body[data-theme="royale"] .cyber-card::before,
+body[data-theme="royale"] .cyber-card::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e5c943;
+  opacity: 0.55;
+  transition: all 0.25s ease;
+}
+
+body[data-theme="royale"] .cyber-card::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+body[data-theme="royale"] .cyber-card::after {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+
 body[data-theme="royale"] .cyber-card:hover {
-  border-color: rgba(255, 209, 102, 0.75) !important;
+  border-color: #e5c943 !important;
+  transform: translateY(-6px) scale(1.02) !important;
   box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.5),
-    0 0 16px rgba(255, 209, 102, 0.24) !important;
+    0 12px 30px rgba(229, 201, 67, 0.2),
+    0 0 20px rgba(229, 201, 67, 0.3) !important;
+}
+
+body[data-theme="royale"] .cyber-card:hover::before,
+body[data-theme="royale"] .cyber-card:hover::after {
+  opacity: 1;
+  border-color: #fff4c9;
 }
 
 body[data-theme="royale"] .kanban-column {
-  background: linear-gradient(180deg, rgba(22, 40, 74, 0.86) 0%, rgba(14, 29, 55, 0.92) 100%) !important;
-  border: 1px solid rgba(79, 195, 247, 0.3) !important;
-  border-top: 3px solid #ffd166 !important;
+  background: rgba(0,0,0,0.35) !important;
+  border: 1px dashed #2a2a2f !important;
+  border-top: 2px solid #e5c943 !important;
   box-shadow:
-    0 12px 25px rgba(0, 0, 0, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+    inset 0 0 0 1px rgba(255,255,255,0.03),
+    0 4px 20px rgba(0,0,0,0.5) !important;
 }
 
 body[data-theme="royale"] .cyber-btn {
   clip-path: none !important;
-  border-radius: 999px !important;
-  border: 1px solid rgba(255, 209, 102, 0.72) !important;
-  color: #ffe3a3 !important;
-  background: linear-gradient(180deg, rgba(56, 78, 133, 0.9) 0%, rgba(38, 56, 99, 0.94) 100%) !important;
+  border-radius: 0 !important;
+  border: 2px solid #2a2a2f !important;
+  color: #a6a6a6 !important;
+  background: linear-gradient(180deg, #1a1a1e 0%, #0f0f12 100%) !important;
+  font-family: 'Cinzel', serif !important;
+  letter-spacing: 2px !important;
 }
 body[data-theme="royale"] .cyber-btn:hover {
-  color: #fff8e8 !important;
-  background: linear-gradient(180deg, rgba(83, 109, 176, 0.96) 0%, rgba(57, 81, 147, 0.98) 100%) !important;
-  box-shadow: 0 0 16px rgba(255, 209, 102, 0.28) !important;
+  border-color: #76c905 !important;
+  color: #76c905 !important;
+  box-shadow: 0 0 20px rgba(118, 201, 5, 0.4) !important;
 }
 
 body[data-theme="royale"] .cyber-input {
-  border-radius: 10px !important;
-  border: 1px solid rgba(79, 195, 247, 0.48) !important;
-  background: rgba(9, 22, 45, 0.75) !important;
-  color: #ecf6ff !important;
+  border-radius: 0 !important;
+  border: 1px solid #2a2a2f !important;
+  background: rgba(0,0,0,0.55) !important;
+  color: #e8e6e3 !important;
 }
 body[data-theme="royale"] .cyber-input:focus {
-  border-color: #ffd166 !important;
-  box-shadow: 0 0 12px rgba(255, 209, 102, 0.24) !important;
+  border-color: #76c905 !important;
+  box-shadow: 0 0 15px rgba(118, 201, 5, 0.45) !important;
+  background: rgba(0,0,0,0.8) !important;
 }
 body[data-theme="royale"] .cyber-input::placeholder {
-  color: rgba(236, 246, 255, 0.56) !important;
+  color: rgba(232,230,227,0.42) !important;
 }
 
 body[data-theme="royale"] [class^="tag-"],
@@ -1302,23 +1366,23 @@ body[data-theme="royale"] [class^="status-"],
 body[data-theme="royale"] [class*=" status-"],
 body[data-theme="royale"] [class^="priority-"],
 body[data-theme="royale"] [class*=" priority-"] {
-  border-color: rgba(79, 195, 247, 0.52) !important;
-  background: rgba(79, 195, 247, 0.16) !important;
-  color: #e6f4ff !important;
+  border-color: rgba(229, 201, 67, 0.35) !important;
+  background: rgba(229, 201, 67, 0.12) !important;
+  color: #e8e6e3 !important;
 }
 
 body[data-theme="royale"] .modal-backdrop {
-  background: rgba(6, 13, 28, 0.8) !important;
-  backdrop-filter: blur(7px) !important;
+  background: rgba(0,0,0,0.9) !important;
+  backdrop-filter: blur(8px) !important;
 }
 
-body[data-theme="royale"] ::-webkit-scrollbar-track { background: #081425 !important; }
-body[data-theme="royale"] ::-webkit-scrollbar-thumb { background: #2b5d97 !important; }
-body[data-theme="royale"] ::-webkit-scrollbar-thumb:hover { background: #4f83c2 !important; }
+body[data-theme="royale"] ::-webkit-scrollbar-track { background: #050507 !important; border: 1px solid #2a2a2f !important; }
+body[data-theme="royale"] ::-webkit-scrollbar-thumb { background: #2a2a2f !important; border: 1px solid #000 !important; }
+body[data-theme="royale"] ::-webkit-scrollbar-thumb:hover { background: #e5c943 !important; }
 
 body[data-theme="royale"] select option {
-  background: #102443;
-  color: #eff7ff;
+  background: #111113;
+  color: #e8e6e3;
 }
 
 .royale-overlay {
@@ -1329,26 +1393,10 @@ body[data-theme="royale"] select option {
   overflow: hidden;
 }
 
-.royale-light-ray {
+.royale-vignette {
   position: absolute;
-  top: -15%;
-  width: 38%;
-  height: 130%;
-  background: linear-gradient(180deg, rgba(255, 209, 102, 0.18) 0%, transparent 70%);
-  filter: blur(14px);
-  transform-origin: top;
-  animation: royaleRayShift 6s ease-in-out infinite;
-}
-
-.royale-light-ray-left {
-  left: -8%;
-  transform: rotate(-14deg);
-}
-
-.royale-light-ray-right {
-  right: -8%;
-  transform: rotate(14deg);
-  animation-delay: -2s;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.58) 100%);
 }
 
 .royale-sparks {
@@ -1358,30 +1406,26 @@ body[data-theme="royale"] select option {
 
 .royale-spark {
   position: absolute;
-  top: -8%;
+  bottom: -8%;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 243, 215, 0.95) 0%, rgba(255, 209, 102, 0.55) 55%, transparent 72%);
-  filter: drop-shadow(0 0 8px rgba(255, 209, 102, 0.42));
+  background: radial-gradient(circle, rgba(229, 201, 67, 0.95) 0%, rgba(229, 201, 67, 0.55) 55%, transparent 80%);
+  box-shadow: 0 0 10px rgba(229, 201, 67, 0.45);
   animation-name: royaleSparkFall;
-  animation-timing-function: linear;
+  animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
 
 @keyframes royaleSparkFall {
   0% {
-    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
   }
   100% {
-    transform: translate3d(12px, 110vh, 0) rotate(220deg);
-  }
-}
-
-@keyframes royaleRayShift {
-  0%, 100% {
-    opacity: 0.34;
-  }
-  50% {
-    opacity: 0.56;
+    transform: translate3d(var(--drift-x), -110vh, 0) rotate(680deg);
+    opacity: 0;
   }
 }
 
@@ -1396,7 +1440,7 @@ body[data-theme="darksouls"] .cyber-btn,
 body[data-theme="darksouls"] p,
 body[data-theme="darksouls"] span,
 body[data-theme="darksouls"] label {
-  color: #d7d2c6 !important;
+  color: #ccc7bd !important;
 }
 
 body[data-theme="royale"] .cyber-card,
@@ -1406,7 +1450,13 @@ body[data-theme="royale"] .cyber-btn,
 body[data-theme="royale"] p,
 body[data-theme="royale"] span,
 body[data-theme="royale"] label {
-  color: #ecf6ff !important;
+  color: #e8e6e3 !important;
+}
+
+body[data-theme="darksouls"] header,
+body[data-theme="royale"] header {
+  background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.55) 100%) !important;
+  border-bottom: 2px solid #8a7335 !important;
 }
 
 
