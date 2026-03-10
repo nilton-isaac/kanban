@@ -21,6 +21,14 @@ function stripHtml(html) {
     .replace(/<[^>]+>/g, '')
 }
 
+function markdownToHtml(markdown) {
+  return escapeHtml(markdown)
+    .replace(/\*\*_([^*]+)_\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/_([^_]+)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />')
+}
+
 function tokenChip(token, label, onInsert) {
   return (
     <button
@@ -127,6 +135,8 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       preferences: { ...preferences, format: 'markdown' },
     })
   }, [columns, cards, theme, templateText, dateText, preferences])
+
+  const previewHtml = useMemo(() => markdownToHtml(dailyMessage), [dailyMessage])
 
   const weeklySummary = generateWeeklySummary(weeklyLogs, theme)
 
@@ -348,22 +358,21 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
               )}
 
-              <pre
+              <div
                 style={{
-                  margin: 0,
                   fontFamily: 'var(--font-body)',
                   fontSize: '13px',
                   lineHeight: '1.7',
-                  whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
                   color: '#e5e7eb',
                   background: 'rgba(0,0,0,0.4)',
                   padding: '16px',
                   border: '1px solid rgba(0,243,255,0.15)',
+                  whiteSpace: 'normal',
                 }}
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
               >
-                {dailyMessage}
-              </pre>
+              </div>
               <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
                 Standup travado em markdown. Colunas ficam em negrito. Estados ficam em negrito e italico.
               </p>
