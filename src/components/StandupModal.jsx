@@ -81,6 +81,25 @@ function toggleStyleButton(active, label, onClick) {
   )
 }
 
+function styleEditor({ title, color, onColorChange, bold, italic, onBoldToggle, onItalicToggle }) {
+  return (
+    <div className="cyber-card" style={{ padding: 10, border: '1px solid rgba(0,243,255,0.12)' }}>
+      <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>{title}</p>
+      <input
+        className="cyber-input"
+        value={color || ''}
+        onChange={onColorChange}
+        placeholder="#00f3ff"
+        style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
+      />
+      <div style={{ display: 'flex', gap: 8 }}>
+        {toggleStyleButton(!!bold, 'Negrito', onBoldToggle)}
+        {toggleStyleButton(!!italic, 'Italico', onItalicToggle)}
+      </div>
+    </div>
+  )
+}
+
 export default function StandupModal({ columns, cards, userId, onSaveLog, onClose }) {
   const { theme } = useTheme()
   const [tab, setTab] = useState('daily')
@@ -203,6 +222,19 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       columnAliases: {
         ...(prev.columnAliases || {}),
         [columnId]: value,
+      },
+    }))
+  }
+
+  const updateColumnStyle = (columnId, key, value) => {
+    setPreferences((prev) => ({
+      ...prev,
+      columnStyles: {
+        ...(prev.columnStyles || {}),
+        [columnId]: {
+          ...((prev.columnStyles || {})[columnId] || {}),
+          [key]: value,
+        },
       },
     }))
   }
@@ -359,27 +391,72 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-                  <div>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Task concluida</p>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                      {toggleStyleButton(!!preferences.taskLabelStyles?.done?.bold, 'Negrito', () => updateStyleToggle('taskLabelStyles', 'done', 'bold'))}
-                      {toggleStyleButton(!!preferences.taskLabelStyles?.done?.italic, 'Italico', () => updateStyleToggle('taskLabelStyles', 'done', 'italic'))}
-                    </div>
-                  </div>
-                  <div>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Task pendente</p>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                      {toggleStyleButton(!!preferences.taskLabelStyles?.pending?.bold, 'Negrito', () => updateStyleToggle('taskLabelStyles', 'pending', 'bold'))}
-                      {toggleStyleButton(!!preferences.taskLabelStyles?.pending?.italic, 'Italico', () => updateStyleToggle('taskLabelStyles', 'pending', 'italic'))}
-                    </div>
-                  </div>
-                  <div>
-                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Status concluido</p>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                      {toggleStyleButton(!!preferences.statusStyles?.done?.bold, 'Negrito', () => updateStyleToggle('statusStyles', 'done', 'bold'))}
-                      {toggleStyleButton(!!preferences.statusStyles?.done?.italic, 'Italico', () => updateStyleToggle('statusStyles', 'done', 'italic'))}
-                    </div>
-                  </div>
+                  {styleEditor({
+                    title: 'Cabecalho',
+                    color: preferences.elementStyles?.header?.color,
+                    onColorChange: (e) => updateNestedPreference('elementStyles', 'header', { ...(preferences.elementStyles?.header || {}), color: e.target.value }),
+                    bold: preferences.elementStyles?.header?.bold,
+                    italic: preferences.elementStyles?.header?.italic,
+                    onBoldToggle: () => updateStyleToggle('elementStyles', 'header', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('elementStyles', 'header', 'italic'),
+                  })}
+                  {styleEditor({
+                    title: 'Rodape',
+                    color: preferences.elementStyles?.footer?.color,
+                    onColorChange: (e) => updateNestedPreference('elementStyles', 'footer', { ...(preferences.elementStyles?.footer || {}), color: e.target.value }),
+                    bold: preferences.elementStyles?.footer?.bold,
+                    italic: preferences.elementStyles?.footer?.italic,
+                    onBoldToggle: () => updateStyleToggle('elementStyles', 'footer', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('elementStyles', 'footer', 'italic'),
+                  })}
+                  {styleEditor({
+                    title: 'Titulo do card',
+                    color: preferences.elementStyles?.cardTitle?.color,
+                    onColorChange: (e) => updateNestedPreference('elementStyles', 'cardTitle', { ...(preferences.elementStyles?.cardTitle || {}), color: e.target.value }),
+                    bold: preferences.elementStyles?.cardTitle?.bold,
+                    italic: preferences.elementStyles?.cardTitle?.italic,
+                    onBoldToggle: () => updateStyleToggle('elementStyles', 'cardTitle', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('elementStyles', 'cardTitle', 'italic'),
+                  })}
+                  {styleEditor({
+                    title: 'Secao da coluna',
+                    color: preferences.elementStyles?.section?.color,
+                    onColorChange: (e) => updateNestedPreference('elementStyles', 'section', { ...(preferences.elementStyles?.section || {}), color: e.target.value }),
+                    bold: preferences.elementStyles?.section?.bold,
+                    italic: preferences.elementStyles?.section?.italic,
+                    onBoldToggle: () => updateStyleToggle('elementStyles', 'section', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('elementStyles', 'section', 'italic'),
+                  })}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 12 }}>
+                  {styleEditor({
+                    title: 'Task concluida',
+                    color: preferences.colors.done,
+                    onColorChange: (e) => updateNestedPreference('colors', 'done', e.target.value),
+                    bold: preferences.taskLabelStyles?.done?.bold,
+                    italic: preferences.taskLabelStyles?.done?.italic,
+                    onBoldToggle: () => updateStyleToggle('taskLabelStyles', 'done', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('taskLabelStyles', 'done', 'italic'),
+                  })}
+                  {styleEditor({
+                    title: 'Task pendente',
+                    color: preferences.colors.pending || preferences.colors.todo,
+                    onColorChange: (e) => updateNestedPreference('colors', 'pending', e.target.value),
+                    bold: preferences.taskLabelStyles?.pending?.bold,
+                    italic: preferences.taskLabelStyles?.pending?.italic,
+                    onBoldToggle: () => updateStyleToggle('taskLabelStyles', 'pending', 'bold'),
+                    onItalicToggle: () => updateStyleToggle('taskLabelStyles', 'pending', 'italic'),
+                  })}
+                  {['done', 'progress', 'review', 'blocked', 'todo'].map((statusKey) => styleEditor({
+                    title: `Status ${statusKey}`,
+                    color: preferences.colors?.[statusKey],
+                    onColorChange: (e) => updateNestedPreference('colors', statusKey, e.target.value),
+                    bold: preferences.statusStyles?.[statusKey]?.bold,
+                    italic: preferences.statusStyles?.[statusKey]?.italic,
+                    onBoldToggle: () => updateStyleToggle('statusStyles', statusKey, 'bold'),
+                    onItalicToggle: () => updateStyleToggle('statusStyles', statusKey, 'italic'),
+                  }))}
                 </div>
               </div>
 
@@ -439,20 +516,31 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
 
                   <div style={{ marginBottom: 14 }}>
                     <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
-                      Alias das colunas no standup
+                      Alias e estilo das colunas no standup
                     </label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {columns.map((column) => (
-                        <label key={column.id} style={{ display: 'grid', gap: 6 }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#777' }}>{column.title}</span>
+                        <div key={column.id} className="cyber-card" style={{ padding: 10, border: '1px solid rgba(0,243,255,0.12)' }}>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#777', display: 'block', marginBottom: 6 }}>{column.title}</span>
                           <input
                             className="cyber-input"
                             value={preferences.columnAliases?.[column.id] || ''}
                             onChange={(e) => updateColumnAlias(column.id, e.target.value)}
                             placeholder="Nome alternativo"
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
                           />
-                        </label>
+                          <input
+                            className="cyber-input"
+                            value={preferences.columnStyles?.[column.id]?.color || ''}
+                            onChange={(e) => updateColumnStyle(column.id, 'color', e.target.value)}
+                            placeholder="Cor da coluna (#00f3ff)"
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
+                          />
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            {toggleStyleButton(!!preferences.columnStyles?.[column.id]?.bold, 'Negrito', () => updateColumnStyle(column.id, 'bold', !preferences.columnStyles?.[column.id]?.bold))}
+                            {toggleStyleButton(!!preferences.columnStyles?.[column.id]?.italic, 'Italico', () => updateColumnStyle(column.id, 'italic', !preferences.columnStyles?.[column.id]?.italic))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
