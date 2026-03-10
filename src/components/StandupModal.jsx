@@ -8,6 +8,22 @@ import {
 import { fetchWeeklyLogs, fetchProfile, updateProfile } from '../lib/db'
 import { useTheme } from '../contexts/ThemeContext'
 
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function markdownToHtml(markdown) {
+  const escaped = escapeHtml(markdown)
+  return escaped
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/_(.+?)_/g, '<em>$1</em>')
+    .replace(/\n/g, '<br />')
+}
+
 function tokenChip(token, label, onInsert) {
   return (
     <button
@@ -172,15 +188,39 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }))
   }
 
-  const copy = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+  const previewHtml = useMemo(() => {
+    if (preferences.format === 'html') return dailyMessage
+    if (preferences.format === 'markdown') return markdownToHtml(dailyMessage)
+    return escapeHtml(dailyMessage).replace(/\n/g, '<br />')
+  }, [dailyMessage, preferences.format])
+
+  const copy = async (text) => {
+    if (preferences.format === 'html' && window.ClipboardItem && navigator.clipboard?.write) {
+      const htmlBlob = new Blob([text], { type: 'text/html' })
+      const plainBlob = new Blob([text.replace(/<[^>]+>/g, '')], { type: 'text/plain' })
+      await navigator.clipboard.write([new window.ClipboardItem({
+        'text/html': htmlBlob,
+        'text/plain': plainBlob,
+      })])
+    } else {
+      await navigator.clipboard.writeText(text)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const copyDailyMessage = () => {
+    copy(dailyMessage).then(() => {
+      if (preferences.format === 'html') return
+    }).catch(console.error)
+  }
+
+  const copyWeeklySummary = () => {
+    copy(weeklySummary).catch(console.error)
   }
 
   const saveAndCopy = async () => {
-    copy(dailyMessage)
+    await copy(dailyMessage)
     if (userId && onSaveLog) {
       await onSaveLog(dailyMessage)
       setSaved(true)
@@ -370,21 +410,23 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
               )}
 
-              <pre
+              <div
                 style={{
                   fontFamily: 'var(--font-body)',
                   fontSize: '13px',
                   color: preferences.colors.text || 'var(--neon-cyan)',
                   lineHeight: '1.7',
-                  whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
                   background: 'rgba(0,0,0,0.4)',
                   padding: '16px',
                   border: '1px solid rgba(0,243,255,0.15)',
+                  whiteSpace: preferences.format === 'plain' ? 'pre-wrap' : 'normal',
                 }}
-              >
-                {dailyMessage}
-              </pre>
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
+              <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
+                Preview em {preferences.format === 'plain' ? 'texto puro' : preferences.format}. Cor, negrito e italico aparecem visualmente em `html` e em preview de `markdown`.
+              </p>
               {saved && (
                 <p style={{ fontSize: '11px', color: 'var(--neon-green)', fontFamily: 'var(--font-body)', marginTop: 8 }}>
                   Standup salvo no historico semanal.
@@ -423,11 +465,11 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
           {tab === 'daily' && (
             <>
               <button
-                onClick={() => copy(dailyMessage)}
+                onClick={copyDailyMessage}
                 className="cyber-btn"
                 style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
               >
-                {copied ? 'Copiado!' : 'Copiar Texto'}
+                {copied ? 'Copiado!' : preferences.format === 'html' ? 'Copiar Rico' : 'Copiar Texto'}
               </button>
               {userId && !saved && (
                 <button
@@ -442,7 +484,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
           )}
           {tab === 'weekly' && !loadingWeekly && (
             <button
-              onClick={() => copy(weeklySummary)}
+              onClick={copyWeeklySummary}
               className="cyber-btn"
               style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
             >
