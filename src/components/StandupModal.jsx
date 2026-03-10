@@ -76,7 +76,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       year: 'numeric',
     })
   )
-  const [preferences, setPreferences] = useState(DEFAULT_STANDUP_PREFERENCES)
+  const [preferences, setPreferences] = useState({ ...DEFAULT_STANDUP_PREFERENCES, format: 'markdown' })
 
   const textareaRef = useRef(null)
   const [loadingTemplate, setLoadingTemplate] = useState(false)
@@ -94,6 +94,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
           setPreferences((prev) => ({
             ...prev,
             ...profile.standup_preferences,
+            format: 'markdown',
             columnAliases: {
               ...prev.columnAliases,
               ...(profile.standup_preferences.columnAliases || {}),
@@ -123,13 +124,9 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     return generateStandupMessage(columns, cards, theme, {
       template: templateText,
       customDateText: dateText,
-      preferences,
+      preferences: { ...preferences, format: 'markdown' },
     })
   }, [columns, cards, theme, templateText, dateText, preferences])
-
-  const previewHtml = useMemo(() => {
-    return `<!doctype html><html><body style="margin:0;padding:0;background:transparent;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.7;color:#e5e7eb;">${dailyMessage}</body></html>`
-  }, [dailyMessage])
 
   const weeklySummary = generateWeeklySummary(weeklyLogs, theme)
 
@@ -178,16 +175,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
   }
 
   const copy = async (text) => {
-    if (window.ClipboardItem && navigator.clipboard?.write) {
-      const htmlBlob = new Blob([text], { type: 'text/html' })
-      const plainBlob = new Blob([stripHtml(text)], { type: 'text/plain' })
-      await navigator.clipboard.write([new window.ClipboardItem({
-        'text/html': htmlBlob,
-        'text/plain': plainBlob,
-      })])
-    } else {
-      await navigator.clipboard.writeText(stripHtml(text))
-    }
+    await navigator.clipboard.writeText(stripHtml(text))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -360,15 +348,24 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
               )}
 
-              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', border: '1px solid rgba(0,243,255,0.15)', overflowX: 'auto' }}>
-                <iframe
-                  title="standup-preview"
-                  srcDoc={previewHtml}
-                  style={{ width: '100%', minHeight: 260, border: 'none', background: 'transparent' }}
-                />
-              </div>
+              <pre
+                style={{
+                  margin: 0,
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '13px',
+                  lineHeight: '1.7',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  color: '#e5e7eb',
+                  background: 'rgba(0,0,0,0.4)',
+                  padding: '16px',
+                  border: '1px solid rgba(0,243,255,0.15)',
+                }}
+              >
+                {dailyMessage}
+              </pre>
               <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
-                Colunas e estados ficam em negrito. Estados tambem ficam em italico.
+                Standup travado em markdown. Colunas ficam em negrito. Estados ficam em negrito e italico.
               </p>
               {saved && (
                 <p style={{ fontSize: '11px', color: 'var(--neon-green)', fontFamily: 'var(--font-body)', marginTop: 8 }}>
@@ -412,7 +409,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 className="cyber-btn"
                 style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
               >
-                {copied ? 'Copiado!' : 'Copiar Rico'}
+                {copied ? 'Copiado!' : 'Copiar Markdown'}
               </button>
               {userId && !saved && (
                 <button

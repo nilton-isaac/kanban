@@ -19,7 +19,7 @@ export const NEXT_DAY_CONFIG = {
 }
 
 export const DEFAULT_STANDUP_PREFERENCES = {
-  format: 'html',
+  format: 'markdown',
   showCompletedTasks: false,
   showPendingTasks: false,
   includeTaskLinks: true,
