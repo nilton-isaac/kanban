@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- CyberDaily Kanban - Supabase Schema
 -- Execute in Supabase Dashboard > SQL Editor
 -- ============================================================
@@ -52,6 +52,10 @@ CREATE TABLE IF NOT EXISTS public.kanban_cards (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE public.kanban_cards
+  ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+
 -- Daily standup logs
 CREATE TABLE IF NOT EXISTS public.standup_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -69,6 +73,8 @@ CREATE INDEX IF NOT EXISTS idx_kanban_cards_user_position
   ON public.kanban_cards(user_id, position);
 CREATE INDEX IF NOT EXISTS idx_kanban_cards_column_id
   ON public.kanban_cards(column_id);
+CREATE INDEX IF NOT EXISTS idx_kanban_cards_user_archived
+  ON public.kanban_cards(user_id, archived, archived_at DESC);
 CREATE INDEX IF NOT EXISTS idx_standup_logs_user_date
   ON public.standup_logs(user_id, log_date DESC);
 
@@ -150,3 +156,4 @@ CREATE TRIGGER cards_updated_at
   BEFORE UPDATE ON public.kanban_cards
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at();
+
