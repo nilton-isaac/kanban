@@ -1,7 +1,16 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 
-// ── Columns ──────────────────────────────────────────────────────────────────
+function normalizeTask(task) {
+  return {
+    id: task?.id || `task-${Date.now()}`,
+    title: String(task?.title || '').trim(),
+    done: Boolean(task?.done),
+    link: String(task?.link || '').trim(),
+    platform: String(task?.platform || '').trim(),
+  }
+}
 
+// Columns
 export async function fetchColumns(userId) {
   const { data, error } = await supabase
     .from('kanban_columns')
@@ -45,8 +54,7 @@ function dbColToState(row) {
   }
 }
 
-// ── Cards ─────────────────────────────────────────────────────────────────────
-
+// Cards
 export async function fetchCards(userId) {
   const { data, error } = await supabase
     .from('kanban_cards')
@@ -58,6 +66,7 @@ export async function fetchCards(userId) {
 }
 
 export async function upsertCard(card, userId) {
+  const tasks = (card.tasks || []).map(normalizeTask)
   const { error } = await supabase.from('kanban_cards').upsert({
     id: card.id,
     user_id: userId,
@@ -71,7 +80,7 @@ export async function upsertCard(card, userId) {
     due_date: card.dueDate || '',
     tags: card.tags || [],
     assignees: card.assignees || [],
-    tasks: card.tasks || [],
+    tasks,
     excluded_from_standup: card.excluded_from_standup || false,
     position: card.position || 0,
     archived: card.archived || false,
@@ -102,20 +111,18 @@ function dbCardToState(row) {
     dueDate: row.due_date,
     tags: row.tags || [],
     assignees: row.assignees || [],
-    tasks: row.tasks || [],
+    tasks: (row.tasks || []).map(normalizeTask),
     excluded_from_standup: row.excluded_from_standup || false,
     position: row.position,
     createdAt: row.created_at,
     archived: row.archived || false,
     archivedAt: row.archived_at || null,
-    // images e banner: só localStorage
     images: [],
     banner: null,
   }
 }
 
-// ── Standup Logs ──────────────────────────────────────────────────────────────
-
+// Standup Logs
 export async function saveStandupLog(userId, message, date) {
   const logDate = date || new Date().toISOString().split('T')[0]
   const { error } = await supabase.from('standup_logs').upsert({
@@ -139,8 +146,7 @@ export async function fetchWeeklyLogs(userId) {
   return data
 }
 
-// ── Profile ───────────────────────────────────────────────────────────────────
-
+// Profile
 export async function fetchProfile(userId) {
   const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
   if (error && error.code !== 'PGRST116') throw error

@@ -1,9 +1,9 @@
-import { normalizeThemeId } from '../themes'
+﻿import { normalizeThemeId } from '../themes'
 
 const STANDUP_DEBUG = true
 
 export const SUMMARY_CONFIG = {
-  columnOrder: 'position', // position | alphabetical
+  columnOrder: 'position',
   includeEmptyColumns: true,
   linePrefix: '  - ',
   showStatusBadge: true,
@@ -18,11 +18,40 @@ export const NEXT_DAY_CONFIG = {
   hideFromStandupOnLimbo: true,
 }
 
-export const DEFAULT_DAILY_TEMPLATE = `{{header}}
+export const DEFAULT_STANDUP_PREFERENCES = {
+  format: 'plain',
+  showCompletedTasks: false,
+  showPendingTasks: false,
+  includeTaskLinks: true,
+  completedTaskLabel: 'Concluida',
+  pendingTaskLabel: 'Pendente',
+  columnAliases: {},
+  colors: {
+    text: '',
+    accent: '',
+    done: '#22c55e',
+    blocked: '#ef4444',
+    review: '#f59e0b',
+    progress: '#38bdf8',
+    todo: '#94a3b8',
+  },
+  statusLabels: {
+    done: 'Concluida',
+    blocked: 'Bloqueada',
+    review: 'Em review',
+    progress: 'Em andamento',
+    todo: 'A fazer',
+  },
+  statusStyles: {
+    done: { bold: true, italic: false },
+    blocked: { bold: true, italic: false },
+    review: { bold: false, italic: true },
+    progress: { bold: false, italic: false },
+    todo: { bold: false, italic: false },
+  },
+}
 
-{{columns}}
-
-{{footer}}`
+export const DEFAULT_DAILY_TEMPLATE = `{{header}}\n\n{{columns}}\n\n{{footer}}`
 
 const THEMES_STANDUP = {
   cyberpunk: {
@@ -76,22 +105,149 @@ const THEMES_STANDUP = {
   },
 }
 
-const STATUS_BADGE = {
-  done: '[DONE]',
-  blocked: '[BLOCKED]',
-  progress: '[IN PROGRESS]',
-  review: '[REVIEW]',
-  todo: '[TODO]',
-}
-
 function getTheme(themeId) {
   return normalizeThemeId(themeId)
 }
 
-function sortColumns(columns, columnOrder) {
+function normalizeKey(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function sanitizeColor(value) {
+  const input = String(value || '').trim()
+  if (!input) return ''
+  return /^#[0-9a-fA-F]{3,8}$/.test(input) ? input : ''
+}
+
+function normalizeStandupPreferences(raw) {
+  const input = raw && typeof raw === 'object' ? raw : {}
+  const colors = input.colors && typeof input.colors === 'object' ? input.colors : {}
+  const statusLabels = input.statusLabels && typeof input.statusLabels === 'object' ? input.statusLabels : {}
+  const statusStyles = input.statusStyles && typeof input.statusStyles === 'object' ? input.statusStyles : {}
+
+  return {
+    ...DEFAULT_STANDUP_PREFERENCES,
+    ...input,
+    format: ['plain', 'markdown', 'html'].includes(input.format) ? input.format : DEFAULT_STANDUP_PREFERENCES.format,
+    showCompletedTasks: Boolean(input.showCompletedTasks),
+    showPendingTasks: Boolean(input.showPendingTasks),
+    includeTaskLinks: input.includeTaskLinks !== false,
+    completedTaskLabel: String(input.completedTaskLabel || DEFAULT_STANDUP_PREFERENCES.completedTaskLabel),
+    pendingTaskLabel: String(input.pendingTaskLabel || DEFAULT_STANDUP_PREFERENCES.pendingTaskLabel),
+    columnAliases: input.columnAliases && typeof input.columnAliases === 'object' ? input.columnAliases : {},
+    colors: {
+      ...DEFAULT_STANDUP_PREFERENCES.colors,
+      ...Object.fromEntries(Object.entries(colors).map(([key, value]) => [key, sanitizeColor(value)])),
+    },
+    statusLabels: {
+      ...DEFAULT_STANDUP_PREFERENCES.statusLabels,
+      ...Object.fromEntries(Object.entries(statusLabels).map(([key, value]) => [key, String(value || '').trim()])),
+    },
+    statusStyles: {
+      ...DEFAULT_STANDUP_PREFERENCES.statusStyles,
+      ...Object.fromEntries(Object.entries(statusStyles).map(([key, value]) => [
+        key,
+        {
+          bold: Boolean(value?.bold),
+          italic: Boolean(value?.italic),
+        },
+      ])),
+    },
+  }
+}
+
+function formatText(text, options = {}, preferences = DEFAULT_STANDUP_PREFERENCES) {
+  const content = String(text || '')
+  const format = preferences.format || 'plain'
+  const color = sanitizeColor(options.color)
+  const bold = Boolean(options.bold)
+  const italic = Boolean(options.italic)
+
+  if (format === 'html') {
+    let formatted = escapeHtml(content)
+    if (bold) formatted = `<strong>${formatted}</strong>`
+    if (italic) formatted = `<em>${formatted}</em>`
+    if (color) formatted = `<span style="color:${color}">${formatted}</span>`
+    return formatted
+  }
+
+  if (format === 'markdown') {
+    let formatted = content
+    if (bold) formatted = `**${formatted}**`
+    if (italic) formatted = `_${formatted}_`
+    return formatted
+  }
+
+  return content
+}
+
+function formatLink(label, url, preferences = DEFAULT_STANDUP_PREFERENCES) {
+  const href = String(url || '').trim()
+  if (!href) return label
+
+  if (preferences.format === 'html') {
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`
+  }
+
+  if (preferences.format === 'markdown') {
+    return `[${label}](${href})`
+  }
+
+  return `${label} (${href})`
+}
+
+function formatStatusBadge(status, preferences) {
+  const label = preferences.statusLabels[status] || String(status || '').trim()
+  if (!label) return ''
+  const style = preferences.statusStyles[status] || {}
+  const color = preferences.colors[status] || preferences.colors.accent || ''
+  return formatText(`[${label}]`, { ...style, color }, preferences)
+}
+
+function normalizeTask(task) {
+  return {
+    id: task?.id,
+    title: String(task?.title || '').trim(),
+    done: Boolean(task?.done),
+    link: String(task?.link || '').trim(),
+    platform: String(task?.platform || '').trim(),
+  }
+}
+
+function resolveColumnLabel(column, preferences) {
+  const alias = preferences.columnAliases?.[column.id]
+  if (alias && String(alias).trim()) return String(alias).trim()
+  return String(column.title || `COLUNA ${column.index || ''}`).trim()
+}
+
+function formatTaskLine(task, preferences, linePrefix) {
+  const label = task.done ? preferences.completedTaskLabel : preferences.pendingTaskLabel
+  const color = task.done ? preferences.colors.done : preferences.colors.todo
+  const decoratedLabel = formatText(label, { bold: task.done, color }, preferences)
+  const taskTitle = preferences.includeTaskLinks && task.link
+    ? formatLink(task.title || task.platform || 'Abrir tarefa', task.link, preferences)
+    : formatText(task.title, { italic: !task.done }, preferences)
+  const platform = task.platform ? ` · ${task.platform}` : ''
+  return `${linePrefix}    ${decoratedLabel}: ${taskTitle}${platform}`
+}
+
+function sortColumns(columns, columnOrder, preferences) {
   const ordered = [...columns]
   if (columnOrder === 'alphabetical') {
-    return ordered.sort((a, b) => String(a.title || '').localeCompare(String(b.title || '')))
+    return ordered.sort((a, b) => resolveColumnLabel(a, preferences).localeCompare(resolveColumnLabel(b, preferences)))
   }
 
   return ordered.sort((a, b) => {
@@ -102,8 +258,8 @@ function sortColumns(columns, columnOrder) {
   })
 }
 
-function buildColumnsBlock(columns, cards, themePack, config) {
-  const orderedColumns = sortColumns(columns, config.columnOrder)
+function buildColumnsBlock(columns, cards, themePack, config, preferences) {
+  const orderedColumns = sortColumns(columns, config.columnOrder, preferences)
   if (orderedColumns.length === 0) return themePack.noColumns
 
   const lines = []
@@ -111,15 +267,22 @@ function buildColumnsBlock(columns, cards, themePack, config) {
     const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
     if (!config.includeEmptyColumns && colCards.length === 0) return
 
-    const title = col.title || `COLUNA ${col.index || ''}`.trim()
-    lines.push(themePack.section(title, colCards.length))
+    const title = resolveColumnLabel(col, preferences)
+    const sectionTitle = themePack.section(title, colCards.length)
+    lines.push(formatText(sectionTitle, { bold: true, color: preferences.colors.accent }, preferences))
 
     if (colCards.length === 0) {
       lines.push(`  ${themePack.noneInColumn}`)
     } else {
       colCards.forEach((card) => {
-        const badge = config.showStatusBadge && STATUS_BADGE[card.status] ? ` ${STATUS_BADGE[card.status]}` : ''
-        lines.push(`${config.linePrefix}${card.title}${badge}`)
+        const badge = config.showStatusBadge && card.status ? ` ${formatStatusBadge(card.status, preferences)}` : ''
+        lines.push(`${config.linePrefix}${formatText(card.title, { color: preferences.colors.text }, preferences)}${badge}`)
+
+        const tasks = (card.tasks || []).map(normalizeTask).filter((task) => {
+          if (task.done) return preferences.showCompletedTasks
+          return preferences.showPendingTasks
+        })
+        tasks.forEach((task) => lines.push(formatTaskLine(task, preferences, config.linePrefix)))
       })
     }
 
@@ -139,77 +302,81 @@ function normalizeDateText(customDateText) {
   })
 }
 
-function normalizeKey(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
+function buildRuntimeCard(card, columns, preferences) {
+  const column = columns.find((item) => item.id === card.columnId)
+  const columnLabel = column ? resolveColumnLabel(column, preferences) : ''
+  return {
+    id: card.id,
+    title: card.title,
+    status: card.status,
+    priority: card.priority,
+    columnId: card.columnId,
+    columnLabel,
+    tasks: (card.tasks || []).map(normalizeTask),
+  }
 }
 
 export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', options = {}) {
   const themeId = getTheme(theme)
   const themePack = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
   const config = { ...SUMMARY_CONFIG, ...options }
+  const preferences = normalizeStandupPreferences(options.preferences)
   const dateText = normalizeDateText(options.customDateText)
 
-  const columnsBlock = buildColumnsBlock(columns, cards, themePack, config)
+  const columnsBlock = buildColumnsBlock(columns, cards, themePack, config, preferences)
   const context = {
     date: dateText,
-    header: themePack.header(dateText),
-    footer: themePack.footer,
+    header: formatText(themePack.header(dateText), { bold: true, color: preferences.colors.accent }, preferences),
+    footer: formatText(themePack.footer, { italic: true, color: preferences.colors.accent }, preferences),
     columns: columnsBlock,
     cards_count: cards.length,
     columns_count: columns.length,
+    preferences,
+    prefs: preferences,
   }
 
   const columnBlocks = []
 
-  // Token by specific column: {{col:<columnId>}} or {{col:<columnTitle>}} or {{<columnTitle>}}
   columns.forEach((col, idx) => {
-    const block = buildColumnsBlock([col], cards, themePack, config)
+    const block = buildColumnsBlock([col], cards, themePack, config, preferences)
     const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
     const title = String(col.title || '').trim()
+    const alias = resolveColumnLabel(col, preferences)
     const normalizedTitle = normalizeKey(title)
+    const normalizedAlias = normalizeKey(alias)
     const byPosition = String(col.position ?? idx)
     const byIndex = String(col.index ?? idx + 1)
 
-    // Stable and legacy aliases:
-    // - col:<id> (recommended)
-    // - col:<title> / <title> (legacy)
-    // - colpos:<n> / colindex:<n> / colrole:<role> (extra resiliency)
     context[`col:${col.id}`] = block
     context[`col:${title}`] = block
     context[`col:${normalizedTitle}`] = block
+    context[`col:${alias}`] = block
+    context[`col:${normalizedAlias}`] = block
     context[`colpos:${byPosition}`] = block
     context[`colindex:${byIndex}`] = block
     if (col.role) context[`colrole:${col.role}`] = block
     context[title] = block
     context[normalizedTitle] = block
+    context[alias] = block
+    context[normalizedAlias] = block
 
     columnBlocks.push({
       id: col.id,
       title,
+      alias,
       count: colCards.length,
-      cards: colCards.map((c) => ({
-        id: c.id,
-        title: c.title,
-        status: c.status,
-        priority: c.priority,
-      })),
+      cards: colCards.map((c) => buildRuntimeCard(c, columns, preferences)),
       block,
     })
   })
 
   context.__runtime = {
     columns: columnBlocks,
-    cards: cards.map((c) => ({
-      id: c.id,
-      title: c.title,
-      status: c.status,
-      priority: c.priority,
-      columnId: c.columnId,
-    })),
+    cards: cards.map((c) => buildRuntimeCard(c, columns, preferences)),
+    style: (text, opts = {}) => formatText(text, opts, preferences),
+    link: (label, href) => formatLink(label, href, preferences),
+    statusLabel: (status) => preferences.statusLabels[status] || status,
+    statusText: (status) => formatStatusBadge(status, preferences),
   }
 
   return context
@@ -224,6 +391,7 @@ function runInlineExpression(expression, context) {
       columns: context.columns,
       cards_count: context.cards_count,
       columns_count: context.columns_count,
+      prefs: context.preferences,
       cols: context.__runtime?.columns || [],
       cards: context.__runtime?.cards || [],
       col: (idOrName) => {
@@ -236,6 +404,10 @@ function runInlineExpression(expression, context) {
           ''
         )
       },
+      style: context.__runtime?.style,
+      link: context.__runtime?.link,
+      statusLabel: context.__runtime?.statusLabel,
+      statusText: context.__runtime?.statusText,
     }
 
     const fn = new Function('scope', `with (scope) { return (${expression}); }`)
@@ -255,6 +427,7 @@ function runBlockScript(code, context) {
       columns: context.columns,
       cards_count: context.cards_count,
       columns_count: context.columns_count,
+      prefs: context.preferences,
       cols: context.__runtime?.columns || [],
       cards: context.__runtime?.cards || [],
       col: (idOrName) => {
@@ -267,6 +440,10 @@ function runBlockScript(code, context) {
           ''
         )
       },
+      style: context.__runtime?.style,
+      link: context.__runtime?.link,
+      statusLabel: context.__runtime?.statusLabel,
+      statusText: context.__runtime?.statusText,
     }
 
     const fn = new Function('scope', `with (scope) { ${code} }`)
@@ -279,9 +456,7 @@ function runBlockScript(code, context) {
 
 export function renderStandupTemplate(template, context) {
   const input = template && template.trim() ? template : DEFAULT_DAILY_TEMPLATE
-  const withScriptBlocks = input.replace(/\{\{#script\}\}([\s\S]*?)\{\{\/script\}\}/g, (_full, scriptCode) => {
-    return runBlockScript(scriptCode, context)
-  })
+  const withScriptBlocks = input.replace(/\{\{#script\}\}([\s\S]*?)\{\{\/script\}\}/g, (_full, scriptCode) => runBlockScript(scriptCode, context))
 
   return withScriptBlocks.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_full, rawToken) => {
     const token = String(rawToken).trim()
@@ -306,7 +481,7 @@ export function generateStandupMessage(columns, cards, theme = 'cyberpunk', opti
     debugStandup('primary', { columns, cards, theme, options, context, primary, hasVisible, fallbackUsed: false })
     return primary
   }
-  // Guardrail: never return empty standup due to stale/mismatched template tokens.
+
   const fallback = renderStandupTemplate(DEFAULT_DAILY_TEMPLATE, context)
   debugStandup('fallback', {
     columns,
@@ -357,11 +532,13 @@ function debugStandup(stage, payload) {
       status: c.status,
       excluded_from_standup: c.excluded_from_standup,
       excluded_normalized: isExcludedFromStandup(c),
+      tasks: (c.tasks || []).length,
     }))
 
     console.groupCollapsed(`[standup:${stage}] cols=${cols.length} cards=${cds.length} theme=${payload.theme}`)
     console.log('template', payload.options?.template || DEFAULT_DAILY_TEMPLATE)
     console.log('customDateText', payload.options?.customDateText)
+    console.log('preferences', payload.options?.preferences)
     console.table(cols)
     console.table(cds)
     console.log('context.columns (rendered block)', payload.context?.columns)

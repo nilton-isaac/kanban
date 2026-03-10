@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- CyberDaily Kanban - Supabase Schema
 -- Execute in Supabase Dashboard > SQL Editor
 -- ============================================================
@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS standup_template TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS standup_template_date TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS standup_preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- Kanban columns
 CREATE TABLE IF NOT EXISTS public.kanban_columns (
@@ -156,4 +157,3 @@ CREATE TRIGGER cards_updated_at
   BEFORE UPDATE ON public.kanban_cards
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at();
-

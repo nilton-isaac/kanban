@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   DEFAULT_DAILY_TEMPLATE,
+  DEFAULT_STANDUP_PREFERENCES,
   generateStandupMessage,
   generateWeeklySummary,
 } from '../lib/standup'
@@ -30,6 +31,21 @@ function tokenChip(token, label, onInsert) {
   )
 }
 
+function prefInput(label, value, onChange, placeholder = '') {
+  return (
+    <label style={{ display: 'grid', gap: 6 }}>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>{label}</span>
+      <input
+        className="cyber-input"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
+      />
+    </label>
+  )
+}
+
 export default function StandupModal({ columns, cards, userId, onSaveLog, onClose }) {
   const { theme } = useTheme()
   const [tab, setTab] = useState('daily')
@@ -47,6 +63,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       year: 'numeric',
     })
   )
+  const [preferences, setPreferences] = useState(DEFAULT_STANDUP_PREFERENCES)
 
   const textareaRef = useRef(null)
   const [loadingTemplate, setLoadingTemplate] = useState(false)
@@ -63,6 +80,28 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
         }
         if (profile?.standup_template_date) {
           setDateText(profile.standup_template_date)
+        }
+        if (profile?.standup_preferences) {
+          setPreferences((prev) => ({
+            ...prev,
+            ...profile.standup_preferences,
+            colors: {
+              ...prev.colors,
+              ...(profile.standup_preferences.colors || {}),
+            },
+            statusLabels: {
+              ...prev.statusLabels,
+              ...(profile.standup_preferences.statusLabels || {}),
+            },
+            statusStyles: {
+              ...prev.statusStyles,
+              ...(profile.standup_preferences.statusStyles || {}),
+            },
+            columnAliases: {
+              ...prev.columnAliases,
+              ...(profile.standup_preferences.columnAliases || {}),
+            },
+          }))
         }
       })
       .catch(console.error)
@@ -83,8 +122,9 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     return generateStandupMessage(columns, cards, theme, {
       template: templateText,
       customDateText: dateText,
+      preferences,
     })
-  }, [columns, cards, theme, templateText, dateText])
+  }, [columns, cards, theme, templateText, dateText, preferences])
 
   const weeklySummary = generateWeeklySummary(weeklyLogs, theme)
 
@@ -106,6 +146,30 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       const cursor = start + fullToken.length
       el.setSelectionRange(cursor, cursor)
     })
+  }
+
+  const updatePreference = (key, value) => {
+    setPreferences((prev) => ({ ...prev, [key]: value }))
+  }
+
+  const updateNestedPreference = (group, key, value) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [group]: {
+        ...(prev[group] || {}),
+        [key]: value,
+      },
+    }))
+  }
+
+  const updateColumnAlias = (columnId, value) => {
+    setPreferences((prev) => ({
+      ...prev,
+      columnAliases: {
+        ...(prev.columnAliases || {}),
+        [columnId]: value,
+      },
+    }))
   }
 
   const copy = (text) => {
@@ -130,6 +194,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       await updateProfile(userId, {
         standup_template: templateText,
         standup_template_date: dateText,
+        standup_preferences: preferences,
       })
       setTemplateSaved(true)
       setTimeout(() => setTemplateSaved(false), 2000)
@@ -161,7 +226,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
         style={{
           background: 'var(--panel-bg)',
           width: '100%',
-          maxWidth: '760px',
+          maxWidth: '860px',
           maxHeight: '88vh',
           display: 'flex',
           flexDirection: 'column',
@@ -189,7 +254,8 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {tokenChip('columns', '{columns}', insertToken)}
                   {tokenChip('footer', '{footer}', insertToken)}
                   {tokenChip('js: cols.length', '{js: cols.length}', insertToken)}
-                  {columns.map((c) => tokenChip(`col:${c.id}`, `{${c.title}}`, insertToken))}
+                  {tokenChip("js: cards.map(c => c.tasks.map(t => t.link)).flat().filter(Boolean).join('\\n')", '{links}', insertToken)}
+                  {columns.map((c) => tokenChip(`col:${c.id}`, `{${preferences.columnAliases?.[c.id] || c.title}}`, insertToken))}
                 </div>
                 <button
                   onClick={() => setIsEditingTemplate((v) => !v)}
@@ -207,28 +273,85 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                       Carregando template salvo...
                     </p>
                   )}
-                  <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
-                    Data variavel ({'{date}'})
-                  </label>
-                  <input
-                    className="cyber-input"
-                    value={dateText}
-                    onChange={(e) => setDateText(e.target.value)}
-                    style={{ width: '100%', padding: '8px 10px', marginBottom: 10, fontSize: '12px' }}
-                  />
+
+                  <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
+                    {prefInput('Data variavel ({date})', dateText, (e) => setDateText(e.target.value))}
+                    <label style={{ display: 'grid', gap: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>Formato da mensagem</span>
+                      <select
+                        className="cyber-input"
+                        value={preferences.format}
+                        onChange={(e) => updatePreference('format', e.target.value)}
+                        style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
+                      >
+                        <option value="plain">Texto puro</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="html">HTML</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+                    {prefInput('Cor base do texto', preferences.colors.text, (e) => updateNestedPreference('colors', 'text', e.target.value), '#e5e7eb')}
+                    {prefInput('Cor de destaque', preferences.colors.accent, (e) => updateNestedPreference('colors', 'accent', e.target.value), '#00f3ff')}
+                    {prefInput('Cor de concluido', preferences.colors.done, (e) => updateNestedPreference('colors', 'done', e.target.value), '#22c55e')}
+                    {prefInput('Cor de bloqueado', preferences.colors.blocked, (e) => updateNestedPreference('colors', 'blocked', e.target.value), '#ef4444')}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
+                    {prefInput('Texto status concluido', preferences.statusLabels.done, (e) => updateNestedPreference('statusLabels', 'done', e.target.value))}
+                    {prefInput('Texto task concluida', preferences.completedTaskLabel, (e) => updatePreference('completedTaskLabel', e.target.value))}
+                    {prefInput('Texto task pendente', preferences.pendingTaskLabel, (e) => updatePreference('pendingTaskLabel', e.target.value))}
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 14 }}>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                      <input type="checkbox" checked={preferences.showCompletedTasks} onChange={(e) => updatePreference('showCompletedTasks', e.target.checked)} />
+                      Mostrar tasks concluidas
+                    </label>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                      <input type="checkbox" checked={preferences.showPendingTasks} onChange={(e) => updatePreference('showPendingTasks', e.target.checked)} />
+                      Mostrar tasks pendentes
+                    </label>
+                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                      <input type="checkbox" checked={preferences.includeTaskLinks} onChange={(e) => updatePreference('includeTaskLinks', e.target.checked)} />
+                      Incluir hyperlinks das tasks
+                    </label>
+                  </div>
+
+                  <div style={{ marginBottom: 14 }}>
+                    <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
+                      Alias das colunas no standup
+                    </label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+                      {columns.map((column) => (
+                        <label key={column.id} style={{ display: 'grid', gap: 6 }}>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#777' }}>{column.title}</span>
+                          <input
+                            className="cyber-input"
+                            value={preferences.columnAliases?.[column.id] || ''}
+                            onChange={(e) => updateColumnAlias(column.id, e.target.value)}
+                            placeholder="Nome alternativo"
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
                   <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
                     Template (use os chips para inserir variaveis no texto)
                   </label>
                   <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#7f7f7f', marginBottom: 6 }}>
                     Scripts: {'{{js: expressao}}'} ou {'{{#script}} return ... {{/script}}'}.
-                    Variaveis de script: cols, cards, date, header, footer, columns, col('ID_OU_NOME').
+                    Variaveis: cols, cards, prefs, date, header, footer, columns, col('ID_OU_NOME'), style(), link(), statusText().
                   </p>
                   <textarea
                     ref={textareaRef}
                     className="cyber-input"
                     value={templateText}
                     onChange={(e) => setTemplateText(e.target.value)}
-                    rows={7}
+                    rows={9}
                     style={{ width: '100%', padding: '10px', resize: 'vertical', fontSize: '12px', whiteSpace: 'pre' }}
                   />
                   {userId && (
@@ -250,7 +373,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 style={{
                   fontFamily: 'var(--font-body)',
                   fontSize: '13px',
-                  color: 'var(--neon-cyan)',
+                  color: preferences.colors.text || 'var(--neon-cyan)',
                   lineHeight: '1.7',
                   whiteSpace: 'pre-wrap',
                   wordBreak: 'break-word',
