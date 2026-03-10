@@ -295,6 +295,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                     {prefInput('Cor base do texto', preferences.colors.text, (e) => updateNestedPreference('colors', 'text', e.target.value), '#e5e7eb')}
                     {prefInput('Cor de destaque', preferences.colors.accent, (e) => updateNestedPreference('colors', 'accent', e.target.value), '#00f3ff')}
                     {prefInput('Cor de concluido', preferences.colors.done, (e) => updateNestedPreference('colors', 'done', e.target.value), '#22c55e')}
+                    {prefInput('Cor de pendente', preferences.colors.pending || preferences.colors.todo || '', (e) => updateNestedPreference('colors', 'pending', e.target.value), '#94a3b8')}
                     {prefInput('Cor de bloqueado', preferences.colors.blocked, (e) => updateNestedPreference('colors', 'blocked', e.target.value), '#ef4444')}
                   </div>
 

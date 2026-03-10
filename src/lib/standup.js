@@ -30,6 +30,7 @@ export const DEFAULT_STANDUP_PREFERENCES = {
     text: '',
     accent: '',
     done: '#22c55e',
+    pending: '#94a3b8',
     blocked: '#ef4444',
     review: '#f59e0b',
     progress: '#38bdf8',
@@ -56,14 +57,14 @@ export const DEFAULT_DAILY_TEMPLATE = `{{header}}\n\n{{columns}}\n\n{{footer}}`
 const THEMES_STANDUP = {
   cyberpunk: {
     header: (date) => `CYBER STANDUP // ${date.toUpperCase()}`,
-    section: (title, count) => `[${title}] (${count})`,
+    section: (title, count) => `${title} (${count})`,
     noneInColumn: '- sem itens -',
     noColumns: 'Nenhuma coluna cadastrada.',
     footer: '// END TRANSMISSION',
   },
   fallout: {
     header: (date) => `PIP-BOY STANDUP // ${date.toUpperCase()}`,
-    section: (title, count) => `>_ ${title} [${count}]`,
+    section: (title, count) => `>_ ${title} (${count})`,
     noneInColumn: '--- sem registros ---',
     noColumns: 'Nenhuma coluna cadastrada.',
     footer: '[ VAULT-TEC APPROVED ]',
@@ -84,7 +85,7 @@ const THEMES_STANDUP = {
   },
   nier: {
     header: (date) => `YORHA MISSION LOG // ${date.toUpperCase()}`,
-    section: (title, count) => `> ${title} [${count}]`,
+    section: (title, count) => `> ${title} (${count})`,
     noneInColumn: 'NO DATA.',
     noColumns: 'NO COLUMN DATA.',
     footer: '// END OF TRANSMISSION',
@@ -98,7 +99,7 @@ const THEMES_STANDUP = {
   },
   royale: {
     header: (date) => `ROYALE WAR ROOM // ${date.toUpperCase()}`,
-    section: (title, count) => `* ${title} [${count}]`,
+    section: (title, count) => `* ${title} (${count})`,
     noneInColumn: 'No troops in this lane.',
     noColumns: 'No lanes configured.',
     footer: '// VICTORY PATH OPEN',
@@ -214,7 +215,7 @@ function formatStatusBadge(status, preferences) {
   if (!label) return ''
   const style = preferences.statusStyles[status] || {}
   const color = preferences.colors[status] || preferences.colors.accent || ''
-  return formatText(`[${label}]`, { ...style, color }, preferences)
+  return formatText(label, { ...style, color }, preferences)
 }
 
 function normalizeTask(task) {
@@ -235,7 +236,7 @@ function resolveColumnLabel(column, preferences) {
 
 function formatTaskLine(task, preferences, linePrefix) {
   const label = task.done ? preferences.completedTaskLabel : preferences.pendingTaskLabel
-  const color = task.done ? preferences.colors.done : preferences.colors.todo
+  const color = task.done ? preferences.colors.done : (preferences.colors.pending || preferences.colors.todo)
   const decoratedLabel = formatText(label, { bold: task.done, color }, preferences)
   const taskTitle = preferences.includeTaskLinks && task.link
     ? formatLink(task.title || task.platform || 'Abrir tarefa', task.link, preferences)
