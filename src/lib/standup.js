@@ -26,40 +26,12 @@ export const DEFAULT_STANDUP_PREFERENCES = {
   completedTaskLabel: 'Concluida',
   pendingTaskLabel: 'Pendente',
   columnAliases: {},
-  columnStyles: {},
-  colors: {
-    text: '',
-    accent: '',
-    done: '#22c55e',
-    pending: '#94a3b8',
-    blocked: '#ef4444',
-    review: '#f59e0b',
-    progress: '#38bdf8',
-    todo: '#94a3b8',
-  },
   statusLabels: {
     done: 'Concluida',
     blocked: 'Bloqueada',
     review: 'Em review',
     progress: 'Em andamento',
     todo: 'A fazer',
-  },
-  statusStyles: {
-    done: { bold: true, italic: false },
-    blocked: { bold: true, italic: false },
-    review: { bold: false, italic: true },
-    progress: { bold: false, italic: false },
-    todo: { bold: false, italic: false },
-  },
-  taskLabelStyles: {
-    done: { bold: true, italic: false },
-    pending: { bold: false, italic: true },
-  },
-  elementStyles: {
-    header: { color: '', bold: true, italic: false },
-    footer: { color: '', bold: false, italic: true },
-    section: { color: '', bold: true, italic: false },
-    cardTitle: { color: '', bold: false, italic: false },
   },
 }
 
@@ -138,20 +110,9 @@ function escapeHtml(value) {
     .replace(/'/g, '&#39;')
 }
 
-function sanitizeColor(value) {
-  const input = String(value || '').trim()
-  if (!input) return ''
-  return /^#[0-9a-fA-F]{3,8}$/.test(input) ? input : ''
-}
-
 function normalizeStandupPreferences(raw) {
   const input = raw && typeof raw === 'object' ? raw : {}
-  const colors = input.colors && typeof input.colors === 'object' ? input.colors : {}
   const statusLabels = input.statusLabels && typeof input.statusLabels === 'object' ? input.statusLabels : {}
-  const statusStyles = input.statusStyles && typeof input.statusStyles === 'object' ? input.statusStyles : {}
-  const taskLabelStyles = input.taskLabelStyles && typeof input.taskLabelStyles === 'object' ? input.taskLabelStyles : {}
-  const columnStyles = input.columnStyles && typeof input.columnStyles === 'object' ? input.columnStyles : {}
-  const elementStyles = input.elementStyles && typeof input.elementStyles === 'object' ? input.elementStyles : {}
 
   return {
     ...DEFAULT_STANDUP_PREFERENCES,
@@ -163,45 +124,9 @@ function normalizeStandupPreferences(raw) {
     completedTaskLabel: String(input.completedTaskLabel || DEFAULT_STANDUP_PREFERENCES.completedTaskLabel),
     pendingTaskLabel: String(input.pendingTaskLabel || DEFAULT_STANDUP_PREFERENCES.pendingTaskLabel),
     columnAliases: input.columnAliases && typeof input.columnAliases === 'object' ? input.columnAliases : {},
-    columnStyles,
-    colors: {
-      ...DEFAULT_STANDUP_PREFERENCES.colors,
-      ...Object.fromEntries(Object.entries(colors).map(([key, value]) => [key, sanitizeColor(value)])),
-    },
     statusLabels: {
       ...DEFAULT_STANDUP_PREFERENCES.statusLabels,
       ...Object.fromEntries(Object.entries(statusLabels).map(([key, value]) => [key, String(value || '').trim()])),
-    },
-    statusStyles: {
-      ...DEFAULT_STANDUP_PREFERENCES.statusStyles,
-      ...Object.fromEntries(Object.entries(statusStyles).map(([key, value]) => [
-        key,
-        {
-          bold: Boolean(value?.bold),
-          italic: Boolean(value?.italic),
-        },
-      ])),
-    },
-    taskLabelStyles: {
-      ...DEFAULT_STANDUP_PREFERENCES.taskLabelStyles,
-      ...Object.fromEntries(Object.entries(taskLabelStyles).map(([key, value]) => [
-        key,
-        {
-          bold: Boolean(value?.bold),
-          italic: Boolean(value?.italic),
-        },
-      ])),
-    },
-    elementStyles: {
-      ...DEFAULT_STANDUP_PREFERENCES.elementStyles,
-      ...Object.fromEntries(Object.entries(elementStyles).map(([key, value]) => [
-        key,
-        {
-          color: sanitizeColor(value?.color),
-          bold: Boolean(value?.bold),
-          italic: Boolean(value?.italic),
-        },
-      ])),
     },
   }
 }
@@ -209,7 +134,6 @@ function normalizeStandupPreferences(raw) {
 function formatText(text, options = {}, preferences = DEFAULT_STANDUP_PREFERENCES) {
   const content = String(text || '')
   const format = preferences.format || 'plain'
-  const color = sanitizeColor(options.color)
   const bold = Boolean(options.bold)
   const italic = Boolean(options.italic)
 
@@ -217,7 +141,6 @@ function formatText(text, options = {}, preferences = DEFAULT_STANDUP_PREFERENCE
     let formatted = escapeHtml(content)
     if (bold) formatted = `<strong>${formatted}</strong>`
     if (italic) formatted = `<em>${formatted}</em>`
-    if (color) formatted = `<span style="color:${color}">${formatted}</span>`
     return formatted
   }
 
@@ -249,9 +172,7 @@ function formatLink(label, url, preferences = DEFAULT_STANDUP_PREFERENCES) {
 function formatStatusBadge(status, preferences) {
   const label = preferences.statusLabels[status] || String(status || '').trim()
   if (!label) return ''
-  const style = preferences.statusStyles[status] || {}
-  const color = preferences.colors[status] || preferences.colors.accent || ''
-  return formatText(label, { ...style, color }, preferences)
+  return formatText(label, { bold: true, italic: true }, preferences)
 }
 
 function normalizeTask(task) {
@@ -270,17 +191,9 @@ function resolveColumnLabel(column, preferences) {
   return String(column.title || `COLUNA ${column.index || ''}`).trim()
 }
 
-function resolveColumnStyle(column, preferences) {
-  return preferences.columnStyles?.[column.id] || {}
-}
-
 function formatTaskLine(task, preferences, linePrefix) {
   const label = task.done ? preferences.completedTaskLabel : preferences.pendingTaskLabel
-  const color = task.done ? preferences.colors.done : (preferences.colors.pending || preferences.colors.todo)
-  const labelStyle = task.done
-    ? (preferences.taskLabelStyles?.done || {})
-    : (preferences.taskLabelStyles?.pending || {})
-  const decoratedLabel = formatText(label, { ...labelStyle, color }, preferences)
+  const decoratedLabel = formatText(label, { bold: true, italic: true }, preferences)
   const taskTitle = preferences.includeTaskLinks && task.link
     ? formatLink(task.title || task.platform || 'Abrir tarefa', task.link, preferences)
     : formatText(task.title, { italic: !task.done }, preferences)
@@ -313,23 +226,14 @@ function buildColumnsBlock(columns, cards, themePack, config, preferences) {
 
     const title = resolveColumnLabel(col, preferences)
     const sectionTitle = themePack.section(title, colCards.length)
-    const columnStyle = resolveColumnStyle(col, preferences)
-    lines.push(formatText(sectionTitle, {
-      ...preferences.elementStyles.section,
-      color: columnStyle.color || preferences.elementStyles.section?.color || preferences.colors.accent,
-      bold: columnStyle.bold ?? preferences.elementStyles.section?.bold,
-      italic: columnStyle.italic ?? preferences.elementStyles.section?.italic,
-    }, preferences))
+    lines.push(formatText(sectionTitle, { bold: true }, preferences))
 
     if (colCards.length === 0) {
       lines.push(`  ${themePack.noneInColumn}`)
     } else {
       colCards.forEach((card) => {
         const badge = config.showStatusBadge && card.status ? ` ${formatStatusBadge(card.status, preferences)}` : ''
-        lines.push(`${config.linePrefix}${formatText(card.title, {
-          ...preferences.elementStyles.cardTitle,
-          color: preferences.elementStyles.cardTitle?.color || preferences.colors.text,
-        }, preferences)}${badge}`)
+        lines.push(`${config.linePrefix}${formatText(card.title, {}, preferences)}${badge}`)
 
         const tasks = (card.tasks || []).map(normalizeTask).filter((task) => {
           if (task.done) return preferences.showCompletedTasks
@@ -379,14 +283,8 @@ export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', o
   const columnsBlock = buildColumnsBlock(columns, cards, themePack, config, preferences)
   const context = {
     date: dateText,
-    header: formatText(themePack.header(dateText), {
-      ...preferences.elementStyles.header,
-      color: preferences.elementStyles.header?.color || preferences.colors.accent,
-    }, preferences),
-    footer: formatText(themePack.footer, {
-      ...preferences.elementStyles.footer,
-      color: preferences.elementStyles.footer?.color || preferences.colors.accent,
-    }, preferences),
+    header: formatText(themePack.header(dateText), {}, preferences),
+    footer: formatText(themePack.footer, {}, preferences),
     columns: columnsBlock,
     cards_count: cards.length,
     columns_count: columns.length,

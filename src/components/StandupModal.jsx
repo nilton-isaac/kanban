@@ -15,15 +15,6 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
 }
 
-function markdownToHtml(markdown) {
-  const escaped = escapeHtml(markdown)
-  return escaped
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/_(.+?)_/g, '<em>$1</em>')
-    .replace(/\n/g, '<br />')
-}
-
 function stripHtml(html) {
   return String(html || '')
     .replace(/<br\s*\/?>/gi, '\n')
@@ -68,46 +59,6 @@ function prefInput(label, value, onChange, placeholder = '') {
   )
 }
 
-function toggleStyleButton(active, label, onClick) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="cyber-btn"
-      style={{
-        padding: '6px 10px',
-        fontSize: '11px',
-        background: active ? '#00f3ff' : 'transparent',
-        color: active ? '#02131a' : '#8aa5b3',
-        borderColor: active ? '#00f3ff' : '#355160',
-        fontWeight: active ? 700 : 400,
-        boxShadow: active ? '0 0 0 1px #00f3ff inset, 0 0 12px rgba(0,243,255,0.25)' : 'none',
-      }}
-    >
-      {active ? `Ativo: ${label}` : label}
-    </button>
-  )
-}
-
-function styleEditor({ title, color, onColorChange, bold, italic, onBoldToggle, onItalicToggle }) {
-  return (
-    <div className="cyber-card" style={{ padding: 10, border: '1px solid rgba(0,243,255,0.12)' }}>
-      <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>{title}</p>
-      <input
-        className="cyber-input"
-        value={color || ''}
-        onChange={onColorChange}
-        placeholder="#00f3ff"
-        style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
-      />
-      <div style={{ display: 'flex', gap: 8 }}>
-        {toggleStyleButton(!!bold, 'Negrito', onBoldToggle)}
-        {toggleStyleButton(!!italic, 'Italico', onItalicToggle)}
-      </div>
-    </div>
-  )
-}
-
 export default function StandupModal({ columns, cards, userId, onSaveLog, onClose }) {
   const { theme } = useTheme()
   const [tab, setTab] = useState('daily')
@@ -137,43 +88,19 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     setLoadingTemplate(true)
     fetchProfile(userId)
       .then((profile) => {
-        if (profile?.standup_template) {
-          setTemplateText(profile.standup_template)
-        }
-        if (profile?.standup_template_date) {
-          setDateText(profile.standup_template_date)
-        }
+        if (profile?.standup_template) setTemplateText(profile.standup_template)
+        if (profile?.standup_template_date) setDateText(profile.standup_template_date)
         if (profile?.standup_preferences) {
           setPreferences((prev) => ({
             ...prev,
             ...profile.standup_preferences,
-            colors: {
-              ...prev.colors,
-              ...(profile.standup_preferences.colors || {}),
-            },
-            statusLabels: {
-              ...prev.statusLabels,
-              ...(profile.standup_preferences.statusLabels || {}),
-            },
-            statusStyles: {
-              ...prev.statusStyles,
-              ...(profile.standup_preferences.statusStyles || {}),
-            },
-            taskLabelStyles: {
-              ...prev.taskLabelStyles,
-              ...(profile.standup_preferences.taskLabelStyles || {}),
-            },
-            elementStyles: {
-              ...prev.elementStyles,
-              ...(profile.standup_preferences.elementStyles || {}),
-            },
             columnAliases: {
               ...prev.columnAliases,
               ...(profile.standup_preferences.columnAliases || {}),
             },
-            columnStyles: {
-              ...(prev.columnStyles || {}),
-              ...(profile.standup_preferences.columnStyles || {}),
+            statusLabels: {
+              ...prev.statusLabels,
+              ...(profile.standup_preferences.statusLabels || {}),
             },
           }))
         }
@@ -199,6 +126,10 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
       preferences,
     })
   }, [columns, cards, theme, templateText, dateText, preferences])
+
+  const previewHtml = useMemo(() => {
+    return `<!doctype html><html><body style="margin:0;padding:0;background:transparent;font-family:Inter,Segoe UI,Arial,sans-serif;font-size:13px;line-height:1.7;color:#e5e7eb;">${dailyMessage}</body></html>`
+  }, [dailyMessage])
 
   const weeklySummary = generateWeeklySummary(weeklyLogs, theme)
 
@@ -246,114 +177,19 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }))
   }
 
-  const updateColumnStyle = (columnId, key, value) => {
-    setPreferences((prev) => ({
-      ...prev,
-      format: key === 'color' && value ? 'html' : prev.format,
-      columnStyles: {
-        ...(prev.columnStyles || {}),
-        [columnId]: {
-          ...((prev.columnStyles || {})[columnId] || {}),
-          [key]: value,
-        },
-      },
-    }))
-  }
-
-  const updateStyleToggle = (group, key, styleKey) => {
-    setPreferences((prev) => ({
-      ...prev,
-      [group]: {
-        ...(prev[group] || {}),
-        [key]: {
-          ...((prev[group] || {})[key] || {}),
-          [styleKey]: !((prev[group] || {})[key] || {})[styleKey],
-        },
-      },
-    }))
-  }
-
-  const updateStyleColor = (group, key, color) => {
-    setPreferences((prev) => ({
-      ...prev,
-      format: color ? 'html' : prev.format,
-      [group]: {
-        ...(prev[group] || {}),
-        [key]: {
-          ...((prev[group] || {})[key] || {}),
-          color,
-        },
-      },
-    }))
-  }
-
-  const previewBodyHtml = useMemo(() => {
-    const previewTextColor = preferences.colors.text || '#e5e7eb'
-    const baseStyle = [
-      'all: initial',
-      'display: block',
-      'box-sizing: border-box',
-      'font-family: Inter, Segoe UI, Arial, sans-serif',
-      `color: ${previewTextColor}`,
-      'font-size: 13px',
-      'line-height: 1.7',
-      'white-space: normal',
-      'word-break: break-word',
-    ].join('; ')
-
-    const content = preferences.format === 'html'
-      ? dailyMessage
-      : preferences.format === 'markdown'
-        ? markdownToHtml(dailyMessage)
-        : escapeHtml(dailyMessage).replace(/\n/g, '<br />')
-
-    return `<div style="${baseStyle}">${content}</div>`
-  }, [dailyMessage, preferences.colors.text, preferences.format])
-
-  const previewHtmlDoc = useMemo(() => {
-    return `<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        background: transparent;
-      }
-      body {
-        background: transparent;
-      }
-      a {
-        text-decoration: underline;
-      }
-    </style>
-  </head>
-  <body>${previewBodyHtml}</body>
-</html>`
-  }, [previewBodyHtml])
-
   const copy = async (text) => {
-    if (preferences.format === 'html' && window.ClipboardItem && navigator.clipboard?.write) {
-      const htmlBlob = new Blob([previewBodyHtml], { type: 'text/html' })
-      const plainBlob = new Blob([stripHtml(previewBodyHtml)], { type: 'text/plain' })
+    if (window.ClipboardItem && navigator.clipboard?.write) {
+      const htmlBlob = new Blob([text], { type: 'text/html' })
+      const plainBlob = new Blob([stripHtml(text)], { type: 'text/plain' })
       await navigator.clipboard.write([new window.ClipboardItem({
         'text/html': htmlBlob,
         'text/plain': plainBlob,
       })])
     } else {
-      await navigator.clipboard.writeText(text)
+      await navigator.clipboard.writeText(stripHtml(text))
     }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-  }
-
-  const copyDailyMessage = () => {
-    copy(dailyMessage).catch(console.error)
-  }
-
-  const copyWeeklySummary = () => {
-    copy(weeklySummary).catch(console.error)
   }
 
   const saveAndCopy = async () => {
@@ -430,8 +266,6 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {tokenChip('header', '{header}', insertToken)}
                   {tokenChip('columns', '{columns}', insertToken)}
                   {tokenChip('footer', '{footer}', insertToken)}
-                  {tokenChip('js: cols.length', '{js: cols.length}', insertToken)}
-                  {tokenChip("js: cards.map(c => c.tasks.map(t => t.link)).flat().filter(Boolean).join('\\n')", '{links}', insertToken)}
                   {columns.map((c) => tokenChip(`col:${c.id}`, `{${preferences.columnAliases?.[c.id] || c.title}}`, insertToken))}
                 </div>
                 <button
@@ -444,92 +278,27 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
               </div>
 
               <div className="cyber-card" style={{ padding: '14px', marginBottom: 16, border: '1px solid rgba(0,243,255,0.18)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 12 }}>
-                  <label style={{ display: 'grid', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>Formato visivel e de copia</span>
-                    <select
-                      className="cyber-input"
-                      value={preferences.format}
-                      onChange={(e) => updatePreference('format', e.target.value)}
-                      style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
-                    >
-                      <option value="html">HTML com cor</option>
-                      <option value="markdown">Markdown</option>
-                      <option value="plain">Texto puro</option>
-                    </select>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginBottom: 14 }}>
+                  {prefInput('Texto de concluido', preferences.statusLabels.done, (e) => updateNestedPreference('statusLabels', 'done', e.target.value))}
+                  {prefInput('Texto de bloqueado', preferences.statusLabels.blocked, (e) => updateNestedPreference('statusLabels', 'blocked', e.target.value))}
+                  {prefInput('Texto de review', preferences.statusLabels.review, (e) => updateNestedPreference('statusLabels', 'review', e.target.value))}
+                  {prefInput('Texto de andamento', preferences.statusLabels.progress, (e) => updateNestedPreference('statusLabels', 'progress', e.target.value))}
+                  {prefInput('Texto de a fazer', preferences.statusLabels.todo, (e) => updateNestedPreference('statusLabels', 'todo', e.target.value))}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                    <input type="checkbox" checked={preferences.showCompletedTasks} onChange={(e) => updatePreference('showCompletedTasks', e.target.checked)} />
+                    Mostrar tasks concluidas
                   </label>
-                  {prefInput('Cor concluido', preferences.colors.done, (e) => updateNestedPreference('colors', 'done', e.target.value), '#22c55e')}
-                  {prefInput('Cor pendente', preferences.colors.pending || preferences.colors.todo || '', (e) => updateNestedPreference('colors', 'pending', e.target.value), '#94a3b8')}
-                  {prefInput('Cor destaque', preferences.colors.accent, (e) => updateNestedPreference('colors', 'accent', e.target.value), '#00f3ff')}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
-                  {styleEditor({
-                    title: 'Cabecalho',
-                    color: preferences.elementStyles?.header?.color,
-                    onColorChange: (e) => updateStyleColor('elementStyles', 'header', e.target.value),
-                    bold: preferences.elementStyles?.header?.bold,
-                    italic: preferences.elementStyles?.header?.italic,
-                    onBoldToggle: () => updateStyleToggle('elementStyles', 'header', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('elementStyles', 'header', 'italic'),
-                  })}
-                  {styleEditor({
-                    title: 'Rodape',
-                    color: preferences.elementStyles?.footer?.color,
-                    onColorChange: (e) => updateStyleColor('elementStyles', 'footer', e.target.value),
-                    bold: preferences.elementStyles?.footer?.bold,
-                    italic: preferences.elementStyles?.footer?.italic,
-                    onBoldToggle: () => updateStyleToggle('elementStyles', 'footer', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('elementStyles', 'footer', 'italic'),
-                  })}
-                  {styleEditor({
-                    title: 'Titulo do card',
-                    color: preferences.elementStyles?.cardTitle?.color,
-                    onColorChange: (e) => updateStyleColor('elementStyles', 'cardTitle', e.target.value),
-                    bold: preferences.elementStyles?.cardTitle?.bold,
-                    italic: preferences.elementStyles?.cardTitle?.italic,
-                    onBoldToggle: () => updateStyleToggle('elementStyles', 'cardTitle', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('elementStyles', 'cardTitle', 'italic'),
-                  })}
-                  {styleEditor({
-                    title: 'Secao da coluna',
-                    color: preferences.elementStyles?.section?.color,
-                    onColorChange: (e) => updateStyleColor('elementStyles', 'section', e.target.value),
-                    bold: preferences.elementStyles?.section?.bold,
-                    italic: preferences.elementStyles?.section?.italic,
-                    onBoldToggle: () => updateStyleToggle('elementStyles', 'section', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('elementStyles', 'section', 'italic'),
-                  })}
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12, marginTop: 12 }}>
-                  {styleEditor({
-                    title: 'Task concluida',
-                    color: preferences.colors.done,
-                    onColorChange: (e) => updateNestedPreference('colors', 'done', e.target.value),
-                    bold: preferences.taskLabelStyles?.done?.bold,
-                    italic: preferences.taskLabelStyles?.done?.italic,
-                    onBoldToggle: () => updateStyleToggle('taskLabelStyles', 'done', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('taskLabelStyles', 'done', 'italic'),
-                  })}
-                  {styleEditor({
-                    title: 'Task pendente',
-                    color: preferences.colors.pending || preferences.colors.todo,
-                    onColorChange: (e) => updateNestedPreference('colors', 'pending', e.target.value),
-                    bold: preferences.taskLabelStyles?.pending?.bold,
-                    italic: preferences.taskLabelStyles?.pending?.italic,
-                    onBoldToggle: () => updateStyleToggle('taskLabelStyles', 'pending', 'bold'),
-                    onItalicToggle: () => updateStyleToggle('taskLabelStyles', 'pending', 'italic'),
-                  })}
-                  {['done', 'progress', 'review', 'blocked', 'todo'].map((statusKey) => styleEditor({
-                    title: `Status ${statusKey}`,
-                    color: preferences.colors?.[statusKey],
-                    onColorChange: (e) => updateNestedPreference('colors', statusKey, e.target.value),
-                    bold: preferences.statusStyles?.[statusKey]?.bold,
-                    italic: preferences.statusStyles?.[statusKey]?.italic,
-                    onBoldToggle: () => updateStyleToggle('statusStyles', statusKey, 'bold'),
-                    onItalicToggle: () => updateStyleToggle('statusStyles', statusKey, 'italic'),
-                  }))}
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                    <input type="checkbox" checked={preferences.showPendingTasks} onChange={(e) => updatePreference('showPendingTasks', e.target.checked)} />
+                    Mostrar tasks pendentes
+                  </label>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                    <input type="checkbox" checked={preferences.includeTaskLinks} onChange={(e) => updatePreference('includeTaskLinks', e.target.checked)} />
+                    Incluir hyperlinks das tasks
+                  </label>
                 </div>
               </div>
 
@@ -543,77 +312,24 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
 
                   <div style={{ display: 'grid', gap: 10, marginBottom: 14 }}>
                     {prefInput('Data variavel ({date})', dateText, (e) => setDateText(e.target.value))}
-                    <label style={{ display: 'grid', gap: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>Formato da mensagem</span>
-                      <select
-                        className="cyber-input"
-                        value={preferences.format}
-                        onChange={(e) => updatePreference('format', e.target.value)}
-                        style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
-                      >
-                        <option value="html">HTML</option>
-                        <option value="markdown">Markdown</option>
-                        <option value="plain">Texto puro</option>
-                      </select>
-                    </label>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
-                    {prefInput('Cor base do texto', preferences.colors.text, (e) => updateNestedPreference('colors', 'text', e.target.value), '#e5e7eb')}
-                    {prefInput('Cor de destaque', preferences.colors.accent, (e) => updateNestedPreference('colors', 'accent', e.target.value), '#00f3ff')}
-                    {prefInput('Cor de concluido', preferences.colors.done, (e) => updateNestedPreference('colors', 'done', e.target.value), '#22c55e')}
-                    {prefInput('Cor de pendente', preferences.colors.pending || preferences.colors.todo || '', (e) => updateNestedPreference('colors', 'pending', e.target.value), '#94a3b8')}
-                    {prefInput('Cor de bloqueado', preferences.colors.blocked, (e) => updateNestedPreference('colors', 'blocked', e.target.value), '#ef4444')}
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 14 }}>
-                    {prefInput('Texto status concluido', preferences.statusLabels.done, (e) => updateNestedPreference('statusLabels', 'done', e.target.value))}
-                    {prefInput('Texto task concluida', preferences.completedTaskLabel, (e) => updatePreference('completedTaskLabel', e.target.value))}
-                    {prefInput('Texto task pendente', preferences.pendingTaskLabel, (e) => updatePreference('pendingTaskLabel', e.target.value))}
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 14 }}>
-                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
-                      <input type="checkbox" checked={preferences.showCompletedTasks} onChange={(e) => updatePreference('showCompletedTasks', e.target.checked)} />
-                      Mostrar tasks concluidas
-                    </label>
-                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
-                      <input type="checkbox" checked={preferences.showPendingTasks} onChange={(e) => updatePreference('showPendingTasks', e.target.checked)} />
-                      Mostrar tasks pendentes
-                    </label>
-                    <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
-                      <input type="checkbox" checked={preferences.includeTaskLinks} onChange={(e) => updatePreference('includeTaskLinks', e.target.checked)} />
-                      Incluir hyperlinks das tasks
-                    </label>
                   </div>
 
                   <div style={{ marginBottom: 14 }}>
                     <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
-                      Alias e estilo das colunas no standup
+                      Alias das colunas no standup
                     </label>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
                       {columns.map((column) => (
-                        <div key={column.id} className="cyber-card" style={{ padding: 10, border: '1px solid rgba(0,243,255,0.12)' }}>
-                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#777', display: 'block', marginBottom: 6 }}>{column.title}</span>
+                        <label key={column.id} style={{ display: 'grid', gap: 6 }}>
+                          <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#777' }}>{column.title}</span>
                           <input
                             className="cyber-input"
                             value={preferences.columnAliases?.[column.id] || ''}
                             onChange={(e) => updateColumnAlias(column.id, e.target.value)}
                             placeholder="Nome alternativo"
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
+                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
                           />
-                          <input
-                            className="cyber-input"
-                            value={preferences.columnStyles?.[column.id]?.color || ''}
-                            onChange={(e) => updateColumnStyle(column.id, 'color', e.target.value)}
-                            placeholder="Cor da coluna (#00f3ff)"
-                            style={{ width: '100%', padding: '8px 10px', fontSize: '12px', marginBottom: 8 }}
-                          />
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            {toggleStyleButton(!!preferences.columnStyles?.[column.id]?.bold, 'Negrito', () => updateColumnStyle(column.id, 'bold', !preferences.columnStyles?.[column.id]?.bold))}
-                            {toggleStyleButton(!!preferences.columnStyles?.[column.id]?.italic, 'Italico', () => updateColumnStyle(column.id, 'italic', !preferences.columnStyles?.[column.id]?.italic))}
-                          </div>
-                        </div>
+                        </label>
                       ))}
                     </div>
                   </div>
@@ -621,10 +337,6 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   <label style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', display: 'block', marginBottom: 6 }}>
                     Template (use os chips para inserir variaveis no texto)
                   </label>
-                  <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#7f7f7f', marginBottom: 6 }}>
-                    Scripts: {'{{js: expressao}}'} ou {'{{#script}} return ... {{/script}}'}.
-                    Variaveis: cols, cards, prefs, date, header, footer, columns, col('ID_OU_NOME'), style(), link(), statusText().
-                  </p>
                   <textarea
                     ref={textareaRef}
                     className="cyber-input"
@@ -648,27 +360,15 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
               )}
 
-              <div
-                style={{
-                  background: 'rgba(0,0,0,0.4)',
-                  padding: '16px',
-                  border: '1px solid rgba(0,243,255,0.15)',
-                  overflowX: 'auto',
-                }}
-              >
+              <div style={{ background: 'rgba(0,0,0,0.4)', padding: '16px', border: '1px solid rgba(0,243,255,0.15)', overflowX: 'auto' }}>
                 <iframe
                   title="standup-preview"
-                  srcDoc={previewHtmlDoc}
-                  style={{
-                    width: '100%',
-                    minHeight: 260,
-                    border: 'none',
-                    background: 'transparent',
-                  }}
+                  srcDoc={previewHtml}
+                  style={{ width: '100%', minHeight: 260, border: 'none', background: 'transparent' }}
                 />
               </div>
               <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
-                Preview em {preferences.format === 'plain' ? 'texto puro' : preferences.format}. Para cor visivel e copia formatada, use `html`.
+                Colunas e estados ficam em negrito. Estados tambem ficam em italico.
               </p>
               {saved && (
                 <p style={{ fontSize: '11px', color: 'var(--neon-green)', fontFamily: 'var(--font-body)', marginTop: 8 }}>
@@ -708,11 +408,11 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
           {tab === 'daily' && (
             <>
               <button
-                onClick={copyDailyMessage}
+                onClick={() => copy(dailyMessage).catch(console.error)}
                 className="cyber-btn"
                 style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
               >
-                {copied ? 'Copiado!' : preferences.format === 'html' ? 'Copiar Rico' : 'Copiar Texto'}
+                {copied ? 'Copiado!' : 'Copiar Rico'}
               </button>
               {userId && !saved && (
                 <button
@@ -727,11 +427,11 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
           )}
           {tab === 'weekly' && !loadingWeekly && (
             <button
-              onClick={copyWeeklySummary}
+              onClick={() => navigator.clipboard.writeText(weeklySummary).catch(console.error)}
               className="cyber-btn"
               style={{ padding: '8px 16px', fontSize: '12px', color: 'var(--neon-yellow)', borderColor: 'var(--neon-yellow)' }}
             >
-              {copied ? 'Copiado!' : 'Copiar Resumo'}
+              Copiar Resumo
             </button>
           )}
         </div>
