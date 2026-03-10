@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
-import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle } from 'lucide-react'
+import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle, Archive } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
 import { ThemeIcon } from '../lib/themeIcons'
 
-export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError }) {
+export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError, archivedCount }) {
   const [time, setTime] = useState(new Date())
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
@@ -58,17 +58,28 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
 
       <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
         <div style={{ display: 'flex', border: '1px solid rgba(0,243,255,0.2)', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' }}>
-          {[{ id: 'kanban', label: 'KANBAN' }, { id: 'eisenhower', label: 'EISENHOWER' }].map(({ id, label }) => (
+          {[{ id: 'kanban', label: 'KANBAN' }, { id: 'eisenhower', label: 'EISENHOWER' }, { id: 'archived', label: 'ARQUIVO' }].map(({ id, label }, idx, arr) => (
             <button key={id} onClick={() => onViewModeChange(id)} style={{
               padding: '6px 16px',
               background: viewMode === id ? 'rgba(0,243,255,0.12)' : 'transparent',
               border: 'none',
-              borderRight: id === 'kanban' ? '1px solid rgba(0,243,255,0.2)' : 'none',
+              borderRight: idx < arr.length - 1 ? '1px solid rgba(0,243,255,0.2)' : 'none',
               color: viewMode === id ? 'var(--neon-cyan)' : '#444',
               fontFamily: 'var(--font-heading)', fontSize: '10px', letterSpacing: '1px', cursor: 'pointer',
               transition: 'all 0.2s', textTransform: 'uppercase',
               boxShadow: viewMode === id ? 'inset 0 -2px 0 var(--neon-cyan)' : 'none',
-            }}>{label}</button>
+              position: 'relative',
+            }}>
+              {label}
+              {id === 'archived' && archivedCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: 2, right: 2,
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: 'var(--neon-yellow)',
+                  boxShadow: '0 0 4px var(--neon-yellow)',
+                }} />
+              )}
+            </button>
           ))}
         </div>
       </div>

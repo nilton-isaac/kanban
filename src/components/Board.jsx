@@ -52,6 +52,7 @@ export default function Board({
   onAddCard,
   onEditCard,
   onDeleteCard,
+  onArchiveCard,
   onMoveCard,
   onReorderColumn,
   onReorderColumns,
@@ -135,7 +136,7 @@ export default function Board({
         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
           <div className="flex gap-5 pb-4" style={{ minWidth: 'max-content', alignItems: 'flex-start' }}>
             {columns.map((col) => {
-              const colCards = cards.filter((c) => c.columnId === col.id)
+              const colCards = cards.filter((c) => c.columnId === col.id && !c.archived)
               return (
                 <SortableColumnItem key={col.id} column={col}>
                   {(dragHandleProps) => (
@@ -145,6 +146,7 @@ export default function Board({
                       onAddCard={() => onAddCard(col.id)}
                       onEditCard={onEditCard}
                       onDeleteCard={onDeleteCard}
+                      onArchiveCard={onArchiveCard}
                       onUpdateColumn={onUpdateColumn}
                       onDeleteColumn={onDeleteColumn}
                       onClearColumn={onClearColumn}

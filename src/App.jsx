@@ -2,6 +2,7 @@
 import Board from './components/Board'
 import Header from './components/Header'
 import EisenhowerMatrix from './components/EisenhowerMatrix'
+import ArchivedView from './components/ArchivedView'
 import AuthScreen from './components/AuthScreen'
 import StandupModal from './components/StandupModal'
 import FloatingThemeSelector from './components/FloatingThemeSelector'
@@ -186,6 +187,26 @@ export default function App() {
     if (isCloud && session?.user?.id) dbDeleteCard(cardId, session.user.id).catch(console.error)
   }, [isCloud, session])
 
+  const archiveCard = useCallback((cardId) => {
+    setCards(prev => prev.map(c =>
+      c.id === cardId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c
+    ))
+  }, [])
+
+  const unarchiveCard = useCallback((cardId) => {
+    setCards(prev => prev.map(c =>
+      c.id === cardId ? { ...c, archived: false, archivedAt: null } : c
+    ))
+  }, [])
+
+  const clearArchive = useCallback(() => {
+    const archivedIds = cards.filter(c => c.archived).map(c => c.id)
+    setCards(prev => prev.filter(c => !c.archived))
+    if (isCloud && session?.user?.id) {
+      archivedIds.forEach(id => dbDeleteCard(id, session.user.id).catch(console.error))
+    }
+  }, [cards, isCloud, session])
+
   const moveCard = useCallback((cardId, newColumnId, newIndex) => {
     setCards(prev => {
       const card = prev.find(c => c.id === cardId)
@@ -314,6 +335,7 @@ export default function App() {
         nextDayDone={nextDayDone}
         onLogout={() => supabase.auth.signOut()}
         syncError={syncError}
+        archivedCount={cards.filter(c => c.archived).length}
       />
 
       {viewMode === 'kanban' ? (
@@ -323,6 +345,7 @@ export default function App() {
           onAddCard={(columnId) => setAddCardModal({ columnId })}
           onEditCard={handleOpenEdit}
           onDeleteCard={removeCard}
+          onArchiveCard={archiveCard}
           onMoveCard={moveCard}
           onReorderColumn={reorderColumn}
           onReorderColumns={reorderColumns}
@@ -332,13 +355,21 @@ export default function App() {
           onClearColumn={clearColumnCards}
           onInlineEdit={(id, title) => updateCard(id, { title })}
         />
-      ) : (
+      ) : viewMode === 'eisenhower' ? (
         <EisenhowerMatrix
-          cards={cards}
+          cards={cards.filter(c => !c.archived)}
           onEditCard={handleOpenEdit}
           onDeleteCard={removeCard}
           onUpdateCard={updateCard}
           onInlineEdit={(id, title) => updateCard(id, { title })}
+        />
+      ) : (
+        <ArchivedView
+          cards={cards}
+          columns={columns}
+          onUnarchive={unarchiveCard}
+          onView={handleOpenEdit}
+          onClearArchive={clearArchive}
         />
       )}
 

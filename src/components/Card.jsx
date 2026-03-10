@@ -18,7 +18,7 @@ const PRIORITY_DOTS = {
   critical: { color: 'var(--neon-pink)',   label: 'Crítica' },
 }
 
-export default function Card({ card, onEdit, onDelete, onInlineEdit }) {
+export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }) {
   const { theme } = useTheme()
   const isNier = theme === 'nier'
   const [hovered, setHovered] = useState(false)
@@ -125,6 +125,14 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit }) {
               style={actionBtnStyle('var(--neon-cyan)')}
               title="Editar"
             >✎</button>
+            {onArchive && (
+              <button
+                onPointerDown={e => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onArchive() }}
+                style={actionBtnStyle('var(--neon-yellow)')}
+                title="Arquivar tarefa"
+              >⊙</button>
+            )}
             <button
               onPointerDown={e => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onDelete() }}

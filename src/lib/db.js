@@ -74,6 +74,8 @@ export async function upsertCard(card, userId) {
     tasks: card.tasks || [],
     excluded_from_standup: card.excluded_from_standup || false,
     position: card.position || 0,
+    archived: card.archived || false,
+    archived_at: card.archivedAt || null,
   })
   if (error) throw error
 }
@@ -104,6 +106,8 @@ function dbCardToState(row) {
     excluded_from_standup: row.excluded_from_standup || false,
     position: row.position,
     createdAt: row.created_at,
+    archived: row.archived || false,
+    archivedAt: row.archived_at || null,
     // images e banner: só localStorage
     images: [],
     banner: null,

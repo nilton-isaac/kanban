@@ -18,6 +18,7 @@ export default function Column({
   onAddCard,
   onEditCard,
   onDeleteCard,
+  onArchiveCard,
   onUpdateColumn,
   onDeleteColumn,
   onClearColumn,
@@ -177,6 +178,7 @@ export default function Column({
               columnColor={column.color}
               onEdit={() => onEditCard(card)}
               onDelete={() => onDeleteCard(card.id)}
+              onArchive={onArchiveCard ? () => onArchiveCard(card.id) : undefined}
               onInlineEdit={onInlineEdit}
             />
           ))}
