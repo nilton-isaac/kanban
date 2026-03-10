@@ -62,6 +62,25 @@ function prefInput(label, value, onChange, placeholder = '') {
   )
 }
 
+function toggleStyleButton(active, label, onClick) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="cyber-btn"
+      style={{
+        padding: '6px 10px',
+        fontSize: '11px',
+        background: active ? 'rgba(0,243,255,0.18)' : 'transparent',
+        color: active ? 'var(--neon-cyan)' : '#8aa5b3',
+        borderColor: active ? 'var(--neon-cyan)' : '#355160',
+      }}
+    >
+      {label}
+    </button>
+  )
+}
+
 export default function StandupModal({ columns, cards, userId, onSaveLog, onClose }) {
   const { theme } = useTheme()
   const [tab, setTab] = useState('daily')
@@ -188,6 +207,19 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }))
   }
 
+  const updateStyleToggle = (group, key, styleKey) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [group]: {
+        ...(prev[group] || {}),
+        [key]: {
+          ...((prev[group] || {})[key] || {}),
+          [styleKey]: !((prev[group] || {})[key] || {})[styleKey],
+        },
+      },
+    }))
+  }
+
   const previewHtml = useMemo(() => {
     if (preferences.format === 'html') return dailyMessage
     if (preferences.format === 'markdown') return markdownToHtml(dailyMessage)
@@ -306,6 +338,51 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </button>
               </div>
 
+              <div className="cyber-card" style={{ padding: '14px', marginBottom: 16, border: '1px solid rgba(0,243,255,0.18)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, marginBottom: 12 }}>
+                  <label style={{ display: 'grid', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999' }}>Formato visivel e de copia</span>
+                    <select
+                      className="cyber-input"
+                      value={preferences.format}
+                      onChange={(e) => updatePreference('format', e.target.value)}
+                      style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
+                    >
+                      <option value="html">HTML com cor</option>
+                      <option value="markdown">Markdown</option>
+                      <option value="plain">Texto puro</option>
+                    </select>
+                  </label>
+                  {prefInput('Cor concluido', preferences.colors.done, (e) => updateNestedPreference('colors', 'done', e.target.value), '#22c55e')}
+                  {prefInput('Cor pendente', preferences.colors.pending || preferences.colors.todo || '', (e) => updateNestedPreference('colors', 'pending', e.target.value), '#94a3b8')}
+                  {prefInput('Cor destaque', preferences.colors.accent, (e) => updateNestedPreference('colors', 'accent', e.target.value), '#00f3ff')}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Task concluida</p>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                      {toggleStyleButton(!!preferences.taskLabelStyles?.done?.bold, 'Negrito', () => updateStyleToggle('taskLabelStyles', 'done', 'bold'))}
+                      {toggleStyleButton(!!preferences.taskLabelStyles?.done?.italic, 'Italico', () => updateStyleToggle('taskLabelStyles', 'done', 'italic'))}
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Task pendente</p>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                      {toggleStyleButton(!!preferences.taskLabelStyles?.pending?.bold, 'Negrito', () => updateStyleToggle('taskLabelStyles', 'pending', 'bold'))}
+                      {toggleStyleButton(!!preferences.taskLabelStyles?.pending?.italic, 'Italico', () => updateStyleToggle('taskLabelStyles', 'pending', 'italic'))}
+                    </div>
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: '#999', marginBottom: 6 }}>Status concluido</p>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                      {toggleStyleButton(!!preferences.statusStyles?.done?.bold, 'Negrito', () => updateStyleToggle('statusStyles', 'done', 'bold'))}
+                      {toggleStyleButton(!!preferences.statusStyles?.done?.italic, 'Italico', () => updateStyleToggle('statusStyles', 'done', 'italic'))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {isEditingTemplate && (
                 <div className="cyber-card" style={{ padding: '14px', marginBottom: 16, border: '1px solid rgba(252,238,10,0.35)' }}>
                   {loadingTemplate && (
@@ -324,9 +401,9 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                         onChange={(e) => updatePreference('format', e.target.value)}
                         style={{ width: '100%', padding: '8px 10px', fontSize: '12px' }}
                       >
-                        <option value="plain">Texto puro</option>
-                        <option value="markdown">Markdown</option>
                         <option value="html">HTML</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="plain">Texto puro</option>
                       </select>
                     </label>
                   </div>
@@ -425,7 +502,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
               <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
-                Preview em {preferences.format === 'plain' ? 'texto puro' : preferences.format}. Cor, negrito e italico aparecem visualmente em `html` e em preview de `markdown`.
+                Preview em {preferences.format === 'plain' ? 'texto puro' : preferences.format}. Para cor visivel e copia formatada, use `html`.
               </p>
               {saved && (
                 <p style={{ fontSize: '11px', color: 'var(--neon-green)', fontFamily: 'var(--font-body)', marginTop: 8 }}>

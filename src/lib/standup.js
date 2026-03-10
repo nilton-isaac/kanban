@@ -19,7 +19,7 @@ export const NEXT_DAY_CONFIG = {
 }
 
 export const DEFAULT_STANDUP_PREFERENCES = {
-  format: 'plain',
+  format: 'html',
   showCompletedTasks: false,
   showPendingTasks: false,
   includeTaskLinks: true,
@@ -49,6 +49,10 @@ export const DEFAULT_STANDUP_PREFERENCES = {
     review: { bold: false, italic: true },
     progress: { bold: false, italic: false },
     todo: { bold: false, italic: false },
+  },
+  taskLabelStyles: {
+    done: { bold: true, italic: false },
+    pending: { bold: false, italic: true },
   },
 }
 
@@ -138,6 +142,7 @@ function normalizeStandupPreferences(raw) {
   const colors = input.colors && typeof input.colors === 'object' ? input.colors : {}
   const statusLabels = input.statusLabels && typeof input.statusLabels === 'object' ? input.statusLabels : {}
   const statusStyles = input.statusStyles && typeof input.statusStyles === 'object' ? input.statusStyles : {}
+  const taskLabelStyles = input.taskLabelStyles && typeof input.taskLabelStyles === 'object' ? input.taskLabelStyles : {}
 
   return {
     ...DEFAULT_STANDUP_PREFERENCES,
@@ -160,6 +165,16 @@ function normalizeStandupPreferences(raw) {
     statusStyles: {
       ...DEFAULT_STANDUP_PREFERENCES.statusStyles,
       ...Object.fromEntries(Object.entries(statusStyles).map(([key, value]) => [
+        key,
+        {
+          bold: Boolean(value?.bold),
+          italic: Boolean(value?.italic),
+        },
+      ])),
+    },
+    taskLabelStyles: {
+      ...DEFAULT_STANDUP_PREFERENCES.taskLabelStyles,
+      ...Object.fromEntries(Object.entries(taskLabelStyles).map(([key, value]) => [
         key,
         {
           bold: Boolean(value?.bold),
@@ -237,7 +252,10 @@ function resolveColumnLabel(column, preferences) {
 function formatTaskLine(task, preferences, linePrefix) {
   const label = task.done ? preferences.completedTaskLabel : preferences.pendingTaskLabel
   const color = task.done ? preferences.colors.done : (preferences.colors.pending || preferences.colors.todo)
-  const decoratedLabel = formatText(label, { bold: task.done, color }, preferences)
+  const labelStyle = task.done
+    ? (preferences.taskLabelStyles?.done || {})
+    : (preferences.taskLabelStyles?.pending || {})
+  const decoratedLabel = formatText(label, { ...labelStyle, color }, preferences)
   const taskTitle = preferences.includeTaskLinks && task.link
     ? formatLink(task.title || task.platform || 'Abrir tarefa', task.link, preferences)
     : formatText(task.title, { italic: !task.done }, preferences)
