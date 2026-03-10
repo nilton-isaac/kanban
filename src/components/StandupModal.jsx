@@ -23,9 +23,9 @@ function stripHtml(html) {
 
 function markdownToHtml(markdown) {
   return escapeHtml(markdown)
-    .replace(/\*\*_([^*]+)_\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/_([^_]+)_/g, '<em>$1</em>')
+    .replace(/\*\*_([^\n*]+)_\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*([^\n*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/_([^\n_]+)_/g, '<em>$1</em>')
     .replace(/\n/g, '<br />')
 }
 
