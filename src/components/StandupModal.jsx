@@ -24,6 +24,12 @@ function markdownToHtml(markdown) {
     .replace(/\n/g, '<br />')
 }
 
+function stripHtml(html) {
+  return String(html || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+}
+
 function tokenChip(token, label, onInsert) {
   return (
     <button
@@ -151,9 +157,21 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
               ...prev.statusStyles,
               ...(profile.standup_preferences.statusStyles || {}),
             },
+            taskLabelStyles: {
+              ...prev.taskLabelStyles,
+              ...(profile.standup_preferences.taskLabelStyles || {}),
+            },
+            elementStyles: {
+              ...prev.elementStyles,
+              ...(profile.standup_preferences.elementStyles || {}),
+            },
             columnAliases: {
               ...prev.columnAliases,
               ...(profile.standup_preferences.columnAliases || {}),
+            },
+            columnStyles: {
+              ...(prev.columnStyles || {}),
+              ...(profile.standup_preferences.columnStyles || {}),
             },
           }))
         }
@@ -252,16 +270,46 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }))
   }
 
+  const updateStyleColor = (group, key, color) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [group]: {
+        ...(prev[group] || {}),
+        [key]: {
+          ...((prev[group] || {})[key] || {}),
+          color,
+        },
+      },
+    }))
+  }
+
   const previewHtml = useMemo(() => {
-    if (preferences.format === 'html') return dailyMessage
-    if (preferences.format === 'markdown') return markdownToHtml(dailyMessage)
-    return escapeHtml(dailyMessage).replace(/\n/g, '<br />')
-  }, [dailyMessage, preferences.format])
+    const previewTextColor = preferences.colors.text || '#e5e7eb'
+    const baseStyle = [
+      'all: initial',
+      'display: block',
+      'box-sizing: border-box',
+      'font-family: Inter, Segoe UI, Arial, sans-serif',
+      `color: ${previewTextColor}`,
+      'font-size: 13px',
+      'line-height: 1.7',
+      'white-space: normal',
+      'word-break: break-word',
+    ].join('; ')
+
+    const content = preferences.format === 'html'
+      ? dailyMessage
+      : preferences.format === 'markdown'
+        ? markdownToHtml(dailyMessage)
+        : escapeHtml(dailyMessage).replace(/\n/g, '<br />')
+
+    return `<div style="${baseStyle}">${content}</div>`
+  }, [dailyMessage, preferences.colors.text, preferences.format])
 
   const copy = async (text) => {
     if (preferences.format === 'html' && window.ClipboardItem && navigator.clipboard?.write) {
-      const htmlBlob = new Blob([text], { type: 'text/html' })
-      const plainBlob = new Blob([text.replace(/<[^>]+>/g, '')], { type: 'text/plain' })
+      const htmlBlob = new Blob([previewHtml], { type: 'text/html' })
+      const plainBlob = new Blob([stripHtml(previewHtml)], { type: 'text/plain' })
       await navigator.clipboard.write([new window.ClipboardItem({
         'text/html': htmlBlob,
         'text/plain': plainBlob,
@@ -274,9 +322,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
   }
 
   const copyDailyMessage = () => {
-    copy(dailyMessage).then(() => {
-      if (preferences.format === 'html') return
-    }).catch(console.error)
+    copy(dailyMessage).catch(console.error)
   }
 
   const copyWeeklySummary = () => {
@@ -394,7 +440,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {styleEditor({
                     title: 'Cabecalho',
                     color: preferences.elementStyles?.header?.color,
-                    onColorChange: (e) => updateNestedPreference('elementStyles', 'header', { ...(preferences.elementStyles?.header || {}), color: e.target.value }),
+                    onColorChange: (e) => updateStyleColor('elementStyles', 'header', e.target.value),
                     bold: preferences.elementStyles?.header?.bold,
                     italic: preferences.elementStyles?.header?.italic,
                     onBoldToggle: () => updateStyleToggle('elementStyles', 'header', 'bold'),
@@ -403,7 +449,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {styleEditor({
                     title: 'Rodape',
                     color: preferences.elementStyles?.footer?.color,
-                    onColorChange: (e) => updateNestedPreference('elementStyles', 'footer', { ...(preferences.elementStyles?.footer || {}), color: e.target.value }),
+                    onColorChange: (e) => updateStyleColor('elementStyles', 'footer', e.target.value),
                     bold: preferences.elementStyles?.footer?.bold,
                     italic: preferences.elementStyles?.footer?.italic,
                     onBoldToggle: () => updateStyleToggle('elementStyles', 'footer', 'bold'),
@@ -412,7 +458,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {styleEditor({
                     title: 'Titulo do card',
                     color: preferences.elementStyles?.cardTitle?.color,
-                    onColorChange: (e) => updateNestedPreference('elementStyles', 'cardTitle', { ...(preferences.elementStyles?.cardTitle || {}), color: e.target.value }),
+                    onColorChange: (e) => updateStyleColor('elementStyles', 'cardTitle', e.target.value),
                     bold: preferences.elementStyles?.cardTitle?.bold,
                     italic: preferences.elementStyles?.cardTitle?.italic,
                     onBoldToggle: () => updateStyleToggle('elementStyles', 'cardTitle', 'bold'),
@@ -421,7 +467,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   {styleEditor({
                     title: 'Secao da coluna',
                     color: preferences.elementStyles?.section?.color,
-                    onColorChange: (e) => updateNestedPreference('elementStyles', 'section', { ...(preferences.elementStyles?.section || {}), color: e.target.value }),
+                    onColorChange: (e) => updateStyleColor('elementStyles', 'section', e.target.value),
                     bold: preferences.elementStyles?.section?.bold,
                     italic: preferences.elementStyles?.section?.italic,
                     onBoldToggle: () => updateStyleToggle('elementStyles', 'section', 'bold'),
@@ -577,15 +623,10 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
 
               <div
                 style={{
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '13px',
-                  color: preferences.colors.text || 'var(--neon-cyan)',
-                  lineHeight: '1.7',
-                  wordBreak: 'break-word',
                   background: 'rgba(0,0,0,0.4)',
                   padding: '16px',
                   border: '1px solid rgba(0,243,255,0.15)',
-                  whiteSpace: preferences.format === 'plain' ? 'pre-wrap' : 'normal',
+                  overflowX: 'auto',
                 }}
                 dangerouslySetInnerHTML={{ __html: previewHtml }}
               />
