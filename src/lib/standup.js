@@ -185,6 +185,10 @@ function normalizeTask(task) {
   }
 }
 
+function isVisibleInStandup(card) {
+  return !card?.archived && !isExcludedFromStandup(card)
+}
+
 function resolveColumnLabel(column, preferences) {
   const alias = preferences.columnAliases?.[column.id]
   if (alias && String(alias).trim()) return String(alias).trim()
@@ -221,7 +225,7 @@ function buildColumnsBlock(columns, cards, themePack, config, preferences) {
 
   const lines = []
   orderedColumns.forEach((col) => {
-    const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
+    const colCards = cards.filter((c) => c.columnId === col.id && isVisibleInStandup(c))
     if (!config.includeEmptyColumns && colCards.length === 0) return
 
     const title = resolveColumnLabel(col, preferences)
@@ -296,7 +300,7 @@ export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', o
 
   columns.forEach((col, idx) => {
     const block = buildColumnsBlock([col], cards, themePack, config, preferences)
-    const colCards = cards.filter((c) => c.columnId === col.id && !isExcludedFromStandup(c))
+    const colCards = cards.filter((c) => c.columnId === col.id && isVisibleInStandup(c))
     const title = String(col.title || '').trim()
     const alias = resolveColumnLabel(col, preferences)
     const normalizedTitle = normalizeKey(title)
@@ -463,7 +467,7 @@ function isExcludedFromStandup(card) {
 }
 
 function templateHasVisibleCards(renderedText, cards) {
-  const visibleCards = (cards || []).filter((c) => !isExcludedFromStandup(c))
+  const visibleCards = (cards || []).filter((c) => isVisibleInStandup(c))
   if (visibleCards.length === 0) return true
   const text = String(renderedText || '').toLowerCase()
   return visibleCards.some((c) => text.includes(String(c.title || '').toLowerCase()))
