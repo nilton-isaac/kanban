@@ -77,12 +77,14 @@ function toggleStyleButton(active, label, onClick) {
       style={{
         padding: '6px 10px',
         fontSize: '11px',
-        background: active ? 'rgba(0,243,255,0.18)' : 'transparent',
-        color: active ? 'var(--neon-cyan)' : '#8aa5b3',
-        borderColor: active ? 'var(--neon-cyan)' : '#355160',
+        background: active ? '#00f3ff' : 'transparent',
+        color: active ? '#02131a' : '#8aa5b3',
+        borderColor: active ? '#00f3ff' : '#355160',
+        fontWeight: active ? 700 : 400,
+        boxShadow: active ? '0 0 0 1px #00f3ff inset, 0 0 12px rgba(0,243,255,0.25)' : 'none',
       }}
     >
-      {label}
+      {active ? `Ativo: ${label}` : label}
     </button>
   )
 }
@@ -247,6 +249,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
   const updateColumnStyle = (columnId, key, value) => {
     setPreferences((prev) => ({
       ...prev,
+      format: key === 'color' && value ? 'html' : prev.format,
       columnStyles: {
         ...(prev.columnStyles || {}),
         [columnId]: {
@@ -273,6 +276,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
   const updateStyleColor = (group, key, color) => {
     setPreferences((prev) => ({
       ...prev,
+      format: color ? 'html' : prev.format,
       [group]: {
         ...(prev[group] || {}),
         [key]: {
@@ -283,7 +287,7 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     }))
   }
 
-  const previewHtml = useMemo(() => {
+  const previewBodyHtml = useMemo(() => {
     const previewTextColor = preferences.colors.text || '#e5e7eb'
     const baseStyle = [
       'all: initial',
@@ -306,10 +310,33 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
     return `<div style="${baseStyle}">${content}</div>`
   }, [dailyMessage, preferences.colors.text, preferences.format])
 
+  const previewHtmlDoc = useMemo(() => {
+    return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+      }
+      body {
+        background: transparent;
+      }
+      a {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>${previewBodyHtml}</body>
+</html>`
+  }, [previewBodyHtml])
+
   const copy = async (text) => {
     if (preferences.format === 'html' && window.ClipboardItem && navigator.clipboard?.write) {
-      const htmlBlob = new Blob([previewHtml], { type: 'text/html' })
-      const plainBlob = new Blob([stripHtml(previewHtml)], { type: 'text/plain' })
+      const htmlBlob = new Blob([previewBodyHtml], { type: 'text/html' })
+      const plainBlob = new Blob([stripHtml(previewBodyHtml)], { type: 'text/plain' })
       await navigator.clipboard.write([new window.ClipboardItem({
         'text/html': htmlBlob,
         'text/plain': plainBlob,
@@ -628,8 +655,18 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                   border: '1px solid rgba(0,243,255,0.15)',
                   overflowX: 'auto',
                 }}
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
-              />
+              >
+                <iframe
+                  title="standup-preview"
+                  srcDoc={previewHtmlDoc}
+                  style={{
+                    width: '100%',
+                    minHeight: 260,
+                    border: 'none',
+                    background: 'transparent',
+                  }}
+                />
+              </div>
               <p style={{ fontSize: '11px', color: '#777', fontFamily: 'var(--font-body)', marginTop: 8 }}>
                 Preview em {preferences.format === 'plain' ? 'texto puro' : preferences.format}. Para cor visivel e copia formatada, use `html`.
               </p>
