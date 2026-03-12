@@ -2,9 +2,31 @@ import { useState, useEffect, useRef } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { CLASS_LIST, getClassById, getAvailableSkills, createCharacter } from '../data/classes'
 import { WEAPONS, getStartingWeapon, RARITY_COLORS, RARITY_LABELS } from '../data/weapons'
-import { ENEMY_CATEGORIES } from '../data/enemies'
+import { ENEMIES, ENEMY_CATEGORIES } from '../data/enemies'
 import { loadGameState, saveGameState, computeLevel, getLevelTitle, getLevelColor, awardTaskXp, xpForNextLevel } from '../lib/gamification'
 import { startDungeonRun, processPlayerAction, applyLoot } from '../lib/dungeonEngine'
+import { ALL_SHOP_ITEMS, WEAPON_PRICES, canAfford } from '../data/shopItems'
+
+const CONSUMABLE_SPECIALS = new Set(['heal_both'])
+const REPEATABLE_SPECIALS = new Set(['bonus_xp', 'auto_revive', 'reveal_next', 'secret_floor', 'add_class', 'heal_both'])
+
+function createInventoryItem(item) {
+  const uid = `${item.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+  return {
+    ...item,
+    uid,
+    type: item.category,
+    amount: item.amount ?? item.value ?? 0,
+  }
+}
+
+function isConsumableShopItem(item) {
+  return item.category === 'potion' || item.category === 'scroll' || CONSUMABLE_SPECIALS.has(item.effect)
+}
+
+function isRepeatableShopItem(item) {
+  return item.category === 'potion' || item.category === 'scroll' || REPEATABLE_SPECIALS.has(item.effect)
+}
 
 // ─── HP/MP BAR ─────────────────────────────────────────────────────────────
 function StatBar({ current, max, color, label }) {
@@ -88,7 +110,7 @@ function ClassSelect({ onSelect, existingClasses = [] }) {
 function CombatScreen({ run, onAction, onFinish, gameState }) {
   const { character, enemy, log, finished, result } = run
   const skills = getAvailableSkills(character)
-  const potions = (gameState.inventory || []).filter(i => i.type === 'potion')
+  const potions = (gameState.inventory || []).filter(i => i.type === 'potion' || i.type === 'scroll' || (i.type === 'special' && i.effect === 'heal_both'))
   const [activeTab, setActiveTab] = useState('actions')
 
   const hp = character.currentHp ?? character.maxHp
@@ -191,13 +213,13 @@ function CombatScreen({ run, onAction, onFinish, gameState }) {
 
           {activeTab === 'items' && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {potions.length === 0 && <p style={{ color: '#555', fontSize: 11, fontFamily: 'var(--font-body)', gridColumn: '1/-1' }}>Sem itens.</p>}
-              {potions.slice(0, 6).map((item, i) => (
-                <ActionBtn key={i}
+              {consumables.length === 0 && <p style={{ color: '#555', fontSize: 11, fontFamily: 'var(--font-body)', gridColumn: '1/-1' }}>Sem itens.</p>}
+              {consumables.slice(0, 8).map((item) => (
+                <ActionBtn key={item.uid || item.id}
                   label={`🧪 Poção de Cura`}
-                  sub={`+${item.amount} HP`}
+                  sub={item.desc || item.effect || 'Consumivel'}
                   color="var(--neon-green)"
-                  onClick={() => onAction({ type: 'item', item, itemIndex: i })}
+                  onClick={() => onAction({ type: 'item', item })}
                 />
               ))}
             </div>
@@ -248,7 +270,7 @@ function ActionBtn({ label, sub, color, onClick, disabled }) {
 // ─── INVENTORY PANEL ───────────────────────────────────────────────────────
 function InventoryPanel({ gameState, onEquip }) {
   const weapons = (gameState.inventory || []).filter(i => i.dmg)
-  const potions = (gameState.inventory || []).filter(i => i.type === 'potion')
+  const consumables = (gameState.inventory || []).filter(i => i.type === 'potion' || i.type === 'scroll' || (i.type === 'special' && i.effect === 'heal_both'))
   const equipped = gameState.equippedWeapon
 
   return (
@@ -314,29 +336,86 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
   const xpInfo = computeLevel(gameState.totalXp || 0)
   const hasClass = gameState.classIds?.length > 0
   const character = hasClass ? buildCharacter(gameState) : null
-  const isSetup = !hasClass
+  const maxClassSlots = Math.min(3, 1 + (xpInfo.level >= 10 ? 1 : 0) + (xpInfo.level >= 20 ? 1 : 0) + (gameState.bonusClassUnlocks || 0))
 
   function showNotif(msg, color = 'var(--neon-green)') {
     setNotification({ msg, color })
     setTimeout(() => setNotification(null), 3000)
   }
 
+  function removeInventoryItem(state, item) {
+    return {
+      ...state,
+      inventory: (state.inventory || []).filter(entry => (entry.uid || entry.id) !== (item.uid || item.id)),
+    }
+  }
+
+  function findAutoReviveItem(state) {
+    return (state.inventory || []).find(entry => entry.effect === 'auto_revive')
+  }
+
+  function applyPermanentItemEffect(state, item) {
+    const newState = {
+      ...state,
+      ownedShopItems: [...new Set([...(state.ownedShopItems || []), item.id])],
+    }
+    const stats = { ...(newState.characterStats || character?.stats || {}) }
+
+    if (item.effect === 'perm_def') newState.bonusDef = (newState.bonusDef || 0) + (item.value || 0)
+    if (item.effect === 'perm_crit') newState.bonusCrit = (newState.bonusCrit || 0) + (item.value || 0)
+    if (item.effect === 'perm_dodge') newState.bonusDodge = (newState.bonusDodge || 0) + (item.value || 0)
+    if (item.effect === 'perm_magic_res') newState.bonusMagicRes = (newState.bonusMagicRes || 0) + (item.value || 0)
+    if (item.effect === 'perm_hp') {
+      newState.characterMaxHp = (newState.characterMaxHp || character?.maxHp || 0) + (item.value || 0)
+      newState.characterHp = (newState.characterHp || character?.maxHp || 0) + (item.value || 0)
+    }
+    if (item.effect === 'perm_mp') {
+      newState.characterMaxMp = (newState.characterMaxMp || character?.maxMp || 0) + (item.value || 0)
+      newState.characterMp = (newState.characterMp || character?.maxMp || 0) + (item.value || 0)
+    }
+
+    if (item.effect === 'perm_str') stats.str = (stats.str || 0) + (item.value || 0)
+    if (item.effect === 'perm_dex') stats.dex = (stats.dex || 0) + (item.value || 0)
+    if (item.effect === 'perm_int') stats.int = (stats.int || 0) + (item.value || 0)
+    if (item.effect === 'perm_wis') stats.wis = (stats.wis || 0) + (item.value || 0)
+    if (item.effect === 'perm_con') stats.con = (stats.con || 0) + (item.value || 0)
+    if (item.effect === 'perm_cha') stats.cha = (stats.cha || 0) + (item.value || 0)
+    if (item.effect === 'perm_all' || item.effect === 'perm_stat') {
+      for (const stat of ['str', 'dex', 'int', 'wis', 'con', 'cha']) stats[stat] = (stats[stat] || 0) + (item.value || 0)
+    }
+
+    newState.characterStats = Object.keys(stats).length > 0 ? stats : newState.characterStats
+    return newState
+  }
+
   function handleClassSelect(classId) {
     const cls = getClassById(classId)
     if (!cls) return
+    if ((gameState.classIds || []).length >= maxClassSlots) {
+      showNotif('Sem slots de classe disponiveis.', '#ff4444')
+      return
+    }
     const char = createCharacter(classId, gameState.characterName || 'Herói')
     const startWeapon = getStartingWeapon(classId)
+    const mergedStats = (gameState.classIds || []).length === 0
+      ? char.stats
+      : Object.fromEntries(
+        Object.keys({ ...(gameState.characterStats || {}), ...char.stats }).map(stat => [
+          stat,
+          (gameState.characterStats?.[stat] || 0) + (char.stats?.[stat] || 0),
+        ])
+      )
     const newState = {
       ...gameState,
       classIds: [...(gameState.classIds || []), classId],
       characterName: gameState.characterName || 'Herói',
       equippedWeapon: gameState.equippedWeapon || startWeapon,
       inventory: gameState.equippedWeapon ? (gameState.inventory || []) : [startWeapon],
-      characterStats: char.stats,
-      characterMaxHp: char.maxHp,
-      characterHp: char.maxHp,
-      characterMaxMp: char.maxMp,
-      characterMp: char.maxMp,
+      characterStats: mergedStats,
+      characterMaxHp: (gameState.characterMaxHp || 0) + char.maxHp,
+      characterHp: (gameState.characterHp || 0) + char.maxHp,
+      characterMaxMp: (gameState.characterMaxMp || 0) + char.maxMp,
+      characterMp: (gameState.characterMp || 0) + char.maxMp,
     }
     updateState(newState)
     setScreen('hub')
@@ -344,23 +423,42 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
     showNotif(`${cls.icon} ${cls.name} selecionado!`)
   }
 
-  function handleEnterDungeon() {
+  function handleEnterDungeon(secretMode = false) {
     if (!hasClass) { setScreen('class_select'); return }
-    const char = buildCharacter(gameState)
-    const newRun = startDungeonRun(char, gameState.dungeonFloor || 1)
+    const nextState = { ...gameState }
+    const targetFloor = secretMode ? (gameState.dungeonFloor || 1) + 5 : (gameState.dungeonFloor || 1)
+    if (secretMode) nextState.secretFloorKeys = Math.max(0, (nextState.secretFloorKeys || 0) - 1)
+    const char = buildCharacter(nextState)
+    const newRun = { ...startDungeonRun(char, targetFloor), secretMode }
+    if ((nextState.revealCharges || 0) > 0) {
+      nextState.revealCharges -= 1
+      showNotif(`Proximo inimigo revelado: ${newRun.enemy.name}`, 'var(--neon-yellow)')
+    }
+    updateState(nextState)
     setRun(newRun)
     setScreen('combat')
   }
 
   function handleAction(action) {
     if (!run || run.finished) return
-    const res = processPlayerAction(action, run.character, run.enemy, gameState)
+    let workingState = { ...gameState }
+    const res = processPlayerAction(action, run.character, run.enemy, workingState)
     const newLog = [...run.log, ...res.log]
+
+    if (action.type === 'item' && res.consumeItem) {
+      workingState = removeInventoryItem(workingState, action.item)
+    }
 
     if (res.result === 'win') {
       const xpGained = res.xpGained || 0
-      let newState = applyLoot(gameState, res.loot)
+      let newState = applyLoot(workingState, res.loot)
       newState = { ...newState, totalXp: (newState.totalXp || 0) + xpGained }
+      // Track defeated enemies for bestiary
+      const enemyId = run.enemy?.id
+      if (enemyId) {
+        const prev = newState.defeatedEnemies || {}
+        newState = { ...newState, defeatedEnemies: { ...prev, [enemyId]: (prev[enemyId] || 0) + 1 } }
+      }
       const newXpInfo = computeLevel(newState.totalXp)
       if (newXpInfo.level > xpInfo.level) {
         newLog.push({ actor: 'system', text: `⬆️ NÍVEL UP! Você chegou ao nível ${newXpInfo.level}!`, victory: true })
@@ -369,18 +467,46 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
       updateState({ ...newState, level: newXpInfo.level })
       setRun({ ...run, character: res.character, enemy: res.enemy, log: newLog, finished: true, result: 'win' })
     } else if (res.result === 'lose') {
+      const reviveItem = findAutoReviveItem(workingState)
+      if ((workingState.reviveCharges || 0) > 0 || reviveItem) {
+        let revivedState = { ...workingState }
+        let revivePct = revivedState.revivePowerPct || 50
+        if (reviveItem) {
+          revivePct = reviveItem.value || 50
+          revivedState = removeInventoryItem(revivedState, reviveItem)
+        } else {
+          revivedState.reviveCharges = Math.max(0, (revivedState.reviveCharges || 0) - 1)
+        }
+        updateState(revivedState)
+        setRun({
+          ...run,
+          character: { ...res.character, currentHp: Math.max(1, Math.round(res.character.maxHp * (revivePct / 100))) },
+          enemy: res.enemy,
+          log: [...newLog, { actor: 'system', text: `Revive ativado! Voce retorna com ${revivePct}% de HP.`, victory: true }],
+          finished: false,
+          result: null,
+        })
+        return
+      }
       const penaltyFloor = Math.max(1, (gameState.dungeonFloor || 1) - 2)
       updateState({ ...gameState, dungeonFloor: penaltyFloor })
       setRun({ ...run, character: res.character, enemy: res.enemy, log: newLog, finished: true, result: 'lose' })
     } else if (res.result === 'flee') {
+      updateState(workingState)
       setRun({ ...run, character: res.character, enemy: res.enemy, log: newLog, finished: true, result: 'flee' })
     } else {
+      updateState(workingState)
       setRun({ ...run, character: res.character, enemy: res.enemy, log: newLog, turn: run.turn + 1 })
     }
   }
 
   function handleFinish(choice) {
     if (choice === 'next' && run?.result === 'win') {
+      if (run.secretMode) {
+        setRun(null)
+        setScreen('hub')
+        return
+      }
       const nextFloor = (gameState.dungeonFloor || 1) + 1
       updateState({ ...gameState, dungeonFloor: nextFloor })
       const char = buildCharacter({ ...gameState, dungeonFloor: nextFloor })
@@ -398,8 +524,77 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
   }
 
   function handleEquip(weapon) {
+    const level = computeLevel(gameState.totalXp || 0).level
+    if (weapon.levelReq && level < weapon.levelReq) {
+      showNotif(`Nivel ${weapon.levelReq} necessario para equipar.`, '#ff4444')
+      return
+    }
     updateState({ ...gameState, equippedWeapon: weapon })
     showNotif(`⚔️ ${weapon.name} equipada!`)
+  }
+
+  function handleBuy(item, price) {
+    const gold = gameState.gold || 0
+    if (gold < price) return
+    const level = computeLevel(gameState.totalXp || 0).level
+    if (item.levelReq && level < item.levelReq) {
+      showNotif(`Nivel ${item.levelReq} necessario.`, '#ff4444')
+      return
+    }
+    if (!isRepeatableShopItem(item) && (gameState.ownedShopItems || []).includes(item.id)) {
+      showNotif('Item ja adquirido.', '#ff4444')
+      return
+    }
+
+    let newState = { ...gameState, gold: gold - price }
+    if (isConsumableShopItem(item)) {
+      newState.inventory = [...(newState.inventory || []), createInventoryItem(item)]
+    } else if (item.effect === 'bonus_xp') {
+      newState.totalXp = (newState.totalXp || 0) + (item.value || 0)
+      newState.level = computeLevel(newState.totalXp).level
+    } else if (item.effect === 'gold_boost') {
+      newState.goldBoostPct = (newState.goldBoostPct || 0) + 50
+      newState.ownedShopItems = [...new Set([...(newState.ownedShopItems || []), item.id])]
+    } else if (item.effect === 'auto_revive') {
+      newState.reviveCharges = (newState.reviveCharges || 0) + 1
+      newState.revivePowerPct = Math.max(newState.revivePowerPct || 50, item.value || 50)
+    } else if (item.effect === 'reveal_next') {
+      newState.revealCharges = (newState.revealCharges || 0) + 1
+    } else if (item.effect === 'secret_floor') {
+      newState.secretFloorKeys = (newState.secretFloorKeys || 0) + 1
+    } else if (item.effect === 'add_class') {
+      newState.bonusClassUnlocks = Math.min(2, (newState.bonusClassUnlocks || 0) + 1)
+    } else if (item.effect === 'respec') {
+      newState = {
+        ...newState,
+        classIds: [],
+        characterStats: null,
+        characterMaxHp: null,
+        characterHp: null,
+        characterMaxMp: null,
+        characterMp: null,
+        equippedWeapon: null,
+      }
+      setScreen('class_select')
+    } else {
+      newState = applyPermanentItemEffect(newState, item)
+    }
+    updateState(newState)
+    showNotif(`🛒 ${item.name} comprado!`)
+  }
+
+  function handleBuyWeapon(weapon, price) {
+    const gold = gameState.gold || 0
+    if (gold < price) return
+    if (weapon.levelReq && computeLevel(gameState.totalXp || 0).level < weapon.levelReq) {
+      showNotif(`Nivel ${weapon.levelReq} necessario.`, '#ff4444')
+      return
+    }
+    const alreadyOwned = (gameState.inventory || []).some(i => i.id === weapon.id)
+    if (alreadyOwned) return
+    const newInventory = [...(gameState.inventory || []), weapon]
+    updateState({ ...gameState, gold: gold - price, inventory: newInventory })
+    showNotif(`⚔️ ${weapon.name} comprada!`)
   }
 
   // Build runtime character from game state
@@ -419,6 +614,10 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
       mp: gs.characterMp ?? gs.characterMaxMp ?? (cls.mpBase + (level - 1) * mpPerLevel),
       maxMp: gs.characterMaxMp ?? (cls.mpBase + (level - 1) * mpPerLevel),
       stats: gs.characterStats ?? { ...cls.stats },
+      bonusDef: gs.bonusDef || 0,
+      bonusCrit: gs.bonusCrit || 0,
+      bonusDodge: gs.bonusDodge || 0,
+      bonusMagicRes: gs.bonusMagicRes || 0,
       equippedWeapon: gs.equippedWeapon || null,
       inventory: gs.inventory || [],
       statusEffects: [],
@@ -472,8 +671,8 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
 
       {/* Nav when not in combat */}
       {screen !== 'combat' && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-          {[['hub','🏰 Hub'],['inventory','🎒 Inventário'],['character','📜 Personagem']].map(([s, label]) => (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+          {[['hub','🏰 Hub'],['inventory','🎒 Inventário'],['character','📜 Personagem'],['shop','🛒 Loja'],['bestiary','📖 Bestiário']].map(([s, label]) => (
             <button key={s} onClick={() => setScreen(s)} style={{
               padding: '5px 12px', background: 'none',
               border: `1px solid ${screen === s ? 'var(--neon-cyan)' : '#333'}`,
@@ -527,7 +726,7 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
                     </div>
                   ))}
                 </div>
-                {xpInfo.level >= 10 && gameState.classIds.length < 2 && (
+                {gameState.classIds.length < maxClassSlots && (
                   <button onClick={() => setScreen('class_select')} style={{ ...primaryBtn('var(--neon-purple)'), marginTop: 8, fontSize: 9 }}>
                     + Adicionar Multiclasse
                   </button>
@@ -547,9 +746,14 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
               <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 10, marginTop: 4, marginBottom: 16 }}>
                 {getDungeonDesc(gameState.dungeonFloor || 1)}
               </div>
-              <button onClick={handleEnterDungeon} style={primaryBtn('var(--neon-pink)')}>
+              <button onClick={() => handleEnterDungeon()} style={primaryBtn('var(--neon-pink)')}>
                 ⚔️ ENTRAR NA MASMORRA
               </button>
+              {(gameState.secretFloorKeys || 0) > 0 && (
+                <button onClick={() => handleEnterDungeon(true)} style={{ ...primaryBtn('var(--neon-yellow)'), marginTop: 8 }}>
+                  ENTRAR NO ANDAR SECRETO ({gameState.secretFloorKeys})
+                </button>
+              )}
             </div>
           </div>
 
@@ -588,6 +792,18 @@ export default function DungeonMode({ gameState: externalState, onGameStateChang
       {screen === 'character' && (
         <div style={panelStyle}>
           <CharacterSheet gameState={gameState} character={character} xpInfo={xpInfo} />
+        </div>
+      )}
+
+      {screen === 'shop' && (
+        <div style={panelStyle}>
+          <ShopScreen gameState={gameState} onBuy={handleBuy} onBuyWeapon={handleBuyWeapon} />
+        </div>
+      )}
+
+      {screen === 'bestiary' && (
+        <div style={panelStyle}>
+          <BestiaryScreen gameState={gameState} />
         </div>
       )}
     </div>
@@ -638,6 +854,378 @@ function CharacterSheet({ gameState, character, xpInfo }) {
       </div>
     </div>
   )
+}
+
+// ─── SHOP SCREEN ───────────────────────────────────────────────────────────
+function ShopScreen({ gameState, onBuy, onBuyWeapon }) {
+  const [activeTab, setActiveTab] = useState('potion')
+  const [confirmItem, setConfirmItem] = useState(null)
+  const gold = gameState.gold || 0
+
+  const tabItems = {
+    potion:    ALL_SHOP_ITEMS.filter(i => i.category === 'potion'),
+    scroll:    ALL_SHOP_ITEMS.filter(i => i.category === 'scroll'),
+    armor:     ALL_SHOP_ITEMS.filter(i => i.category === 'armor'),
+    accessory: ALL_SHOP_ITEMS.filter(i => i.category === 'accessory'),
+    special:   ALL_SHOP_ITEMS.filter(i => i.category === 'special'),
+    weapon:    WEAPONS.filter(w => WEAPON_PRICES[w.id]).map(w => ({ ...w, price: WEAPON_PRICES[w.id], category: 'weapon', icon: '⚔️' })),
+  }
+
+  const tabs = [
+    ['potion','🧪 Poções'],['scroll','📜 Pergaminhos'],['armor','🛡️ Armaduras'],
+    ['accessory','💍 Acessórios'],['special','✨ Especiais'],['weapon','⚔️ Armas'],
+  ]
+
+  function handleBuyClick(item) {
+    if (!canAfford(gold, item.price)) return
+    setConfirmItem(item)
+  }
+
+  function handleConfirm() {
+    if (!confirmItem) return
+    if (confirmItem.category === 'weapon') onBuyWeapon(confirmItem, confirmItem.price)
+    else onBuy(confirmItem, confirmItem.price)
+    setConfirmItem(null)
+  }
+
+  return (
+    <div>
+      {/* Confirm dialog */}
+      {confirmItem && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }} onClick={() => setConfirmItem(null)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'var(--panel-bg)', border: '1px solid var(--neon-yellow)',
+            padding: 24, maxWidth: 340, width: '90%', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>{confirmItem.icon}</div>
+            <div style={{ color: RARITY_COLORS[confirmItem.rarity] || 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', fontSize: 14, marginBottom: 6 }}>
+              {confirmItem.name}
+            </div>
+            <div style={{ color: '#888', fontFamily: 'var(--font-body)', fontSize: 11, marginBottom: 12 }}>{confirmItem.desc}</div>
+            <div style={{ color: 'var(--neon-yellow)', fontFamily: 'var(--font-heading)', fontSize: 16, marginBottom: 16 }}>
+              💰 {confirmItem.price} ouro
+            </div>
+            <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 10, marginBottom: 16 }}>
+              Seu saldo: {gold} ouro → {gold - confirmItem.price} ouro
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button onClick={handleConfirm} style={primaryBtn('var(--neon-green)')}>✓ Comprar</button>
+              <button onClick={() => setConfirmItem(null)} style={primaryBtn('#555')}>✕ Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gold display */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <p style={{ color: 'var(--neon-yellow)', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: 2, margin: 0 }}>LOJA DO MERCADOR</p>
+        <div style={{ padding: '6px 14px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--neon-yellow)', color: 'var(--neon-yellow)', fontFamily: 'var(--font-heading)', fontSize: 13 }}>
+          💰 {gold} ouro
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12, borderBottom: '1px solid #222', paddingBottom: 8 }}>
+        {tabs.map(([tab, label]) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{
+            padding: '5px 10px', background: 'none',
+            border: `1px solid ${activeTab === tab ? 'var(--neon-cyan)' : '#333'}`,
+            color: activeTab === tab ? 'var(--neon-cyan)' : '#555',
+            fontFamily: 'var(--font-heading)', fontSize: 9, cursor: 'pointer', letterSpacing: 1,
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* Item grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 8, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
+        {(tabItems[activeTab] || []).map((item) => {
+          const level = computeLevel(gameState.totalXp || 0).level
+          const affordable = canAfford(gold, item.price)
+          const meetsLevel = !item.levelReq || level >= item.levelReq
+          const alreadyOwned = !isRepeatableShopItem(item) && ((gameState.ownedShopItems || []).includes(item.id) || (gameState.inventory || []).some(i => i.id === item.id))
+          const isEquipped = activeTab === 'weapon' && gameState.equippedWeapon?.id === item.id
+          return (
+            <div key={item.id} style={{
+              padding: '10px 12px',
+              background: 'rgba(0,0,0,0.4)',
+              border: `1px solid ${isEquipped ? 'var(--neon-cyan)' : alreadyOwned ? '#444' : affordable && meetsLevel ? '#333' : '#222'}`,
+              opacity: (!affordable || !meetsLevel) && !alreadyOwned ? 0.5 : 1,
+              display: 'flex', flexDirection: 'column', gap: 4,
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: 18 }}>{item.icon}</span>
+                <span style={{ fontSize: 9, color: RARITY_COLORS[item.rarity] || '#aaa', fontFamily: 'var(--font-body)' }}>
+                  {RARITY_LABELS[item.rarity] || item.rarity}
+                </span>
+              </div>
+              <div style={{ color: RARITY_COLORS[item.rarity] || 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', fontSize: 11, letterSpacing: 0.5 }}>
+                {item.name}
+              </div>
+              {activeTab === 'weapon' && (
+                <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 9 }}>
+                  ⚔️ {item.dmg?.[0]}-{item.dmg?.[1]} dano
+                  {item.element && ` • ${item.element}`}
+                </div>
+              )}
+              {item.levelReq > 1 && (
+                <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 9 }}>Nv. {item.levelReq}+</div>
+              )}
+              <div style={{ color: '#666', fontFamily: 'var(--font-body)', fontSize: 9, lineHeight: 1.4 }}>{item.desc}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                <span style={{ color: 'var(--neon-yellow)', fontFamily: 'var(--font-heading)', fontSize: 12 }}>💰 {item.price}</span>
+                {isEquipped ? (
+                  <span style={{ fontSize: 9, color: 'var(--neon-cyan)', fontFamily: 'var(--font-body)' }}>✓ Equipado</span>
+                ) : alreadyOwned ? (
+                  <span style={{ fontSize: 9, color: '#555', fontFamily: 'var(--font-body)' }}>✓ Possui</span>
+                ) : (
+                  <button
+                    onClick={() => handleBuyClick(item)}
+                    disabled={!affordable || !meetsLevel}
+                    style={{ ...primaryBtn(affordable && meetsLevel ? 'var(--neon-green)' : '#333'), padding: '3px 8px', fontSize: 9, cursor: affordable && meetsLevel ? 'pointer' : 'not-allowed' }}>
+                    {meetsLevel ? 'Comprar' : `Nv. ${item.levelReq}`}
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── BESTIARY SCREEN ────────────────────────────────────────────────────────
+function BestiaryScreen({ gameState }) {
+  const [search, setSearch] = useState('')
+  const [filterCat, setFilterCat] = useState('all')
+  const [filterTier, setFilterTier] = useState('all')
+  const [selected, setSelected] = useState(null)
+  const defeated = gameState.defeatedEnemies || {}
+
+  const TIER_LABELS = { 1:'Nv.1-5', 2:'Nv.6-10', 3:'Nv.11-18', 4:'Nv.19-28', 5:'Nv.29+' }
+  const TIER_COLORS = { 1:'#aaa', 2:'#44ff88', 3:'#4488ff', 4:'#aa44ff', 5:'#ffaa00' }
+
+  const ELEM_ICONS = {
+    holy:'☀️', fire:'🔥', ice:'❄️', lightning:'⚡', shadow:'🌑', poison:'☠️',
+    bludgeoning:'🔨', piercing:'🗡️', slashing:'⚔️', physical:'⚔️',
+    water:'💧', cold:'❄️', magic:'✨', nature:'🌿', earth:'🪨', wind:'💨',
+    silver:'🌕', iron:'⚙️', light:'💡', acid:'🧪',
+  }
+
+  const filtered = ENEMIES.filter(e => {
+    const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) || e.desc.toLowerCase().includes(search.toLowerCase())
+    const matchCat = filterCat === 'all' || e.category === filterCat
+    const matchTier = filterTier === 'all' || e.tier === parseInt(filterTier)
+    return matchSearch && matchCat && matchTier
+  })
+
+  const totalDefeated = Object.values(defeated).reduce((a, b) => a + b, 0)
+
+  function ElemTag({ label, color = '#444' }) {
+    return (
+      <span style={{ padding: '1px 5px', background: `${color}22`, border: `1px solid ${color}44`, fontSize: 9, color, fontFamily: 'var(--font-body)', borderRadius: 2 }}>
+        {ELEM_ICONS[label] || ''} {label}
+      </span>
+    )
+  }
+
+  return (
+    <div>
+      {/* Detail modal */}
+      {selected && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 900,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }} onClick={() => setSelected(null)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: 'var(--panel-bg)', border: '1px solid var(--neon-cyan)',
+            padding: 24, maxWidth: 480, width: '100%', maxHeight: '80vh', overflowY: 'auto',
+          }}>
+            {/* Monster header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <div style={{ color: 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', fontSize: 18, letterSpacing: 2 }}>
+                  {selected.name}
+                </div>
+                <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 10, marginTop: 3 }}>
+                  {ENEMY_CATEGORIES[selected.category] || selected.category} •{' '}
+                  <span style={{ color: TIER_COLORS[selected.tier] }}>Tier {selected.tier} ({TIER_LABELS[selected.tier]})</span>
+                </div>
+              </div>
+              <button onClick={() => setSelected(null)} style={{ ...primaryBtn('#555'), padding: '4px 8px' }}>✕</button>
+            </div>
+
+            {/* Description */}
+            <p style={{ color: '#888', fontFamily: 'var(--font-body)', fontSize: 11, fontStyle: 'italic', lineHeight: 1.6, marginBottom: 16, borderLeft: '2px solid var(--neon-cyan)', paddingLeft: 10 }}>
+              "{selected.desc}"
+            </p>
+
+            {/* Stats grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
+              {[
+                ['❤️ HP', `${selected.hp[0]}–${selected.hp[1]}`,'var(--neon-green)'],
+                ['⚔️ ATQ', `${selected.atk[0]}–${selected.atk[1]}`,'var(--neon-pink)'],
+                ['🛡️ DEF', selected.def,'var(--neon-yellow)'],
+                ['⭐ XP', `${selected.xp[0]}–${selected.xp[1]}`,'var(--neon-purple)'],
+                ['💰 Ouro', `${selected.gold[0]}–${selected.gold[1]}`,'var(--neon-yellow)'],
+                ['🏆 Derrotados', defeated[selected.id] || 0,'var(--neon-cyan)'],
+              ].map(([label, val, color]) => (
+                <div key={label} style={{ padding: '8px 10px', background: 'rgba(0,0,0,0.4)', border: '1px solid #333', textAlign: 'center' }}>
+                  <div style={{ color, fontFamily: 'var(--font-heading)', fontSize: 14 }}>{val}</div>
+                  <div style={{ color: '#444', fontFamily: 'var(--font-body)', fontSize: 9, marginTop: 3 }}>{label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Special ability */}
+            {selected.special && (
+              <div style={{ padding: '8px 12px', background: 'rgba(255,0,128,0.05)', border: '1px solid var(--neon-pink)', marginBottom: 12 }}>
+                <div style={{ color: 'var(--neon-pink)', fontFamily: 'var(--font-heading)', fontSize: 11, marginBottom: 3 }}>
+                  ⚡ Habilidade Especial
+                </div>
+                <div style={{ color: '#888', fontFamily: 'var(--font-body)', fontSize: 10 }}>
+                  {selected.special.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                </div>
+              </div>
+            )}
+
+            {/* Weaknesses & Resistances */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 9, letterSpacing: 1, marginBottom: 6 }}>FRAQUEZAS</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {selected.weak?.length ? selected.weak.map(w => (
+                    <ElemTag key={w} label={w} color="var(--neon-green)" />
+                  )) : <span style={{ color: '#333', fontSize: 9, fontFamily: 'var(--font-body)' }}>nenhuma</span>}
+                </div>
+              </div>
+              <div>
+                <div style={{ color: '#555', fontFamily: 'var(--font-body)', fontSize: 9, letterSpacing: 1, marginBottom: 6 }}>RESISTÊNCIAS</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {selected.resist?.length ? selected.resist.map(r => (
+                    <ElemTag key={r} label={r} color="var(--neon-pink)" />
+                  )) : <span style={{ color: '#333', fontSize: 9, fontFamily: 'var(--font-body)' }}>nenhuma</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <p style={{ color: 'var(--neon-yellow)', fontFamily: 'var(--font-body)', fontSize: 10, letterSpacing: 2, margin: 0 }}>
+          BESTIÁRIO — {filtered.length}/{ENEMIES.length} monstros
+        </p>
+        <div style={{ color: 'var(--neon-green)', fontFamily: 'var(--font-body)', fontSize: 10 }}>
+          ☠️ {totalDefeated} derrotados
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10, alignItems: 'center' }}>
+        <input
+          value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="🔍 Buscar monstro..."
+          style={{
+            flex: '1 1 160px', padding: '5px 10px', background: 'rgba(0,0,0,0.6)',
+            border: '1px solid #333', color: 'var(--neon-cyan)',
+            fontFamily: 'var(--font-body)', fontSize: 11, outline: 'none',
+          }}
+        />
+        <select value={filterCat} onChange={e => setFilterCat(e.target.value)} style={selectStyle}>
+          <option value="all">Todas Categorias</option>
+          {Object.entries(ENEMY_CATEGORIES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+        </select>
+        <select value={filterTier} onChange={e => setFilterTier(e.target.value)} style={selectStyle}>
+          <option value="all">Todos Tiers</option>
+          {[1,2,3,4,5].map(t => <option key={t} value={t}>Tier {t} — {TIER_LABELS[t]}</option>)}
+        </select>
+      </div>
+
+      {/* Category quick-filter */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 12 }}>
+        <button onClick={() => setFilterCat('all')} style={miniTab(filterCat === 'all')}>Todos</button>
+        {Object.entries(ENEMY_CATEGORIES).map(([k, v]) => (
+          <button key={k} onClick={() => setFilterCat(k)} style={miniTab(filterCat === k)}>{v}</button>
+        ))}
+      </div>
+
+      {/* Monster list */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 6, maxHeight: 440, overflowY: 'auto', paddingRight: 4 }}>
+        {filtered.length === 0 && (
+          <p style={{ color: '#444', fontFamily: 'var(--font-body)', fontSize: 11, gridColumn: '1/-1' }}>Nenhum monstro encontrado.</p>
+        )}
+        {filtered.map(enemy => {
+          const kills = defeated[enemy.id] || 0
+          return (
+            <button key={enemy.id} onClick={() => setSelected(enemy)} style={{
+              padding: '10px 12px', cursor: 'pointer', textAlign: 'left',
+              background: kills > 0 ? 'rgba(0,255,136,0.03)' : 'rgba(0,0,0,0.4)',
+              border: `1px solid ${kills > 0 ? '#223322' : '#222'}`,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--neon-cyan)'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = kills > 0 ? '#223322' : '#222'}
+            >
+              {/* Top row */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 16 }}>
+                  {enemy.category === 'undead' ? '💀' : enemy.category === 'demon' ? '😈'
+                   : enemy.category === 'dragon' ? '🐉' : enemy.category === 'beast' ? '🐺'
+                   : enemy.category === 'golem' ? '🪨' : enemy.category === 'elemental' ? '🔥'
+                   : enemy.category === 'humanoid' ? '👤' : enemy.category === 'plant' ? '🌿'
+                   : enemy.category === 'slime' ? '🫧' : enemy.category === 'giant' ? '🗿'
+                   : enemy.category === 'fey' ? '✨' : enemy.category === 'aberration' ? '👁️'
+                   : enemy.category === 'insect' ? '🦂' : enemy.category === 'aquatic' ? '🐙'
+                   : enemy.category === 'shadow' ? '🌑' : enemy.category === 'boss' ? '💢' : '👾'}
+                </span>
+                <span style={{ fontSize: 9, color: TIER_COLORS[enemy.tier], fontFamily: 'var(--font-body)' }}>T{enemy.tier}</span>
+              </div>
+              {/* Name */}
+              <div style={{ color: 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', fontSize: 10, letterSpacing: 0.5, marginBottom: 2, lineHeight: 1.3 }}>
+                {enemy.name}
+              </div>
+              {/* Category */}
+              <div style={{ color: '#444', fontFamily: 'var(--font-body)', fontSize: 9 }}>
+                {ENEMY_CATEGORIES[enemy.category]}
+              </div>
+              {/* Stats mini */}
+              <div style={{ display: 'flex', gap: 6, marginTop: 5, fontSize: 9, fontFamily: 'var(--font-body)' }}>
+                <span style={{ color: 'var(--neon-green)' }}>❤️{enemy.hp[1]}</span>
+                <span style={{ color: 'var(--neon-pink)' }}>⚔️{enemy.atk[1]}</span>
+                <span style={{ color: 'var(--neon-yellow)' }}>⭐{enemy.xp[1]}</span>
+              </div>
+              {/* Kill count */}
+              {kills > 0 && (
+                <div style={{ marginTop: 4, fontSize: 9, color: 'var(--neon-green)', fontFamily: 'var(--font-body)' }}>
+                  ☠️ ×{kills}
+                </div>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+const selectStyle = {
+  padding: '5px 8px', background: 'rgba(0,0,0,0.6)',
+  border: '1px solid #333', color: '#888',
+  fontFamily: 'var(--font-body)', fontSize: 10, outline: 'none', cursor: 'pointer',
+}
+
+function miniTab(active) {
+  return {
+    padding: '3px 8px', background: 'none', cursor: 'pointer',
+    border: `1px solid ${active ? 'var(--neon-cyan)' : '#222'}`,
+    color: active ? 'var(--neon-cyan)' : '#444',
+    fontFamily: 'var(--font-body)', fontSize: 9, transition: 'all 0.15s',
+  }
 }
 
 function getDungeonDesc(floor) {

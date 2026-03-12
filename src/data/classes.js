@@ -530,3 +530,11 @@ export function getAvailableSkills(character) {
   }
   return skills
 }
+
+export function getSkillById(skillId) {
+  for (const cls of CLASS_LIST) {
+    const skill = cls.skills.find(entry => entry.id === skillId)
+    if (skill) return { ...skill, classId: cls.id }
+  }
+  return null
+}
