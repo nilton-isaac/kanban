@@ -143,6 +143,74 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
+-- ============================================================
+-- GAMIFICATION TABLES
+-- ============================================================
+
+-- Player gamification state (XP, level, class, dungeon progress)
+CREATE TABLE IF NOT EXISTS public.player_game_state (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  total_xp INTEGER NOT NULL DEFAULT 0,
+  level INTEGER NOT NULL DEFAULT 1,
+  class_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  character_name TEXT NOT NULL DEFAULT 'Herói',
+  equipped_weapon JSONB,
+  inventory JSONB NOT NULL DEFAULT '[]'::jsonb,
+  completed_tasks INTEGER NOT NULL DEFAULT 0,
+  streak INTEGER NOT NULL DEFAULT 0,
+  last_task_date TEXT,
+  dungeon_floor INTEGER NOT NULL DEFAULT 1,
+  gold INTEGER NOT NULL DEFAULT 0,
+  character_hp INTEGER,
+  character_max_hp INTEGER,
+  character_mp INTEGER,
+  character_max_mp INTEGER,
+  character_stats JSONB,
+  unlocked_rewards JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+
+-- Dungeon battle history
+CREATE TABLE IF NOT EXISTS public.dungeon_battle_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  enemy_id TEXT NOT NULL,
+  enemy_name TEXT NOT NULL,
+  floor INTEGER NOT NULL DEFAULT 1,
+  result TEXT NOT NULL DEFAULT 'win',
+  xp_gained INTEGER NOT NULL DEFAULT 0,
+  gold_gained INTEGER NOT NULL DEFAULT 0,
+  turns INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_player_game_state_user ON public.player_game_state(user_id);
+CREATE INDEX IF NOT EXISTS idx_dungeon_logs_user ON public.dungeon_battle_logs(user_id, created_at DESC);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.player_game_state TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.dungeon_battle_logs TO authenticated;
+
+ALTER TABLE public.player_game_state ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.dungeon_battle_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "game_state: own data" ON public.player_game_state;
+CREATE POLICY "game_state: own data"
+  ON public.player_game_state FOR ALL
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "dungeon_logs: own data" ON public.dungeon_battle_logs;
+CREATE POLICY "dungeon_logs: own data"
+  ON public.dungeon_battle_logs FOR ALL
+  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+DROP TRIGGER IF EXISTS game_state_updated_at ON public.player_game_state;
+CREATE TRIGGER game_state_updated_at
+  BEFORE UPDATE ON public.player_game_state
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
 -- Auto-update updated_at on cards
 CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS TRIGGER AS $$

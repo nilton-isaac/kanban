@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle, Archive } from 'lucide-react'
+import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle, Sword } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
 import { ThemeIcon } from '../lib/themeIcons'
+import { GamificationStrip } from './GamificationHUD'
+import { computeLevel } from '../lib/gamification'
 
-export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError, archivedCount }) {
+export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError, archivedCount, gameState }) {
   const [time, setTime] = useState(new Date())
   const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
@@ -22,7 +24,7 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
   return (
     <header style={{
       position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0,
-      height: '130px',
+      height: '145px',
       borderBottom: '1px solid var(--neon-cyan)',
       boxShadow: '0 0 20px rgba(0,0,0,0.3)',
       background: 'linear-gradient(to bottom, var(--bg-dark), var(--bg-dark))',
@@ -57,30 +59,45 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
       </div>
 
       <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
-        <div style={{ display: 'flex', border: '1px solid rgba(0,243,255,0.2)', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' }}>
-          {[{ id: 'kanban', label: 'KANBAN' }, { id: 'eisenhower', label: 'EISENHOWER' }, { id: 'archived', label: 'ARQUIVO' }].map(({ id, label }, idx, arr) => (
-            <button key={id} onClick={() => onViewModeChange(id)} style={{
-              padding: '6px 16px',
-              background: viewMode === id ? 'rgba(0,243,255,0.12)' : 'transparent',
-              border: 'none',
-              borderRight: idx < arr.length - 1 ? '1px solid rgba(0,243,255,0.2)' : 'none',
-              color: viewMode === id ? 'var(--neon-cyan)' : '#444',
-              fontFamily: 'var(--font-heading)', fontSize: '10px', letterSpacing: '1px', cursor: 'pointer',
-              transition: 'all 0.2s', textTransform: 'uppercase',
-              boxShadow: viewMode === id ? 'inset 0 -2px 0 var(--neon-cyan)' : 'none',
-              position: 'relative',
-            }}>
-              {label}
-              {id === 'archived' && archivedCount > 0 && (
-                <span style={{
-                  position: 'absolute', top: 2, right: 2,
-                  width: 6, height: 6, borderRadius: '50%',
-                  background: 'var(--neon-yellow)',
-                  boxShadow: '0 0 4px var(--neon-yellow)',
-                }} />
-              )}
-            </button>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+          <div style={{ display: 'flex', border: '1px solid rgba(0,243,255,0.2)', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' }}>
+            {[
+              { id: 'kanban', label: 'KANBAN' },
+              { id: 'eisenhower', label: 'EISENHOWER' },
+              { id: 'archived', label: 'ARQUIVO' },
+              { id: 'dungeon', label: '⚔️ DUNGEON' },
+            ].map(({ id, label }, idx, arr) => (
+              <button key={id} onClick={() => onViewModeChange(id)} style={{
+                padding: '6px 16px',
+                background: viewMode === id
+                  ? id === 'dungeon' ? 'rgba(255,0,128,0.15)' : 'rgba(0,243,255,0.12)'
+                  : 'transparent',
+                border: 'none',
+                borderRight: idx < arr.length - 1 ? '1px solid rgba(0,243,255,0.2)' : 'none',
+                color: viewMode === id
+                  ? id === 'dungeon' ? 'var(--neon-pink)' : 'var(--neon-cyan)'
+                  : '#444',
+                fontFamily: 'var(--font-heading)', fontSize: '10px', letterSpacing: '1px', cursor: 'pointer',
+                transition: 'all 0.2s', textTransform: 'uppercase',
+                boxShadow: viewMode === id
+                  ? `inset 0 -2px 0 ${id === 'dungeon' ? 'var(--neon-pink)' : 'var(--neon-cyan)'}`
+                  : 'none',
+                position: 'relative',
+              }}>
+                {label}
+                {id === 'archived' && archivedCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: 2, right: 2,
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: 'var(--neon-yellow)',
+                    boxShadow: '0 0 4px var(--neon-yellow)',
+                  }} />
+                )}
+              </button>
+            ))}
+          </div>
+          {/* XP strip */}
+          {gameState && <GamificationStrip gameState={gameState} />}
         </div>
       </div>
 
@@ -93,6 +110,9 @@ export default function Header({ viewMode, onViewModeChange, session, onStandup,
         <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           <button onClick={onStandup} title="Gerar Standup" style={hdrBtn('var(--neon-cyan)')}>
             <ClipboardList size={12} /> STANDUP
+          </button>
+          <button onClick={() => onViewModeChange('dungeon')} title="Entrar na Dungeon" style={hdrBtn('var(--neon-pink)')}>
+            <Sword size={12} /> DUNGEON
           </button>
 
           <button onClick={onNextDay} title="Virar o dia" style={hdrBtn(nextDayDone ? 'var(--neon-green)' : 'var(--neon-yellow)')}>

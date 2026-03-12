@@ -7,9 +7,12 @@ import AuthScreen from './components/AuthScreen'
 import StandupModal from './components/StandupModal'
 import FloatingThemeSelector from './components/FloatingThemeSelector'
 import ThemeEffects from './components/ThemeEffects'
+import DungeonMode from './components/DungeonMode'
+import GamificationHUD from './components/GamificationHUD'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { fetchColumns, fetchCards, upsertColumn, upsertCard, deleteColumn as dbDeleteColumn, deleteCard as dbDeleteCard, saveStandupLog } from './lib/db'
 import { applyNextDay, getNextDayImpact } from './lib/standup'
+import { loadGameState, saveGameState, awardTaskXp, computeLevel } from './lib/gamification'
 
 const LOCAL_KEY = 'cyberdaily-kanban-v4'
 const LOCAL_IMAGES_KEY = 'cyberdaily-images-v1'
@@ -53,6 +56,10 @@ export default function App() {
   const [imagePreview, setImagePreview] = useState(null)
   const [nextDayConfirm, setNextDayConfirm] = useState(false)
   const [nextDayDone, setNextDayDone] = useState(false)
+
+  // Gamification
+  const [gameState, setGameState] = useState(() => loadGameState())
+  const [lastXpEvent, setLastXpEvent] = useState(null)
 
   const syncTimer = useRef(null)
   const isCloud = !!session?.user
@@ -188,10 +195,20 @@ export default function App() {
   }, [isCloud, session])
 
   const archiveCard = useCallback((cardId) => {
-    setCards(prev => prev.map(c =>
-      c.id === cardId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c
-    ))
-  }, [])
+    setCards(prev => {
+      const card = prev.find(c => c.id === cardId)
+      if (card) {
+        // Award XP for completing a task
+        const { newState, earned, leveledUp, newLevel } = awardTaskXp(gameState, card)
+        setGameState(newState)
+        saveGameState(newState)
+        setLastXpEvent({ earned, leveledUp, newLevel, ts: Date.now() })
+      }
+      return prev.map(c =>
+        c.id === cardId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c
+      )
+    })
+  }, [gameState])
 
   const unarchiveCard = useCallback((cardId) => {
     setCards(prev => prev.map(c =>
@@ -326,6 +343,7 @@ export default function App() {
     <div className="flex flex-col h-full min-h-screen">
       <ThemeEffects />
       <FloatingThemeSelector />
+      <GamificationHUD gameState={gameState} lastXpEvent={lastXpEvent} />
       <Header
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -336,6 +354,7 @@ export default function App() {
         onLogout={() => supabase.auth.signOut()}
         syncError={syncError}
         archivedCount={cards.filter(c => c.archived).length}
+        gameState={gameState}
       />
 
       {viewMode === 'kanban' ? (
@@ -363,7 +382,7 @@ export default function App() {
           onUpdateCard={updateCard}
           onInlineEdit={(id, title) => updateCard(id, { title })}
         />
-      ) : (
+      ) : viewMode === 'archived' ? (
         <ArchivedView
           cards={cards}
           columns={columns}
@@ -371,7 +390,15 @@ export default function App() {
           onView={handleOpenEdit}
           onClearArchive={clearArchive}
         />
-      )}
+      ) : viewMode === 'dungeon' ? (
+        <DungeonMode
+          gameState={gameState}
+          onGameStateChange={(newState) => {
+            setGameState(newState)
+            saveGameState(newState)
+          }}
+        />
+      ) : null}
 
       {/* â”€â”€ Modals â”€â”€ */}
       {addCardModal && (
