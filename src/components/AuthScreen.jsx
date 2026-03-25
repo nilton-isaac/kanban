@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
-import { ThemeIcon } from '../lib/themeIcons'
+import ThemeSwitcher from './ThemeSwitcher'
 
 export default function AuthScreen() {
-  const { theme, setTheme } = useTheme()
+  const { theme } = useTheme()
   const currentTheme = THEMES[theme] || THEMES.dark
   const [mode, setMode] = useState('login')
   const [email, setEmail] = useState('')
@@ -222,33 +222,20 @@ export default function AuthScreen() {
           </form>
         </div>
 
-        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {Object.values(THEMES).map((item) => {
-            const active = item.id === theme
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setTheme(item.id)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  borderRadius: 999,
-                  border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-cyan) 28%, transparent)' : 'var(--panel-border)'}`,
-                  background: active ? 'var(--surface-raised)' : 'var(--surface-elevated)',
-                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '11px',
-                }}
-              >
-                <ThemeIcon themeId={item.id} size={13} />
-                {item.label}
-              </button>
-            )
-          })}
+        <div style={{ marginTop: 18, display: 'grid', justifyItems: 'center', gap: 10 }}>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-body)',
+              fontSize: '10px',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+            }}
+          >
+            Synth temas principais + colecao completa
+          </p>
+          <ThemeSwitcher align="center" />
         </div>
       </div>
     </div>
