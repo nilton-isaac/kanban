@@ -5,9 +5,9 @@ import { THEMES } from '../themes'
 import { ThemeIcon } from '../lib/themeIcons'
 
 export default function AuthScreen() {
-  const { theme, setTheme } = useTheme()
-  const currentTheme = THEMES[theme] || THEMES.dark
-  const [mode, setMode] = useState('login')
+  const { theme } = useTheme()
+  const t = THEMES[theme]
+  const [mode, setMode] = useState('login') // 'login' | 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
@@ -15,24 +15,23 @@ export default function AuthScreen() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     setError('')
     setSuccess('')
     setLoading(true)
-
     try {
       if (mode === 'signup') {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { name } },
         })
-        if (signUpError) throw signUpError
-        setSuccess('Conta criada. Verifique seu e-mail para confirmar o acesso.')
+        if (error) throw error
+        setSuccess('Conta criada! Verifique seu e-mail para confirmar.')
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-        if (signInError) throw signInError
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) throw error
       }
     } catch (err) {
       setError(err.message)
@@ -41,214 +40,119 @@ export default function AuthScreen() {
     }
   }
 
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        padding: 24,
-        background: 'var(--bg-gradient)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <div className="auth-orb auth-orb--cyan" />
-      <div className="auth-orb auth-orb--violet" />
+  const headingFont = t?.vars['--font-heading'] || "'Orbitron', sans-serif"
 
-      <div style={{ width: 'min(100%, 460px)', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: 28, display: 'grid', gap: 10 }}>
-          <span
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.18em',
-              color: 'var(--text-muted)',
-            }}
-          >
-            Synth KV Sign In
-          </span>
-          <div>
-            <h1
-              style={{
-                margin: 0,
-                fontFamily: currentTheme.vars['--font-heading'],
-                fontSize: 'clamp(32px, 6vw, 48px)',
-                lineHeight: 0.94,
-                letterSpacing: '-0.06em',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Synth Kanban
-            </h1>
-            <p
-              style={{
-                marginTop: 10,
-                fontFamily: 'var(--font-body)',
-                fontSize: '12px',
-                color: 'var(--text-secondary)',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-              }}
-            >
-              Workspace de entrega com glass layers e glow central
-            </p>
-          </div>
+  return (
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--bg-dark)', padding: '24px', position: 'relative',
+    }}>
+      {/* Grid bg */}
+      <div style={{
+        position: 'fixed', inset: 0, pointerEvents: 'none',
+        backgroundImage: 'linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)',
+        backgroundSize: '30px 30px',
+      }} />
+
+      <div style={{ width: '100%', maxWidth: '420px', position: 'relative', zIndex: 1 }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <h1 style={{
+            fontFamily: headingFont,
+            fontSize: '32px', fontWeight: 900,
+            color: '#fff', letterSpacing: '4px',
+            textShadow: '0 0 20px var(--neon-cyan)',
+          }}>
+            KANBAN_NINE
+          </h1>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: '11px', color: 'var(--neon-cyan)', letterSpacing: '3px', marginTop: 6 }}>
+            {mode === 'login' ? 'ACESSO AO SISTEMA' : 'REGISTRO DE OPERADOR'}
+          </p>
         </div>
 
-        <div className="cyber-card" style={{ padding: 28 }}>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-            {['login', 'signup'].map((item) => {
-              const active = mode === item
-              return (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => {
-                    setMode(item)
-                    setError('')
-                    setSuccess('')
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '10px 12px',
-                    borderRadius: 14,
-                    border: 'none',
-                    cursor: 'pointer',
-                    background: active ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 16%, transparent), color-mix(in srgb, var(--brand-violet) 18%, transparent))' : 'var(--surface-soft)',
-                    color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    fontFamily: 'var(--font-body)',
-                    fontSize: '11px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
-                  }}
-                >
-                  {item === 'login' ? 'Entrar' : 'Criar conta'}
-                </button>
-              )
-            })}
-          </div>
-
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
+        {/* Card */}
+        <div className="cyber-card" style={{ background: 'var(--panel-bg)', padding: '32px' }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {mode === 'signup' && (
               <div>
-                <label style={labelStyle}>Nome</label>
+                <label style={labelStyle}>Nome / Codinome</label>
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="cyber-input"
-                  style={inputStyle}
-                  placeholder="Seu nome de workspace"
+                  type="text" value={name} onChange={e => setName(e.target.value)}
+                  className="cyber-input" style={inputStyle}
+                  placeholder="Neo, Trinity, Morpheus..."
                 />
               </div>
             )}
-
             <div>
               <label style={labelStyle}>E-mail</label>
               <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="cyber-input"
-                style={inputStyle}
-                placeholder="time@workspace.com"
-                required
+                type="email" value={email} onChange={e => setEmail(e.target.value)}
+                className="cyber-input" style={inputStyle}
+                placeholder="operador@sistema.io" required
               />
             </div>
-
             <div>
               <label style={labelStyle}>Senha</label>
               <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="cyber-input"
-                style={inputStyle}
-                placeholder="••••••••"
-                required
+                type="password" value={password} onChange={e => setPassword(e.target.value)}
+                className="cyber-input" style={inputStyle}
+                placeholder="••••••••" required
               />
             </div>
 
             {error && (
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--neon-orange)',
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-body)',
-                  background: 'color-mix(in srgb, var(--neon-orange) 8%, transparent)',
-                  border: '1px solid color-mix(in srgb, var(--neon-orange) 28%, transparent)',
-                  padding: '10px 12px',
-                  borderRadius: 14,
-                }}
-              >
-                {error}
+              <p style={{ color: 'var(--neon-pink)', fontSize: '12px', fontFamily: 'var(--font-body)', background: 'rgba(255,0,255,0.08)', padding: '8px 12px', border: '1px solid rgba(255,0,255,0.3)' }}>
+                ⚠ {error}
               </p>
             )}
-
             {success && (
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--neon-green)',
-                  fontSize: '12px',
-                  fontFamily: 'var(--font-body)',
-                  background: 'color-mix(in srgb, var(--neon-green) 8%, transparent)',
-                  border: '1px solid color-mix(in srgb, var(--neon-green) 28%, transparent)',
-                  padding: '10px 12px',
-                  borderRadius: 14,
-                }}
-              >
-                {success}
+              <p style={{ color: 'var(--neon-green)', fontSize: '12px', fontFamily: 'var(--font-body)', background: 'rgba(0,255,136,0.08)', padding: '8px 12px', border: '1px solid rgba(0,255,136,0.3)' }}>
+                ✓ {success}
               </p>
             )}
 
             <button
               type="submit"
               className="cyber-btn"
-              style={{
-                padding: '13px 16px',
-                marginTop: 6,
-                fontSize: '12px',
-                justifyContent: 'center',
-                background: loading ? 'var(--surface-soft)' : undefined,
-              }}
+              style={{ padding: '12px', fontSize: '13px', marginTop: 8, background: loading ? 'rgba(0,243,255,0.1)' : undefined }}
               disabled={loading}
             >
-              {loading ? 'Processando...' : mode === 'login' ? 'Acessar workspace' : 'Criar workspace'}
+              {loading ? 'AGUARDE...' : mode === 'login' ? 'ACESSAR SISTEMA' : 'REGISTRAR'}
             </button>
           </form>
+
+          <div style={{ marginTop: 20, textAlign: 'center' }}>
+            <button
+              onClick={() => { setMode(m => m === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '12px', fontFamily: 'var(--font-body)' }}
+            >
+              {mode === 'login' ? 'Não tem conta? Registre-se' : 'Já tem conta? Fazer login'}
+            </button>
+          </div>
         </div>
 
-        <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-          {Object.values(THEMES).map((item) => {
-            const active = item.id === theme
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setTheme(item.id)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 12px',
-                  borderRadius: 999,
-                  border: `1px solid ${active ? 'color-mix(in srgb, var(--brand-cyan) 28%, transparent)' : 'var(--panel-border)'}`,
-                  background: active ? 'var(--surface-raised)' : 'var(--surface-elevated)',
-                  color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '11px',
-                }}
-              >
-                <ThemeIcon themeId={item.id} size={13} />
-                {item.label}
-              </button>
-            )
-          })}
+        {/* Theme quick-select */}
+        <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          {Object.values(THEMES).map(th => (
+            <button
+              key={th.id}
+              onClick={() => {
+                import('../themes').then(m => m.applyTheme(th.id))
+                localStorage.setItem('cyberdaily-theme', th.id)
+              }}
+              style={{
+                background: 'none', border: '1px solid #333', cursor: 'pointer',
+                color: '#555', fontSize: '11px', padding: '4px 10px',
+                fontFamily: 'monospace',
+              }}
+              title={th.label}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <ThemeIcon themeId={th.id} size={12} />
+                {th.label}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -256,18 +160,11 @@ export default function AuthScreen() {
 }
 
 const labelStyle = {
-  display: 'block',
-  fontSize: '10px',
-  color: 'var(--text-secondary)',
-  fontFamily: 'var(--font-body)',
-  textTransform: 'uppercase',
-  letterSpacing: '0.12em',
-  marginBottom: 8,
+  display: 'block', fontSize: '10px', color: 'var(--neon-cyan)',
+  fontFamily: 'var(--font-body)', textTransform: 'uppercase',
+  letterSpacing: '2px', marginBottom: 6,
 }
-
 const inputStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  fontFamily: 'var(--font-body)',
-  fontSize: '13px',
+  width: '100%', padding: '10px 12px', borderRadius: '2px',
+  fontFamily: 'var(--font-body)', fontSize: '13px',
 }

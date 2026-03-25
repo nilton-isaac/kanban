@@ -5,10 +5,14 @@ import EisenhowerMatrix from './components/EisenhowerMatrix'
 import ArchivedView from './components/ArchivedView'
 import AuthScreen from './components/AuthScreen'
 import StandupModal from './components/StandupModal'
+import FloatingThemeSelector from './components/FloatingThemeSelector'
 import ThemeEffects from './components/ThemeEffects'
+import DungeonMode from './components/DungeonMode'
+import GamificationHUD from './components/GamificationHUD'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { fetchColumns, fetchCards, upsertColumn, upsertCard, deleteColumn as dbDeleteColumn, deleteCard as dbDeleteCard, saveStandupLog } from './lib/db'
 import { applyNextDay, getNextDayImpact } from './lib/standup'
+import { loadGameState, saveGameState, awardTaskXp, computeLevel } from './lib/gamification'
 
 const LOCAL_KEY = 'cyberdaily-kanban-v4'
 const LOCAL_IMAGES_KEY = 'cyberdaily-images-v1'
@@ -52,6 +56,10 @@ export default function App() {
   const [imagePreview, setImagePreview] = useState(null)
   const [nextDayConfirm, setNextDayConfirm] = useState(false)
   const [nextDayDone, setNextDayDone] = useState(false)
+
+  // Gamification
+  const [gameState, setGameState] = useState(() => loadGameState())
+  const [lastXpEvent, setLastXpEvent] = useState(null)
 
   const syncTimer = useRef(null)
   const isCloud = !!session?.user
@@ -187,10 +195,20 @@ export default function App() {
   }, [isCloud, session])
 
   const archiveCard = useCallback((cardId) => {
-    setCards(prev => prev.map(c =>
-      c.id === cardId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c
-    ))
-  }, [])
+    setCards(prev => {
+      const card = prev.find(c => c.id === cardId)
+      if (card) {
+        // Award XP for completing a task
+        const { newState, earned, leveledUp, newLevel } = awardTaskXp(gameState, card)
+        setGameState(newState)
+        saveGameState(newState)
+        setLastXpEvent({ earned, leveledUp, newLevel, ts: Date.now() })
+      }
+      return prev.map(c =>
+        c.id === cardId ? { ...c, archived: true, archivedAt: new Date().toISOString() } : c
+      )
+    })
+  }, [gameState])
 
   const unarchiveCard = useCallback((cardId) => {
     setCards(prev => prev.map(c =>
@@ -277,12 +295,12 @@ export default function App() {
   // â”€â”€ Loading / Auth guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (!isSupabaseConfigured) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div className="cyber-card" style={{ maxWidth: 720, width: '100%', padding: 24, background: 'var(--panel-bg)' }}>
           <h2 style={{ color: 'var(--neon-pink)', fontFamily: 'var(--font-heading)', letterSpacing: '2px', fontSize: '16px', marginBottom: 12 }}>
             SUPABASE NAO CONFIGURADO
           </h2>
-          <p style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: '13px', marginBottom: 8 }}>
+          <p style={{ color: '#b7b7b7', fontFamily: 'var(--font-body)', fontSize: '13px', marginBottom: 8 }}>
             Defina estas variaveis:
           </p>
           <p style={{ color: 'var(--neon-cyan)', fontFamily: 'monospace', fontSize: '12px', marginBottom: 6 }}>
@@ -291,10 +309,10 @@ export default function App() {
           <p style={{ color: 'var(--neon-cyan)', fontFamily: 'monospace', fontSize: '12px', marginBottom: 14 }}>
             VITE_SUPABASE_ANON_KEY
           </p>
-          <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: '12px', marginBottom: 6 }}>
+          <p style={{ color: '#8a8a8a', fontFamily: 'var(--font-body)', fontSize: '12px', marginBottom: 6 }}>
             Local: arquivo .env.local na raiz do projeto + reiniciar o servidor.
           </p>
-          <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: '12px' }}>
+          <p style={{ color: '#8a8a8a', fontFamily: 'var(--font-body)', fontSize: '12px' }}>
             Vercel: Project Settings {'>'} Environment Variables (Production e Preview).
           </p>
         </div>
@@ -304,10 +322,8 @@ export default function App() {
 
   if (session === undefined) {
     return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg-gradient)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', letterSpacing: '0.18em', fontSize: '14px' }}>
-          INICIALIZANDO WORKSPACE...
-        </p>
+      <div style={{ minHeight: '100vh', background: '#050510', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#00f3ff', fontFamily: 'Orbitron', letterSpacing: '4px', fontSize: '14px' }}>INICIALIZANDO...</p>
       </div>
     )
   }
@@ -318,14 +334,16 @@ export default function App() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
         <p style={{ color: 'var(--neon-cyan)', fontFamily: 'var(--font-heading)', letterSpacing: '4px', fontSize: '14px' }}>CARREGANDO DADOS...</p>
-        <p style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-body)', fontSize: '11px' }}>{session.user.email}</p>
+        <p style={{ color: '#333', fontFamily: 'var(--font-body)', fontSize: '11px' }}>{session.user.email}</p>
       </div>
     )
   }
 
   return (
-    <div className="app-shell flex flex-col h-full min-h-screen">
+    <div className="flex flex-col h-full min-h-screen">
       <ThemeEffects />
+      <FloatingThemeSelector />
+      <GamificationHUD gameState={gameState} lastXpEvent={lastXpEvent} />
       <Header
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -336,6 +354,7 @@ export default function App() {
         onLogout={() => supabase.auth.signOut()}
         syncError={syncError}
         archivedCount={cards.filter(c => c.archived).length}
+        gameState={gameState}
       />
 
       {viewMode === 'kanban' ? (
@@ -370,6 +389,14 @@ export default function App() {
           onUnarchive={unarchiveCard}
           onView={handleOpenEdit}
           onClearArchive={clearArchive}
+        />
+      ) : viewMode === 'dungeon' ? (
+        <DungeonMode
+          gameState={gameState}
+          onGameStateChange={(newState) => {
+            setGameState(newState)
+            saveGameState(newState)
+          }}
         />
       ) : null}
 
@@ -461,7 +488,7 @@ function ConfirmNextDayModal({ columns, cards, onConfirm, onClose }) {
           VIRAR DIA
         </h3>
         {!impact.hasSourceColumn ? (
-          <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.7, marginBottom: 20 }}>
+          <div style={{ fontFamily: 'var(--font-body)', fontSize: '13px', color: '#bbb', lineHeight: 1.7, marginBottom: 20 }}>
             <p>Nenhuma coluna com role <strong>today</strong> foi encontrada.</p>
             <p style={{ color: '#888', marginTop: 8 }}>
               Defina uma coluna como "today" para habilitar a virada de dia automaticamente.
@@ -740,7 +767,7 @@ function EditCardModal({ card, columns, onSave, onDelete, onClose, onPreviewImag
                     style={{ width: 18, height: 18, borderRadius: 3, flexShrink: 0, cursor: 'pointer', border: `1px solid ${task.done ? 'var(--neon-green)' : '#444'}`, background: task.done ? 'var(--neon-green)' : 'transparent', color: '#000', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {task.done ? '✓' : ''}
                   </button>
-                  <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-body)', color: task.done ? 'var(--text-muted)' : 'var(--text-primary)', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</span>
+                  <span style={{ flex: 1, fontSize: '13px', fontFamily: 'var(--font-body)', color: task.done ? '#444' : '#ccc', textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</span>
                   <button onClick={() => setTasks(p => p.filter(t => t.id !== task.id))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#333', fontSize: '12px' }}
                     onMouseEnter={e => e.currentTarget.style.color = 'var(--neon-pink)'}
                     onMouseLeave={e => e.currentTarget.style.color = '#333'}>✕</button>
@@ -886,7 +913,7 @@ function AddColumnModal({ onSave, onClose }) {
             <label style={LABEL_STYLE('var(--neon-pink)')}>Cor</label>
             <div className="flex gap-2">
               {COL_COLORS.map(c => (
-                <button key={c} onClick={() => setColor(c)} style={{ width: 28, height: 28, borderRadius: 4, background: `var(--neon-${c})`, border: color === c ? '2px solid var(--surface-contrast)' : '2px solid transparent', cursor: 'pointer', boxShadow: color === c ? `0 0 10px var(--neon-${c})` : 'none' }} />
+                <button key={c} onClick={() => setColor(c)} style={{ width: 28, height: 28, borderRadius: 4, background: `var(--neon-${c})`, border: color === c ? '2px solid #fff' : '2px solid transparent', cursor: 'pointer', boxShadow: color === c ? `0 0 10px var(--neon-${c})` : 'none' }} />
               ))}
             </div>
           </div>

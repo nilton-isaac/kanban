@@ -1,11 +1,17 @@
-import { MoonStar, SunMedium } from 'lucide-react'
+import { Zap, Radiation, Sword, Droplets, Snowflake, Cpu, Flame, Crown } from 'lucide-react'
 
 const THEME_ICON_MAP = {
-  light: SunMedium,
-  dark: MoonStar,
+  cyberpunk: Zap,
+  fallout: Radiation,
+  darkest: Sword,
+  liquidglass: Droplets,
+  frostpunk: Snowflake,
+  nier: Cpu,
+  darksouls: Flame,
+  royale: Crown,
 }
 
 export function ThemeIcon({ themeId, size = 14, strokeWidth = 2, style }) {
-  const Icon = THEME_ICON_MAP[themeId] || MoonStar
+  const Icon = THEME_ICON_MAP[themeId] || Zap
   return <Icon size={size} strokeWidth={strokeWidth} style={style} />
 }

@@ -1,0 +1,540 @@
+// RPG Classes for the Dungeon System
+// Each class: stats, skills, magic, description, playstyle
+
+export const CLASSES = {
+  guerreiro: {
+    id: 'guerreiro',
+    name: 'Guerreiro',
+    icon: '⚔️',
+    desc: 'Mestre do combate físico. Alto HP e defesa.',
+    stats: { str: 8, dex: 5, int: 2, wis: 3, con: 8, cha: 3 },
+    hpBase: 30, hpPerLevel: 8, mpBase: 10, mpPerLevel: 2,
+    primaryStat: 'str',
+    weapons: ['sword', 'axe', 'mace', 'spear', 'shield'],
+    armor: 'heavy',
+    skills: [
+      { id: 'power_strike',   name: 'Golpe Poderoso',   mpCost: 0,  desc: 'Ataque físico com 150% de dano', dmgMult: 1.5, type: 'physical', target: 'enemy', unlockLv: 1 },
+      { id: 'shield_block',   name: 'Bloqueio',         mpCost: 0,  desc: 'Reduz próximo dano recebido em 50%', type: 'buff', target: 'self', effect: 'block', unlockLv: 3 },
+      { id: 'battle_cry',     name: 'Grito de Guerra',  mpCost: 5,  desc: 'Aumenta ATK em 30% por 3 turnos', type: 'buff', target: 'self', effect: 'atk_up', unlockLv: 5 },
+      { id: 'whirlwind',      name: 'Redemoinho',       mpCost: 10, desc: 'Ataque giratório com 120% dano', dmgMult: 1.2, type: 'physical', target: 'enemy', unlockLv: 8 },
+      { id: 'unbreakable',    name: 'Inquebrantável',   mpCost: 15, desc: 'Ganha DEF +50% por 2 turnos', type: 'buff', target: 'self', effect: 'def_up', unlockLv: 12 },
+      { id: 'execute',        name: 'Execução',         mpCost: 20, desc: 'Dano triplicado se inimigo < 25% HP', dmgMult: 3.0, type: 'physical', target: 'enemy', condition: 'enemy_low', unlockLv: 16 },
+    ],
+    passive: 'Resistência: +15% redução de dano físico',
+    lore: 'Forjado em batalhas incontáveis, o guerreiro encarna a arte da guerra.',
+  },
+
+  mago: {
+    id: 'mago',
+    name: 'Mago',
+    icon: '🔮',
+    desc: 'Arsenal de feitiços devastadores. Frágil mas letal.',
+    stats: { str: 2, dex: 4, int: 10, wis: 6, con: 2, cha: 5 },
+    hpBase: 15, hpPerLevel: 4, mpBase: 40, mpPerLevel: 10,
+    primaryStat: 'int',
+    weapons: ['staff', 'wand', 'tome'],
+    armor: 'cloth',
+    skills: [
+      { id: 'magic_missile',  name: 'Míssil Mágico',    mpCost: 5,  desc: 'Dano arcano garantido sem defesa', dmgMult: 1.0, type: 'magic', target: 'enemy', unlockLv: 1 },
+      { id: 'fireball',       name: 'Bola de Fogo',     mpCost: 12, desc: 'Explosão de fogo: 180% dano', dmgMult: 1.8, type: 'fire', target: 'enemy', unlockLv: 3 },
+      { id: 'frost_bolt',     name: 'Raio de Gelo',     mpCost: 10, desc: 'Gelo com chance de congelar', dmgMult: 1.4, type: 'ice', target: 'enemy', effect: 'freeze', unlockLv: 5 },
+      { id: 'lightning_bolt', name: 'Raio',             mpCost: 15, desc: 'Raio com 200% dano e ignora DEF', dmgMult: 2.0, type: 'lightning', target: 'enemy', unlockLv: 8 },
+      { id: 'arcane_shield',  name: 'Escudo Arcano',    mpCost: 20, desc: 'Absorve próximos 2 ataques', type: 'buff', target: 'self', effect: 'magic_shield', unlockLv: 10 },
+      { id: 'meteor',         name: 'Meteoro',          mpCost: 35, desc: 'Dano massivo: 350% dano', dmgMult: 3.5, type: 'fire', target: 'enemy', unlockLv: 15 },
+      { id: 'time_stop',      name: 'Parada do Tempo',  mpCost: 50, desc: 'Inimigo perde 2 turnos', type: 'debuff', target: 'enemy', effect: 'stun', turns: 2, unlockLv: 20 },
+    ],
+    passive: 'Potência Arcana: INT aumenta dano mágico em 15% extra',
+    lore: 'Anos de estudo transformaram sua mente em uma arma de destruição em massa.',
+  },
+
+  ladino: {
+    id: 'ladino',
+    name: 'Ladino',
+    icon: '🗡️',
+    desc: 'Rápido, furtivo. Críticos devastadores.',
+    stats: { str: 4, dex: 10, int: 4, wis: 3, con: 3, cha: 6 },
+    hpBase: 18, hpPerLevel: 5, mpBase: 20, mpPerLevel: 4,
+    primaryStat: 'dex',
+    weapons: ['dagger', 'short_sword', 'hand_crossbow'],
+    armor: 'light',
+    skills: [
+      { id: 'sneak_attack',   name: 'Ataque Furtivo',   mpCost: 0,  desc: 'Crítico garantido: 200% dano', dmgMult: 2.0, type: 'physical', target: 'enemy', unlockLv: 1 },
+      { id: 'poison_blade',   name: 'Lâmina Venenosa',  mpCost: 5,  desc: 'Aplica veneno: 15 dano/turno por 3 turnos', type: 'poison', target: 'enemy', effect: 'poison', unlockLv: 3 },
+      { id: 'evasion',        name: 'Evasão',           mpCost: 8,  desc: 'Esquiva garantida do próximo ataque', type: 'buff', target: 'self', effect: 'dodge', unlockLv: 5 },
+      { id: 'shadow_step',    name: 'Passo Sombrio',    mpCost: 10, desc: 'Ataque + teleporte: 160% dano sem resposta', dmgMult: 1.6, type: 'shadow', target: 'enemy', unlockLv: 8 },
+      { id: 'thousand_cuts',  name: 'Mil Cortes',       mpCost: 20, desc: '5 ataques rápidos: 60% dano cada', dmgMult: 0.6, hits: 5, type: 'physical', target: 'enemy', unlockLv: 12 },
+      { id: 'death_mark',     name: 'Marca da Morte',   mpCost: 25, desc: 'Marca inimigo: todos ataques são críticos por 3t', type: 'debuff', target: 'enemy', effect: 'death_mark', unlockLv: 16 },
+    ],
+    passive: 'Maestria em Crítico: +25% chance de crítico base',
+    lore: 'Criado nas ruas, aperfeiçoado nas sombras. Nunca visto até que seja tarde.',
+  },
+
+  paladino: {
+    id: 'paladino',
+    name: 'Paladino',
+    icon: '🛡️',
+    desc: 'Guerreiro sagrado. Combina força e cura divina.',
+    stats: { str: 7, dex: 3, int: 3, wis: 7, con: 6, cha: 5 },
+    hpBase: 28, hpPerLevel: 7, mpBase: 25, mpPerLevel: 5,
+    primaryStat: 'str',
+    weapons: ['sword', 'mace', 'shield', 'lance'],
+    armor: 'heavy',
+    skills: [
+      { id: 'divine_strike',  name: 'Golpe Divino',     mpCost: 8,  desc: 'Ataque sagrado: 160% dano + ignora resistências', dmgMult: 1.6, type: 'holy', target: 'enemy', unlockLv: 1 },
+      { id: 'lay_on_hands',   name: 'Imposição de Mãos',mpCost: 10, desc: 'Cura 40% do HP máximo', type: 'heal', target: 'self', healPct: 0.4, unlockLv: 2 },
+      { id: 'consecrate',     name: 'Consagração',      mpCost: 15, desc: 'Aura sagrada: dano extra a mortos-vivos e demônios', type: 'buff', target: 'self', effect: 'holy_aura', unlockLv: 5 },
+      { id: 'holy_nova',      name: 'Nova Sagrada',     mpCost: 20, desc: 'Explosão de luz: 140% dano + cura 20% HP', dmgMult: 1.4, type: 'holy', target: 'enemy', healPct: 0.2, unlockLv: 9 },
+      { id: 'divine_shield',  name: 'Escudo Divino',    mpCost: 25, desc: 'Imunidade total por 1 turno', type: 'buff', target: 'self', effect: 'immunity', turns: 1, unlockLv: 13 },
+      { id: 'smite_evil',     name: 'Punição do Mal',   mpCost: 30, desc: 'Contra demônios/mortos: 400% dano', dmgMult: 4.0, type: 'holy', target: 'enemy', condition: 'evil_target', unlockLv: 17 },
+    ],
+    passive: 'Aura de Proteção: +10% DEF para todo o grupo',
+    lore: 'A fé não é cega — é uma espada empunhada com propósito.',
+  },
+
+  necromante: {
+    id: 'necromante',
+    name: 'Necromante',
+    icon: '💀',
+    desc: 'Mestre da morte. Drena vida e convoca mortos.',
+    stats: { str: 2, dex: 3, int: 9, wis: 5, con: 3, cha: 4 },
+    hpBase: 16, hpPerLevel: 4, mpBase: 38, mpPerLevel: 9,
+    primaryStat: 'int',
+    weapons: ['staff', 'scythe', 'tome', 'bone_wand'],
+    armor: 'cloth',
+    skills: [
+      { id: 'life_drain',     name: 'Drenar Vida',      mpCost: 8,  desc: 'Drena 25% do dano causado como HP', dmgMult: 1.2, type: 'necrotic', target: 'enemy', lifesteal: 0.25, unlockLv: 1 },
+      { id: 'curse',          name: 'Maldição',         mpCost: 6,  desc: 'Reduz ATK do inimigo em 30% por 3 turnos', type: 'debuff', target: 'enemy', effect: 'atk_down', unlockLv: 2 },
+      { id: 'bone_shield',    name: 'Escudo de Ossos',  mpCost: 12, desc: 'Absorve 30 dano antes de ser destruído', type: 'buff', target: 'self', effect: 'bone_shield', unlockLv: 4 },
+      { id: 'death_bolt',     name: 'Raio da Morte',    mpCost: 15, desc: 'Dano necrótico puro: 200% dano', dmgMult: 2.0, type: 'necrotic', target: 'enemy', unlockLv: 7 },
+      { id: 'summon_skeleton',name: 'Invocar Esqueleto',mpCost: 20, desc: 'Invoca esqueleto que ataca junto por 3 turnos', type: 'summon', target: 'self', effect: 'summon', summonId: 'skeleton', unlockLv: 10 },
+      { id: 'death_coil',     name: 'Espiral da Morte', mpCost: 30, desc: 'Dano massivo + se matar: absorve todo HP do inimigo', dmgMult: 2.5, type: 'necrotic', target: 'enemy', effect: 'absorb_on_kill', unlockLv: 15 },
+    ],
+    passive: 'Pacto com a Morte: Cura 5 HP a cada turno',
+    lore: 'A morte não é um fim. É uma ferramenta.',
+  },
+
+  arqueiro: {
+    id: 'arqueiro',
+    name: 'Arqueiro',
+    icon: '🏹',
+    desc: 'Atira de longe. Venenos e armadilhas táticas.',
+    stats: { str: 4, dex: 9, int: 4, wis: 5, con: 4, cha: 4 },
+    hpBase: 20, hpPerLevel: 5, mpBase: 18, mpPerLevel: 4,
+    primaryStat: 'dex',
+    weapons: ['bow', 'crossbow', 'dagger'],
+    armor: 'light',
+    skills: [
+      { id: 'aimed_shot',     name: 'Tiro Certeiro',    mpCost: 0,  desc: 'Ataque preciso: 130% dano', dmgMult: 1.3, type: 'physical', target: 'enemy', unlockLv: 1 },
+      { id: 'poison_arrow',   name: 'Flecha Venenosa',  mpCost: 6,  desc: 'Veneno: 20 dano/turno por 4 turnos', type: 'physical', target: 'enemy', effect: 'poison', unlockLv: 3 },
+      { id: 'multi_shot',     name: 'Múltiplos Tiros',  mpCost: 10, desc: '3 flechas: 70% dano cada', dmgMult: 0.7, hits: 3, type: 'physical', target: 'enemy', unlockLv: 5 },
+      { id: 'hawk_eye',       name: 'Olho de Falcão',   mpCost: 8,  desc: 'Próximo ataque: crítico garantido + 50% dano extra', type: 'buff', target: 'self', effect: 'eagle_eye', unlockLv: 7 },
+      { id: 'rain_of_arrows', name: 'Chuva de Flechas', mpCost: 20, desc: '7 flechas: 50% dano cada', dmgMult: 0.5, hits: 7, type: 'physical', target: 'enemy', unlockLv: 11 },
+      { id: 'dragon_arrow',   name: 'Flecha Dracônica', mpCost: 30, desc: 'Flecha explosiva: 300% dano de fogo', dmgMult: 3.0, type: 'fire', target: 'enemy', unlockLv: 16 },
+    ],
+    passive: 'Precisão Natural: Ataques básicos têm 20% chance de ignorar DEF',
+    lore: 'Cada flecha conta uma história. Cada alvo, um capítulo encerrado.',
+  },
+
+  bardo: {
+    id: 'bardo',
+    name: 'Bardo',
+    icon: '🎵',
+    desc: 'Música como magia. Buffs poderosos e debuffs caóticos.',
+    stats: { str: 3, dex: 6, int: 6, wis: 4, con: 3, cha: 10 },
+    hpBase: 17, hpPerLevel: 4, mpBase: 30, mpPerLevel: 7,
+    primaryStat: 'cha',
+    weapons: ['dagger', 'sword', 'wand', 'instrument'],
+    armor: 'light',
+    skills: [
+      { id: 'inspiring_song', name: 'Canto Inspirador',  mpCost: 8,  desc: 'Aumenta todos atributos em 20% por 3 turnos', type: 'buff', target: 'self', effect: 'all_up', unlockLv: 1 },
+      { id: 'dissonance',     name: 'Dissonância',       mpCost: 10, desc: 'Dano sônico + confunde inimigo por 2 turnos', dmgMult: 1.0, type: 'sonic', target: 'enemy', effect: 'confuse', unlockLv: 3 },
+      { id: 'ballad_of_pain', name: 'Balada da Dor',     mpCost: 12, desc: 'Dobra o dano sofrido pelo inimigo por 3 turnos', type: 'debuff', target: 'enemy', effect: 'vulnerable', unlockLv: 5 },
+      { id: 'healing_hymn',   name: 'Hino da Cura',      mpCost: 15, desc: 'Cura 30% HP e remove uma maldição', type: 'heal', target: 'self', healPct: 0.3, unlockLv: 7 },
+      { id: 'war_drum',       name: 'Tambor de Guerra',  mpCost: 20, desc: 'ATK +50% e velocidade +50% por 4 turnos', type: 'buff', target: 'self', effect: 'war_fury', unlockLv: 11 },
+      { id: 'final_verse',    name: 'Verso Final',        mpCost: 35, desc: 'Ataque épico: 250% dano + toca a música da morte', dmgMult: 2.5, type: 'sonic', target: 'enemy', unlockLv: 16 },
+    ],
+    passive: 'Improvisação: 15% chance de usar habilidade sem custo de MP',
+    lore: 'A música move montanhas. A música cura feridas. A música mata.',
+  },
+
+  druida: {
+    id: 'druida',
+    name: 'Druida',
+    icon: '🌿',
+    desc: 'Natureza como aliada. Cura e destruição natural.',
+    stats: { str: 4, dex: 5, int: 5, wis: 9, con: 5, cha: 4 },
+    hpBase: 22, hpPerLevel: 5, mpBase: 32, mpPerLevel: 7,
+    primaryStat: 'wis',
+    weapons: ['staff', 'scimitar', 'sling', 'nature_focus'],
+    armor: 'medium',
+    skills: [
+      { id: 'thornwhip',      name: 'Chicote de Espinhos', mpCost: 5, desc: 'Ataque com espinhos: 120% dano + veneno', dmgMult: 1.2, type: 'nature', target: 'enemy', effect: 'poison', unlockLv: 1 },
+      { id: 'rejuvenate',     name: 'Rejuvenescer',      mpCost: 10, desc: 'Cura 20 HP/turno por 3 turnos', type: 'heal', target: 'self', effect: 'regen', unlockLv: 2 },
+      { id: 'entangle',       name: 'Enredar',           mpCost: 8,  desc: 'Raízes prendem inimigo: perde turno', type: 'debuff', target: 'enemy', effect: 'root', unlockLv: 4 },
+      { id: 'call_lightning', name: 'Convocar Raio',     mpCost: 18, desc: 'Raio da natureza: 220% dano', dmgMult: 2.2, type: 'lightning', target: 'enemy', unlockLv: 7 },
+      { id: 'wild_shape',     name: 'Forma Selvagem',    mpCost: 25, desc: 'Transforma em urso: +50% HP e ATK por 4 turnos', type: 'buff', target: 'self', effect: 'wild_shape', unlockLv: 10 },
+      { id: 'sunbeam',        name: 'Raio Solar',        mpCost: 30, desc: 'Luz divina: 280% dano + destrói mortos-vivos', dmgMult: 2.8, type: 'holy', target: 'enemy', unlockLv: 14 },
+    ],
+    passive: 'Sintonia Natural: Regen 8 HP/turno em masmorras com natureza',
+    lore: 'A floresta é sua cidade, os ventos seu exército, a terra sua fundação.',
+  },
+
+  berserker: {
+    id: 'berserker',
+    name: 'Berserker',
+    icon: '🪓',
+    desc: 'Fúria pura. Quanto mais dano toma, mais perigoso fica.',
+    stats: { str: 10, dex: 6, int: 1, wis: 1, con: 7, cha: 2 },
+    hpBase: 32, hpPerLevel: 9, mpBase: 5, mpPerLevel: 1,
+    primaryStat: 'str',
+    weapons: ['greataxe', 'greatsword', 'axe', 'hammer'],
+    armor: 'medium',
+    skills: [
+      { id: 'rage',           name: 'Fúria',             mpCost: 0,  desc: 'ATK +80%, DEF -40% por 5 turnos', type: 'buff', target: 'self', effect: 'rage', unlockLv: 1 },
+      { id: 'reckless_attack',name: 'Ataque Imprudente', mpCost: 0,  desc: '200% dano mas inimigo acerta primeiro', dmgMult: 2.0, type: 'physical', target: 'enemy', risk: true, unlockLv: 2 },
+      { id: 'blood_frenzy',   name: 'Frenesi de Sangue', mpCost: 0,  desc: 'A cada golpe recebido, ATK +10% (máx 100%)', type: 'passive_buff', target: 'self', effect: 'blood_frenzy', unlockLv: 5 },
+      { id: 'cleave',         name: 'Rachar',            mpCost: 5,  desc: 'Golpe devastador: 170% dano + ignora 50% DEF', dmgMult: 1.7, type: 'physical', target: 'enemy', armorPierce: 0.5, unlockLv: 7 },
+      { id: 'warcry',         name: 'Grito de Fúria',    mpCost: 8,  desc: 'Intimida inimigo: DEF-30% + aterroriza por 2t', type: 'debuff', target: 'enemy', effect: 'terrify', unlockLv: 10 },
+      { id: 'death_blow',     name: 'Golpe Mortal',      mpCost: 15, desc: 'Golpe com 300% dano. Se matar, cura 50% HP', dmgMult: 3.0, type: 'physical', target: 'enemy', unlockLv: 14 },
+    ],
+    passive: 'Resistência ao Dor: Abaixo de 30% HP, ATK dobra',
+    lore: 'Para o berserker, dor é combustível. Morte é o único descanso aceito.',
+  },
+
+  monge: {
+    id: 'monge',
+    name: 'Monge',
+    icon: '👊',
+    desc: 'Arte marcial e ki. Velocidade implacável.',
+    stats: { str: 6, dex: 8, int: 3, wis: 7, con: 5, cha: 3 },
+    hpBase: 22, hpPerLevel: 6, mpBase: 25, mpPerLevel: 5,
+    primaryStat: 'dex',
+    weapons: ['fist', 'staff', 'nunchaku', 'shortbow'],
+    armor: 'light',
+    skills: [
+      { id: 'flurry_blows',   name: 'Rajada de Golpes',  mpCost: 0,  desc: '2 ataques rápidos: 80% dano cada', dmgMult: 0.8, hits: 2, type: 'physical', target: 'enemy', unlockLv: 1 },
+      { id: 'ki_strike',      name: 'Golpe Ki',          mpCost: 8,  desc: 'Golpe de energia pura: 180% dano ignora DEF', dmgMult: 1.8, type: 'ki', target: 'enemy', unlockLv: 3 },
+      { id: 'stunning_strike',name: 'Golpe Atordoante',  mpCost: 10, desc: 'Ataque + atordoa por 1 turno', dmgMult: 1.2, type: 'physical', target: 'enemy', effect: 'stun', unlockLv: 5 },
+      { id: 'patient_defense',name: 'Defesa Paciente',   mpCost: 8,  desc: 'Esquiva dobrada + contra-ataque se errar', type: 'buff', target: 'self', effect: 'deflect', unlockLv: 7 },
+      { id: 'empty_body',     name: 'Corpo Vazio',       mpCost: 20, desc: 'Imaterial por 2 turnos: todos ataques físicos erram', type: 'buff', target: 'self', effect: 'ethereal', unlockLv: 11 },
+      { id: 'quivering_palm', name: 'Palma Tremulante',  mpCost: 30, desc: 'Toque da morte: 250% dano ou mata instantaneamente', dmgMult: 2.5, type: 'ki', target: 'enemy', instaKill: 0.15, unlockLv: 16 },
+    ],
+    passive: 'Ki Ilimitado: +1 ataque básico por turno',
+    lore: 'O corpo é uma arma. A mente, a mira. A alma, o gatilho.',
+  },
+
+  bruxo: {
+    id: 'bruxo',
+    name: 'Bruxo',
+    icon: '👁️',
+    desc: 'Pacto com entidades. Poder eldritch devastador.',
+    stats: { str: 2, dex: 5, int: 7, wis: 3, con: 4, cha: 9 },
+    hpBase: 18, hpPerLevel: 5, mpBase: 20, mpPerLevel: 6,
+    primaryStat: 'cha',
+    weapons: ['wand', 'staff', 'tome', 'dagger'],
+    armor: 'light',
+    skills: [
+      { id: 'eldritch_blast', name: 'Explosão Eldritch', mpCost: 3,  desc: 'Raio arcano: 120% dano. Custo baixo.', dmgMult: 1.2, type: 'eldritch', target: 'enemy', unlockLv: 1 },
+      { id: 'hex',            name: 'Hexo',              mpCost: 10, desc: 'Marca inimigo: +20 dano em cada ataque', type: 'debuff', target: 'enemy', effect: 'hex', unlockLv: 2 },
+      { id: 'dark_one_blessing',name:'Bênção das Trevas', mpCost: 0,  desc: 'Ao matar: restaura 10 MP', type: 'passive', target: 'self', effect: 'kill_mp_restore', unlockLv: 4 },
+      { id: 'hunger_hadar',   name: 'Fome de Hadar',     mpCost: 20, desc: 'Cria vácuo que devora: 150% dano/turno por 3t', dmgMult: 1.5, type: 'void', target: 'enemy', effect: 'hadar', unlockLv: 7 },
+      { id: 'shadow_armor',   name: 'Armadura Sombria',  mpCost: 15, desc: 'Sombras te protegem: DEF +60% por 3 turnos', type: 'buff', target: 'self', effect: 'shadow_armor', unlockLv: 10 },
+      { id: 'banishment',     name: 'Banimento',         mpCost: 35, desc: 'Bane inimigo: 2 turnos fora ou dano massivo se resistir', dmgMult: 4.0, type: 'eldritch', target: 'enemy', unlockLv: 15 },
+    ],
+    passive: 'Pacto Sombrio: Recupera 5 MP por turno',
+    lore: 'O poder tem um preço. O bruxo pagou — e cobra dos outros.',
+  },
+
+  clerigo: {
+    id: 'clerigo',
+    name: 'Clérigo',
+    icon: '✨',
+    desc: 'Cura divina e punição sagrada. Aliado indispensável.',
+    stats: { str: 5, dex: 3, int: 4, wis: 10, con: 5, cha: 6 },
+    hpBase: 24, hpPerLevel: 6, mpBase: 35, mpPerLevel: 8,
+    primaryStat: 'wis',
+    weapons: ['mace', 'staff', 'shield', 'holy_symbol'],
+    armor: 'heavy',
+    skills: [
+      { id: 'heal',           name: 'Curar',             mpCost: 10, desc: 'Restaura 35% HP máximo', type: 'heal', target: 'self', healPct: 0.35, unlockLv: 1 },
+      { id: 'sacred_flame',   name: 'Chama Sagrada',     mpCost: 8,  desc: 'Fogo divino: 140% dano + extra contra mortos', dmgMult: 1.4, type: 'holy', target: 'enemy', unlockLv: 2 },
+      { id: 'bless',          name: 'Abençoar',          mpCost: 12, desc: '+20% ATK e +20% DEF por 4 turnos', type: 'buff', target: 'self', effect: 'bless', unlockLv: 4 },
+      { id: 'turn_undead',    name: 'Expulsar Mortos',   mpCost: 15, desc: 'Causa 400% dano a mortos-vivos ou os faz fugir', dmgMult: 4.0, type: 'holy', target: 'enemy', condition: 'undead_target', unlockLv: 6 },
+      { id: 'mass_heal',      name: 'Cura em Massa',     mpCost: 25, desc: 'Restaura 50% HP + remove todos os debuffs', type: 'heal', target: 'self', healPct: 0.5, cleanse: true, unlockLv: 10 },
+      { id: 'divine_wrath',   name: 'Ira Divina',        mpCost: 40, desc: 'Poder divino total: 350% dano sagrado', dmgMult: 3.5, type: 'holy', target: 'enemy', unlockLv: 15 },
+    ],
+    passive: 'Fé Inabalável: Imune a maldições e mortes instantâneas',
+    lore: 'Deus age por meio das mãos do clérigo. E suas mãos foram moldadas para curar e para destruir.',
+  },
+
+  assassino: {
+    id: 'assassino',
+    name: 'Assassino',
+    icon: '🕶️',
+    desc: 'Mata antes de ser visto. Um golpe, uma morte.',
+    stats: { str: 5, dex: 10, int: 5, wis: 3, con: 3, cha: 5 },
+    hpBase: 16, hpPerLevel: 4, mpBase: 22, mpPerLevel: 5,
+    primaryStat: 'dex',
+    weapons: ['dagger', 'blade', 'thrown', 'blowgun'],
+    armor: 'light',
+    skills: [
+      { id: 'assassinate',    name: 'Assassinar',        mpCost: 10, desc: 'Primeiro ataque: 300% dano se surpresa', dmgMult: 3.0, type: 'physical', target: 'enemy', condition: 'first_attack', unlockLv: 1 },
+      { id: 'deadly_poison',  name: 'Veneno Letal',      mpCost: 8,  desc: 'Veneno poderoso: 30 dano/turno por 5 turnos', type: 'physical', target: 'enemy', effect: 'deadly_poison', unlockLv: 3 },
+      { id: 'shadow_clone',   name: 'Clone Sombrio',     mpCost: 15, desc: 'Cria clone que absorve próximo ataque', type: 'buff', target: 'self', effect: 'clone', unlockLv: 5 },
+      { id: 'throat_cut',     name: 'Cortar Garganta',   mpCost: 18, desc: 'Silencia inimigo: não pode usar magia por 3t', dmgMult: 1.4, type: 'physical', target: 'enemy', effect: 'silence', unlockLv: 8 },
+      { id: 'shadow_dance',   name: 'Dança das Sombras', mpCost: 25, desc: 'Teleporta atrás + ataque: 250% dano', dmgMult: 2.5, type: 'shadow', target: 'enemy', unlockLv: 12 },
+      { id: 'death_sentence', name: 'Sentença de Morte', mpCost: 35, desc: 'Mata instantaneamente inimigo não-chefe', dmgMult: 999, type: 'shadow', target: 'enemy', instaKill: 0.4, unlockLv: 18 },
+    ],
+    passive: 'Passo Silencioso: Sempre age primeiro no turno',
+    lore: 'Não há alvo intocável. Apenas alvos ainda não encontrados.',
+  },
+
+  xamã: {
+    id: 'xamã',
+    name: 'Xamã',
+    icon: '🔥',
+    desc: 'Fala com espíritos. Magias elementais e bênçãos ancestrais.',
+    stats: { str: 3, dex: 4, int: 7, wis: 8, con: 4, cha: 6 },
+    hpBase: 20, hpPerLevel: 5, mpBase: 34, mpPerLevel: 8,
+    primaryStat: 'wis',
+    weapons: ['staff', 'totem', 'spear', 'dagger'],
+    armor: 'medium',
+    skills: [
+      { id: 'earth_shock',    name: 'Choque Terrestre',  mpCost: 8,  desc: 'Tremor de terra: 140% dano + atordoa', dmgMult: 1.4, type: 'earth', target: 'enemy', effect: 'stun', unlockLv: 1 },
+      { id: 'spirit_totem',   name: 'Totem Espiritual',  mpCost: 15, desc: 'Invoca totem que cura 15 HP/turno por 4t', type: 'buff', target: 'self', effect: 'totem', unlockLv: 3 },
+      { id: 'chain_lightning',name: 'Raio em Cadeia',    mpCost: 18, desc: 'Raio que retorna: 160% dano 2x', dmgMult: 1.6, hits: 2, type: 'lightning', target: 'enemy', unlockLv: 5 },
+      { id: 'bloodlust',      name: 'Sede de Sangue',    mpCost: 20, desc: 'Espírito guerreiro: +40% ATK por 4 turnos', type: 'buff', target: 'self', effect: 'bloodlust', unlockLv: 8 },
+      { id: 'hex_curse',      name: 'Maldição do Xamã',  mpCost: 22, desc: 'Maldição: inimigo sofre 150% do dano causado de volta', type: 'debuff', target: 'enemy', effect: 'thorns', unlockLv: 11 },
+      { id: 'spirit_walk',    name: 'Caminhada Espiritual',mpCost: 30, desc: 'Sai do corpo: imune por 2 turnos, cura 40% HP', type: 'buff', target: 'self', effect: 'spirit_walk', unlockLv: 15 },
+    ],
+    passive: 'Ancestral: Chance de 15% de invocar espírito aliado automaticamente',
+    lore: 'Entre os mundos dos vivos e dos mortos, o xamã é a ponte.',
+  },
+
+  piromante: {
+    id: 'piromante',
+    name: 'Piromante',
+    icon: '🔥',
+    desc: 'Especialista em fogo. Queima tudo sem exceção.',
+    stats: { str: 2, dex: 5, int: 10, wis: 4, con: 3, cha: 4 },
+    hpBase: 16, hpPerLevel: 4, mpBase: 38, mpPerLevel: 9,
+    primaryStat: 'int',
+    weapons: ['staff', 'wand', 'tome'],
+    armor: 'cloth',
+    skills: [
+      { id: 'fire_bolt',      name: 'Raio de Fogo',      mpCost: 5,  desc: 'Fogo básico: 130% dano', dmgMult: 1.3, type: 'fire', target: 'enemy', unlockLv: 1 },
+      { id: 'combustion',     name: 'Combustão',         mpCost: 8,  desc: 'Queima contínua: 25 dano/turno por 4 turnos', type: 'fire', target: 'enemy', effect: 'burn', unlockLv: 2 },
+      { id: 'fire_wall',      name: 'Muro de Fogo',      mpCost: 18, desc: 'Barreira de chamas: inimigo sofre 100 dano ao atacar', type: 'buff', target: 'self', effect: 'fire_wall', unlockLv: 5 },
+      { id: 'pyroclasm',      name: 'Piroclasmia',       mpCost: 22, desc: 'Explosão de magma: 240% dano de fogo', dmgMult: 2.4, type: 'fire', target: 'enemy', unlockLv: 8 },
+      { id: 'immolate',       name: 'Imolar',            mpCost: 28, desc: 'Transforma inimigo em tocha: 200% dano + queima por 5 turnos', dmgMult: 2.0, type: 'fire', target: 'enemy', effect: 'immolate', unlockLv: 12 },
+      { id: 'phoenix_nova',   name: 'Nova Fênix',        mpCost: 45, desc: 'Explosão total: 400% dano. Cura 30% do dano causado.', dmgMult: 4.0, type: 'fire', target: 'enemy', lifesteal: 0.3, unlockLv: 17 },
+    ],
+    passive: 'Maestria do Fogo: Inimigos em chamas recebem 25% mais dano',
+    lore: 'O mundo começou com fogo. Com ele também terminará.',
+  },
+
+  criomante: {
+    id: 'criomante',
+    name: 'Criomante',
+    icon: '❄️',
+    desc: 'Mestre do gelo. Congela e fragmenta inimigos.',
+    stats: { str: 2, dex: 5, int: 10, wis: 4, con: 3, cha: 4 },
+    hpBase: 16, hpPerLevel: 4, mpBase: 38, mpPerLevel: 9,
+    primaryStat: 'int',
+    weapons: ['staff', 'wand', 'tome'],
+    armor: 'cloth',
+    skills: [
+      { id: 'ice_bolt',       name: 'Raio de Gelo',      mpCost: 5,  desc: 'Gelo: 120% dano + 20% lentidão', dmgMult: 1.2, type: 'ice', target: 'enemy', effect: 'slow', unlockLv: 1 },
+      { id: 'frost_nova',     name: 'Nova Glacial',      mpCost: 12, desc: 'Congela inimigo por 1 turno', type: 'ice', target: 'enemy', effect: 'freeze', unlockLv: 3 },
+      { id: 'ice_armor',      name: 'Armadura de Gelo',  mpCost: 15, desc: 'Armadura gelada: DEF +70% e reflete 30 dano/ataque', type: 'buff', target: 'self', effect: 'ice_armor', unlockLv: 5 },
+      { id: 'blizzard',       name: 'Nevasca',           mpCost: 22, desc: 'Tempestade de gelo: 180% dano por 2 turnos', dmgMult: 1.8, hits: 2, type: 'ice', target: 'enemy', unlockLv: 8 },
+      { id: 'shatter',        name: 'Fragmentar',        mpCost: 25, desc: 'Inimigo congelado sofre 300% dano', dmgMult: 3.0, type: 'ice', target: 'enemy', condition: 'frozen_target', unlockLv: 12 },
+      { id: 'absolute_zero',  name: 'Zero Absoluto',     mpCost: 45, desc: 'Temperatura impossível: 380% dano + congela por 3 turnos', dmgMult: 3.8, type: 'ice', target: 'enemy', effect: 'freeze', unlockLv: 17 },
+    ],
+    passive: 'Frieza Total: +20% chance de congelar com qualquer ataque de gelo',
+    lore: 'O frio não sente dor. O criomante tampouco.',
+  },
+
+  alquimista: {
+    id: 'alquimista',
+    name: 'Alquimista',
+    icon: '⚗️',
+    desc: 'Poções e explosivos. Versátil e impredizível.',
+    stats: { str: 3, dex: 6, int: 8, wis: 6, con: 5, cha: 3 },
+    hpBase: 20, hpPerLevel: 5, mpBase: 28, mpPerLevel: 6,
+    primaryStat: 'int',
+    weapons: ['dagger', 'crossbow', 'thrown', 'staff'],
+    armor: 'medium',
+    skills: [
+      { id: 'bomb',           name: 'Bomba',             mpCost: 8,  desc: 'Explosivo: 150% dano de fogo', dmgMult: 1.5, type: 'fire', target: 'enemy', unlockLv: 1 },
+      { id: 'healing_potion', name: 'Poção de Cura',     mpCost: 10, desc: 'Poção caseira: cura 40% HP', type: 'heal', target: 'self', healPct: 0.4, unlockLv: 2 },
+      { id: 'acid_flask',     name: 'Frasco Ácido',      mpCost: 12, desc: 'Ácido: 130% dano + corroe armadura (-30% DEF por 3t)', dmgMult: 1.3, type: 'acid', target: 'enemy', effect: 'corrode', unlockLv: 4 },
+      { id: 'mutagen',        name: 'Mutágeno',          mpCost: 18, desc: 'Transforma temporariamente: +60% STR, -20% INT por 4t', type: 'buff', target: 'self', effect: 'mutagen', unlockLv: 7 },
+      { id: 'smoke_bomb',     name: 'Bomba de Fumaça',   mpCost: 15, desc: 'Fumaça: inimigo erra próximos 3 ataques', type: 'debuff', target: 'enemy', effect: 'blind', unlockLv: 10 },
+      { id: 'philosopher_stone',name:'Pedra Filosofal',  mpCost: 40, desc: 'Poder supremo: 280% dano + cura 50% HP', dmgMult: 2.8, type: 'arcane', target: 'enemy', healPct: 0.5, unlockLv: 16 },
+    ],
+    passive: 'Metabolismo Acelerado: Efeitos de cura têm +25% de eficácia',
+    lore: 'Ciência e magia se encontram no laboratório do alquimista.',
+  },
+
+  invocador: {
+    id: 'invocador',
+    name: 'Invocador',
+    icon: '🌀',
+    desc: 'Convoca aliados do além para combater.',
+    stats: { str: 2, dex: 4, int: 8, wis: 5, con: 4, cha: 9 },
+    hpBase: 18, hpPerLevel: 4, mpBase: 36, mpPerLevel: 8,
+    primaryStat: 'cha',
+    weapons: ['staff', 'wand', 'tome'],
+    armor: 'cloth',
+    skills: [
+      { id: 'summon_elemental',name:'Invocar Elemental',  mpCost: 15, desc: 'Elemental combate por 3 turnos', type: 'summon', target: 'self', summonId: 'elemental', unlockLv: 1 },
+      { id: 'arcane_familiar',name:'Familiar Arcano',    mpCost: 10, desc: 'Familiar ataca por 2 turnos', type: 'summon', target: 'self', summonId: 'familiar', unlockLv: 2 },
+      { id: 'binding',        name: 'Compulsão',         mpCost: 18, desc: 'Compele inimigo a não atacar por 2 turnos', type: 'debuff', target: 'enemy', effect: 'bind', unlockLv: 4 },
+      { id: 'gate',           name: 'Portal',            mpCost: 25, desc: 'Abre portal: invoca aliado poderoso por 4 turnos', type: 'summon', target: 'self', summonId: 'demon', unlockLv: 8 },
+      { id: 'command',        name: 'Comando',           mpCost: 20, desc: 'Tenta controlar inimigo menor por 3 turnos', type: 'control', target: 'enemy', effect: 'control', unlockLv: 11 },
+      { id: 'elder_summon',   name: 'Invocação Ancestral',mpCost: 50,desc: 'Invoca entidade ancião por 5 turnos', type: 'summon', target: 'self', summonId: 'ancient', unlockLv: 16 },
+    ],
+    passive: 'Amplificador: Invocações causam +25% de dano',
+    lore: 'Para que lutar sozinho quando mundos inteiros aguardam ser convocados?',
+  },
+
+  cavaleiro: {
+    id: 'cavaleiro',
+    name: 'Cavaleiro',
+    icon: '🐴',
+    desc: 'Armadura máxima, defesa impenetrável.',
+    stats: { str: 7, dex: 3, int: 2, wis: 3, con: 10, cha: 5 },
+    hpBase: 35, hpPerLevel: 9, mpBase: 12, mpPerLevel: 3,
+    primaryStat: 'con',
+    weapons: ['lance', 'sword', 'shield', 'mace'],
+    armor: 'plate',
+    skills: [
+      { id: 'shield_bash',    name: 'Escudada',          mpCost: 0,  desc: 'Atordoa com escudo: 80% dano + stun 1t', dmgMult: 0.8, type: 'physical', target: 'enemy', effect: 'stun', unlockLv: 1 },
+      { id: 'taunt',          name: 'Provocação',        mpCost: 5,  desc: 'Força inimigo a atacar você por 3 turnos', type: 'debuff', target: 'enemy', effect: 'taunt', unlockLv: 2 },
+      { id: 'fortify',        name: 'Fortificar',        mpCost: 8,  desc: 'DEF +80% por 3 turnos', type: 'buff', target: 'self', effect: 'fortify', unlockLv: 4 },
+      { id: 'lance_charge',   name: 'Carga de Lança',    mpCost: 12, desc: 'Carga devastadora: 200% dano + derruba inimigo', dmgMult: 2.0, type: 'physical', target: 'enemy', effect: 'knockdown', unlockLv: 7 },
+      { id: 'last_stand',     name: 'Último Bastião',    mpCost: 20, desc: 'Abaixo de 20% HP: DEF triplicada + ataque dobrado', type: 'buff', target: 'self', effect: 'last_stand', unlockLv: 11 },
+      { id: 'heroic_charge',  name: 'Carga Heroica',     mpCost: 28, desc: 'Carrega e esmaga: 250% dano + ignora toda DEF', dmgMult: 2.5, type: 'physical', target: 'enemy', armorPierce: 1.0, unlockLv: 15 },
+    ],
+    passive: 'Muralha de Aço: Cada 10 pontos de CON add +1 DEF',
+    lore: 'A fortaleza que caminha, o baluarte que respira.',
+  },
+
+  demonhunter: {
+    id: 'demonhunter',
+    name: 'Caçador de Demônios',
+    icon: '⚡',
+    desc: 'Canaliza poder demoníaco para destruir inimigos.',
+    stats: { str: 6, dex: 8, int: 5, wis: 3, con: 4, cha: 5 },
+    hpBase: 22, hpPerLevel: 6, mpBase: 25, mpPerLevel: 5,
+    primaryStat: 'dex',
+    weapons: ['twin_blade', 'bow', 'warglaive', 'dagger'],
+    armor: 'medium',
+    skills: [
+      { id: 'fel_rush',       name: 'Investida Nefasta',  mpCost: 8,  desc: 'Investe: 160% dano + ignora 40% DEF', dmgMult: 1.6, type: 'fel', target: 'enemy', armorPierce: 0.4, unlockLv: 1 },
+      { id: 'demon_form',     name: 'Forma Demoníaca',    mpCost: 20, desc: 'Transforma parcialmente: +50% de tudo por 4 turnos', type: 'buff', target: 'self', effect: 'demon_form', unlockLv: 3 },
+      { id: 'consume_magic',  name: 'Consumir Magia',     mpCost: 0,  desc: 'Absorve magia inimiga: converte em HP e MP', type: 'special', target: 'enemy', effect: 'absorb_magic', unlockLv: 5 },
+      { id: 'chaos_nova',     name: 'Nova do Caos',       mpCost: 22, desc: 'Explosão caótica: 200% dano + atordoa 2t', dmgMult: 2.0, type: 'chaos', target: 'enemy', effect: 'stun', unlockLv: 8 },
+      { id: 'eye_beam',       name: 'Raio Ocular',        mpCost: 25, desc: 'Raio de energia pura: 250% dano', dmgMult: 2.5, type: 'fel', target: 'enemy', unlockLv: 12 },
+      { id: 'metamorphosis',  name: 'Metamorfose',        mpCost: 40, desc: 'Forma demoníaca completa: dobra HP + dano x3 por 3t', type: 'buff', target: 'self', effect: 'metamorphosis', unlockLv: 17 },
+    ],
+    passive: 'Sentido Demoníaco: Imune a efeitos de medo e charme',
+    lore: 'Usa o poder das trevas para destruir as trevas. O preço? Parte da humanidade.',
+  },
+
+  templario: {
+    id: 'templario',
+    name: 'Templário',
+    icon: '⚔️',
+    desc: 'Guerreiro sagrado que mistura fé e força.',
+    stats: { str: 8, dex: 3, int: 3, wis: 8, con: 7, cha: 4 },
+    hpBase: 30, hpPerLevel: 7, mpBase: 28, mpPerLevel: 6,
+    primaryStat: 'str',
+    weapons: ['sword', 'mace', 'shield', 'two_handed_sword'],
+    armor: 'plate',
+    skills: [
+      { id: 'holy_strike',    name: 'Golpe Sagrado',     mpCost: 8,  desc: 'Ataque + luz sagrada: 170% dano', dmgMult: 1.7, type: 'holy', target: 'enemy', unlockLv: 1 },
+      { id: 'divine_favor',   name: 'Favor Divino',      mpCost: 12, desc: 'Bênção: +30% ATK e cura 10 HP/turno por 4t', type: 'buff', target: 'self', effect: 'divine_favor', unlockLv: 3 },
+      { id: 'aura_of_courage',name: 'Aura de Coragem',   mpCost: 15, desc: 'Imunidade a medo + +20% ATK por 5 turnos', type: 'buff', target: 'self', effect: 'courage_aura', unlockLv: 5 },
+      { id: 'righteous_cleave',name:'Limpeza Justa',     mpCost: 18, desc: '150% dano sagrado + remove bênçãos do inimigo', dmgMult: 1.5, type: 'holy', target: 'enemy', effect: 'purge', unlockLv: 8 },
+      { id: 'martyr',         name: 'Mártir',            mpCost: 25, desc: 'Converte 50% do dano recebido em dano ao inimigo', type: 'buff', target: 'self', effect: 'martyr', unlockLv: 12 },
+      { id: 'crusade',        name: 'Cruzada',           mpCost: 38, desc: 'Julgamento final: 320% dano sagrado', dmgMult: 3.2, type: 'holy', target: 'enemy', unlockLv: 16 },
+    ],
+    passive: 'Juramento de Ferro: +20% de todos danos quando com HP acima de 70%',
+    lore: 'O juramento não termina com a morte. O juramento não termina.',
+  },
+
+  feiticeiro: {
+    id: 'feiticeiro',
+    name: 'Feiticeiro',
+    icon: '🌊',
+    desc: 'Magia em sangue. Poder sem estudo, puro instinto arcano.',
+    stats: { str: 2, dex: 6, int: 8, wis: 3, con: 4, cha: 9 },
+    hpBase: 17, hpPerLevel: 4, mpBase: 35, mpPerLevel: 9,
+    primaryStat: 'cha',
+    weapons: ['staff', 'wand', 'dagger'],
+    armor: 'cloth',
+    skills: [
+      { id: 'wild_magic_surge',name:'Surto de Magia Selvagem',mpCost: 5, desc: 'Magia imprevisível: 100-300% dano de elemento aleatório', type: 'wild', target: 'enemy', unlockLv: 1 },
+      { id: 'twinned_spell',  name: 'Feitiço Gêmeo',      mpCost: 12, desc: 'Lança próximo feitiço duas vezes', type: 'buff', target: 'self', effect: 'twin_spell', unlockLv: 3 },
+      { id: 'empowered_spell',name: 'Feitiço Empoderado', mpCost: 8,  desc: 'Próximo feitiço causa +50% dano', type: 'buff', target: 'self', effect: 'empower', unlockLv: 5 },
+      { id: 'metamagic_quicken',name:'Metamagia Rápida',  mpCost: 15, desc: 'Lança feitiço sem gastar turno', type: 'buff', target: 'self', effect: 'quicken', unlockLv: 8 },
+      { id: 'chaos_bolt',     name: 'Raio do Caos',       mpCost: 20, desc: 'Raio caótico: muda de elemento se matar inimigo', dmgMult: 2.0, type: 'chaos', target: 'enemy', unlockLv: 11 },
+      { id: 'wild_arcana',    name: 'Arcana Selvagem',    mpCost: 0,  desc: 'Drena 30% HP próprio para causar 500% dano', dmgMult: 5.0, type: 'wild', target: 'enemy', hpCost: 0.3, unlockLv: 17 },
+    ],
+    passive: 'Sangue Arcano: 10% de chance de lançar feitiço extra grátis por turno',
+    lore: 'O poder não veio de livros. Veio de algo muito mais antigo nas veias.',
+  },
+}
+
+export const CLASS_LIST = Object.values(CLASSES)
+
+export function getClassById(id) {
+  return CLASSES[id] || null
+}
+
+// Starting stats for a new character
+export function createCharacter(classId, name) {
+  const cls = getClassById(classId)
+  if (!cls) return null
+  return {
+    name,
+    classIds: [classId],     // supports multiclass
+    level: 1,
+    xp: 0,
+    hp: cls.hpBase,
+    maxHp: cls.hpBase,
+    mp: cls.mpBase,
+    maxMp: cls.mpBase,
+    stats: { ...cls.stats },
+    equippedWeapon: null,
+    inventory: [],
+    unlockedSkills: cls.skills.filter(s => s.unlockLv <= 1).map(s => s.id),
+    floor: 1,
+    gold: 0,
+    statusEffects: [],
+  }
+}
+
+export function getAvailableSkills(character) {
+  const skills = []
+  for (const classId of character.classIds) {
+    const cls = getClassById(classId)
+    if (!cls) continue
+    for (const skill of cls.skills) {
+      if (character.level >= skill.unlockLv) {
+        skills.push({ ...skill, classId })
+      }
+    }
+  }
+  return skills
+}
+
+export function getSkillById(skillId) {
+  for (const cls of CLASS_LIST) {
+    const skill = cls.skills.find(entry => entry.id === skillId)
+    if (skill) return { ...skill, classId: cls.id }
+  }
+  return null
+}
