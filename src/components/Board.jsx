@@ -1,18 +1,19 @@
 import {
   DndContext,
   DragOverlay,
+  MouseSensor,
   PointerSensor,
   TouchSensor,
-  MouseSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  closestCenter,
 } from '@dnd-kit/core'
 import { SortableContext, horizontalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import Column from './Column'
 import CardPreview from './CardPreview'
+import Column from './Column'
 
 const COLUMN_PREFIX = 'column:'
 
@@ -38,7 +39,7 @@ function SortableColumnItem({ column, children }) {
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0.55 : 1,
       }}
     >
       {children({ ...attributes, ...listeners })}
@@ -65,7 +66,7 @@ export default function Board({
   const [activeCard, setActiveCard] = useState(null)
   const [activeColumnId, setActiveColumnId] = useState(null)
 
-  const columnIds = useMemo(() => columns.map((c) => columnSortableId(c.id)), [columns])
+  const columnIds = useMemo(() => columns.map((column) => columnSortableId(column.id)), [columns])
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 3 } }),
@@ -81,7 +82,7 @@ export default function Board({
       return
     }
 
-    const card = cards.find((c) => c.id === active.id)
+    const card = cards.find((item) => item.id === active.id)
     setActiveCard(card || null)
     setActiveColumnId(null)
   }
@@ -91,36 +92,37 @@ export default function Board({
     setActiveColumnId(null)
     if (!over || active.id === over.id) return
 
-    const activeColumnId = parseColumnSortableId(active.id)
-    const overColumnSortableId = parseColumnSortableId(over.id)
-    if (activeColumnId) {
-      if (overColumnSortableId && activeColumnId !== overColumnSortableId) {
-        onReorderColumns(activeColumnId, overColumnSortableId)
+    const activeColumn = parseColumnSortableId(active.id)
+    const overColumn = parseColumnSortableId(over.id)
+
+    if (activeColumn) {
+      if (overColumn && activeColumn !== overColumn) {
+        onReorderColumns(activeColumn, overColumn)
       }
       return
     }
 
-    const draggedCard = cards.find((c) => c.id === active.id)
+    const draggedCard = cards.find((item) => item.id === active.id)
     if (!draggedCard) return
 
-    const overColumnId = overColumnSortableId || columns.find((col) => col.id === over.id)?.id || null
-    if (overColumnId) {
-      if (draggedCard.columnId !== overColumnId) {
-        const colCards = cards.filter((c) => c.columnId === overColumnId)
-        onMoveCard(active.id, overColumnId, colCards.length)
+    const targetColumnId = overColumn || columns.find((column) => column.id === over.id)?.id || null
+    if (targetColumnId) {
+      if (draggedCard.columnId !== targetColumnId) {
+        const columnCards = cards.filter((item) => item.columnId === targetColumnId)
+        onMoveCard(active.id, targetColumnId, columnCards.length)
       }
       return
     }
 
-    const overCard = cards.find((c) => c.id === over.id)
+    const overCard = cards.find((item) => item.id === over.id)
     if (!overCard) return
 
     if (draggedCard.columnId === overCard.columnId) {
       onReorderColumn(draggedCard.columnId, active.id, over.id)
     } else {
-      const colCards = cards.filter((c) => c.columnId === overCard.columnId)
-      const idx = colCards.findIndex((c) => c.id === over.id)
-      onMoveCard(active.id, overCard.columnId, idx)
+      const columnCards = cards.filter((item) => item.columnId === overCard.columnId)
+      const nextIndex = columnCards.findIndex((item) => item.id === over.id)
+      onMoveCard(active.id, overCard.columnId, nextIndex)
     }
   }
 
@@ -130,20 +132,35 @@ export default function Board({
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      onDragCancel={() => { setActiveCard(null); setActiveColumnId(null) }}
+      onDragCancel={() => {
+        setActiveCard(null)
+        setActiveColumnId(null)
+      }}
     >
-      <main className="flex-1 overflow-x-auto p-6" style={{ minHeight: 0 }}>
+      <main className="workspace-stage workspace-stage--board" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+        <div className="workspace-summary">
+          <div>
+            <span className="workspace-summary__eyebrow">Whiteboard flow</span>
+            <h2 className="workspace-summary__title">Organize delivery in a calm split-view canvas.</h2>
+          </div>
+
+          <div className="workspace-summary__meta">
+            <span>{columns.length} colunas</span>
+            <span>{cards.filter((card) => !card.archived).length} cards ativos</span>
+          </div>
+        </div>
+
         <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
-          <div className="flex gap-5 pb-4" style={{ minWidth: 'max-content', alignItems: 'flex-start' }}>
-            {columns.map((col) => {
-              const colCards = cards.filter((c) => c.columnId === col.id && !c.archived)
+          <div className="workspace-board-row">
+            {columns.map((column) => {
+              const columnCards = cards.filter((card) => card.columnId === column.id && !card.archived)
               return (
-                <SortableColumnItem key={col.id} column={col}>
+                <SortableColumnItem key={column.id} column={column}>
                   {(dragHandleProps) => (
                     <Column
-                      column={col}
-                      cards={colCards}
-                      onAddCard={() => onAddCard(col.id)}
+                      column={column}
+                      cards={columnCards}
+                      onAddCard={() => onAddCard(column.id)}
                       onEditCard={onEditCard}
                       onDeleteCard={onDeleteCard}
                       onArchiveCard={onArchiveCard}
@@ -158,30 +175,15 @@ export default function Board({
               )
             })}
 
-            <button
-              onClick={onAddColumn}
-              className="cyber-btn flex flex-col items-center justify-center gap-2 flex-shrink-0"
-              style={{
-                width: '60px',
-                minHeight: '120px',
-                fontSize: '22px',
-                clipPath: 'none',
-                borderStyle: 'dashed',
-              }}
-              title="Adicionar coluna"
-            >
-              <span>+</span>
-              <span style={{ fontSize: '8px', fontFamily: 'var(--font-heading)', letterSpacing: '1px', writingMode: 'vertical-rl' }}>
-                COLUNA
-              </span>
+            <button type="button" onClick={onAddColumn} className="workspace-add-column">
+              <Plus size={18} />
+              <span>Nova coluna</span>
             </button>
           </div>
         </SortableContext>
       </main>
 
-      <DragOverlay>
-        {activeCard ? <CardPreview card={activeCard} /> : null}
-      </DragOverlay>
+      <DragOverlay>{activeCard ? <CardPreview card={activeCard} /> : null}</DragOverlay>
     </DndContext>
   )
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
-import { ClipboardList, CalendarDays, LogOut, AlertTriangle } from 'lucide-react'
+import { AlertTriangle, CalendarDays, ClipboardList, LogOut, Music4 } from 'lucide-react'
 import ThemeSwitcher from './ThemeSwitcher'
+import { useTheme } from '../contexts/ThemeContext'
+import { isAudioReactiveTheme } from '../themes'
 
 const NAV_ITEMS = [
   { id: 'kanban', label: 'Kanban' },
@@ -18,8 +20,12 @@ export default function Header({
   onLogout,
   syncError,
   archivedCount,
+  onOpenAudioReactive,
+  audioReactiveState,
 }) {
   const [time, setTime] = useState(new Date())
+  const { theme } = useTheme()
+  const canUseAudioReactive = isAudioReactiveTheme(theme)
   const userInitial = session?.user?.email?.charAt(0).toUpperCase() || '?'
 
   useEffect(() => {
@@ -35,7 +41,7 @@ export default function Header({
         zIndex: 20,
         padding: '22px 24px 18px',
         borderBottom: '1px solid var(--panel-border)',
-        background: 'color-mix(in srgb, var(--panel-bg-strong) 82%, transparent)',
+        background: 'color-mix(in srgb, var(--panel-bg-strong) 84%, transparent)',
         backdropFilter: 'blur(28px) saturate(160%)',
         boxShadow: 'var(--shadow-md)',
       }}
@@ -51,8 +57,9 @@ export default function Header({
               fontFamily: 'var(--font-body)',
             }}
           >
-            Synth KV Workspace
+            Synth workspace
           </span>
+
           <div>
             <h1
               style={{
@@ -66,6 +73,7 @@ export default function Header({
             >
               Synth Kanban
             </h1>
+
             <p
               style={{
                 marginTop: 8,
@@ -76,7 +84,7 @@ export default function Header({
                 fontFamily: 'var(--font-body)',
               }}
             >
-              Glass workflow com foco em clareza, ritmo e glow ciano-violeta
+              Documentation + whiteboard flow with glass layers and cyan-violet depth
             </p>
           </div>
         </div>
@@ -104,9 +112,16 @@ export default function Header({
             <button onClick={onStandup} style={actionBtnStyle()}>
               <ClipboardList size={14} /> Standup
             </button>
+
             <button onClick={onNextDay} style={actionBtnStyle(nextDayDone ? 'var(--neon-green)' : 'var(--neon-yellow)')}>
-              <CalendarDays size={14} /> {nextDayDone ? 'Dia virado' : 'Próx. dia'}
+              <CalendarDays size={14} /> {nextDayDone ? 'Dia virado' : 'Prox. dia'}
             </button>
+
+            {canUseAudioReactive ? (
+              <button onClick={onOpenAudioReactive} style={actionBtnStyle(audioReactiveState === 'live' ? 'var(--brand-violet)' : 'var(--brand-cyan)')}>
+                <Music4 size={14} /> {audioReactiveState === 'live' ? 'Fundo ao vivo' : 'Fundo reativo'}
+              </button>
+            ) : null}
 
             <ThemeSwitcher align="end" />
 
@@ -157,14 +172,16 @@ export default function Header({
                       border: 'none',
                       borderRadius: 999,
                       cursor: 'pointer',
-                      background: active ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 18%, transparent), color-mix(in srgb, var(--brand-violet) 20%, transparent))' : 'transparent',
+                      background: active
+                        ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 18%, transparent), color-mix(in srgb, var(--brand-violet) 20%, transparent))'
+                        : 'transparent',
                       color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
                       fontFamily: 'var(--font-body)',
                       fontSize: '11px',
                     }}
                   >
                     {label}
-                    {id === 'archived' && archivedCount > 0 && (
+                    {id === 'archived' && archivedCount > 0 ? (
                       <span
                         style={{
                           position: 'absolute',
@@ -177,7 +194,7 @@ export default function Header({
                           boxShadow: '0 0 10px color-mix(in srgb, var(--neon-yellow) 62%, transparent)',
                         }}
                       />
-                    )}
+                    ) : null}
                   </button>
                 )
               })}
@@ -210,7 +227,7 @@ export default function Header({
   )
 }
 
-function actionBtnStyle(color = 'var(--neon-cyan)') {
+function actionBtnStyle(color = 'var(--brand-cyan)') {
   return {
     display: 'inline-flex',
     alignItems: 'center',
@@ -218,7 +235,7 @@ function actionBtnStyle(color = 'var(--neon-cyan)') {
     padding: '10px 14px',
     borderRadius: 16,
     cursor: 'pointer',
-    border: `1px solid color-mix(in srgb, ${color} 32%, transparent)`,
+    border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
     background: 'var(--surface-elevated)',
     color,
     fontFamily: 'var(--font-body)',
