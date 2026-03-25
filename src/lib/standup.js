@@ -38,54 +38,19 @@ export const DEFAULT_STANDUP_PREFERENCES = {
 export const DEFAULT_DAILY_TEMPLATE = `{{header}}\n\n{{columns}}\n\n{{footer}}`
 
 const THEMES_STANDUP = {
-  cyberpunk: {
-    header: (date) => `CYBER STANDUP // ${date.toUpperCase()}`,
+  dark: {
+    header: (date) => `SYNTH STANDUP // ${date.toUpperCase()}`,
     section: (title, count) => `${title} (${count})`,
-    noneInColumn: '- sem itens -',
+    noneInColumn: '- nenhum item nesta faixa -',
     noColumns: 'Nenhuma coluna cadastrada.',
-    footer: '// END TRANSMISSION',
+    footer: '// glow stable',
   },
-  fallout: {
-    header: (date) => `PIP-BOY STANDUP // ${date.toUpperCase()}`,
-    section: (title, count) => `>_ ${title} (${count})`,
-    noneInColumn: '--- sem registros ---',
+  light: {
+    header: (date) => `SYNTH FLOW // ${date.toUpperCase()}`,
+    section: (title, count) => `${title} (${count})`,
+    noneInColumn: '- nenhum item nesta faixa -',
     noColumns: 'Nenhuma coluna cadastrada.',
-    footer: '[ VAULT-TEC APPROVED ]',
-  },
-  darkest: {
-    header: (date) => `REGISTRO DA MASMORRA // ${date.toUpperCase()}`,
-    section: (title, count) => `* ${title} (${count})`,
-    noneInColumn: 'Nenhum feito registrado.',
-    noColumns: 'Nenhuma coluna cadastrada.',
-    footer: '- Arquivado no Tomo da Guilda -',
-  },
-  liquidglass: {
-    header: (date) => `GLASSBOARD STANDUP // ${date.toUpperCase()}`,
-    section: (title, count) => `- ${title} (${count})`,
-    noneInColumn: 'No items.',
-    noColumns: 'No columns yet.',
-    footer: '// smooth close',
-  },
-  nier: {
-    header: (date) => `YORHA MISSION LOG // ${date.toUpperCase()}`,
-    section: (title, count) => `> ${title} (${count})`,
-    noneInColumn: 'NO DATA.',
-    noColumns: 'NO COLUMN DATA.',
-    footer: '// END OF TRANSMISSION',
-  },
-  darksouls: {
-    header: (date) => `LORDRAN TASK LOG // ${date.toUpperCase()}`,
-    section: (title, count) => `- ${title} (${count})`,
-    noneInColumn: 'No embers found.',
-    noColumns: 'No covenant columns found.',
-    footer: '"Praise the Sun."',
-  },
-  royale: {
-    header: (date) => `ROYALE WAR ROOM // ${date.toUpperCase()}`,
-    section: (title, count) => `* ${title} (${count})`,
-    noneInColumn: 'No troops in this lane.',
-    noColumns: 'No lanes configured.',
-    footer: '// VICTORY PATH OPEN',
+    footer: '// workspace synced',
   },
 }
 
@@ -277,9 +242,9 @@ function buildRuntimeCard(card, columns, preferences) {
   }
 }
 
-export function getStandupTemplateContext(columns, cards, theme = 'cyberpunk', options = {}) {
+export function getStandupTemplateContext(columns, cards, theme = 'dark', options = {}) {
   const themeId = getTheme(theme)
-  const themePack = THEMES_STANDUP[themeId] || THEMES_STANDUP.cyberpunk
+  const themePack = THEMES_STANDUP[themeId] || THEMES_STANDUP.dark
   const config = { ...SUMMARY_CONFIG, ...options }
   const preferences = normalizeStandupPreferences(options.preferences)
   const dateText = normalizeDateText(options.customDateText)
@@ -434,7 +399,7 @@ export function renderStandupTemplate(template, context) {
   }).trim()
 }
 
-export function generateStandupMessage(columns, cards, theme = 'cyberpunk', options = {}) {
+export function generateStandupMessage(columns, cards, theme = 'dark', options = {}) {
   const context = getStandupTemplateContext(columns, cards, theme, options)
   const primary = renderStandupTemplate(options.template || DEFAULT_DAILY_TEMPLATE, context)
   const hasVisible = templateHasVisibleCards(primary, cards)
@@ -532,7 +497,7 @@ export function getNextDayImpact(columns, cards, config = NEXT_DAY_CONFIG) {
   }
 }
 
-export function generateWeeklySummary(logs, theme = 'cyberpunk') {
+export function generateWeeklySummary(logs, theme = 'dark') {
   if (!logs || logs.length === 0) {
     return 'Nenhum standup registrado nesta semana.'
   }
@@ -542,16 +507,11 @@ export function generateWeeklySummary(logs, theme = 'cyberpunk') {
   const last = new Date(logs[logs.length - 1].log_date).toLocaleDateString('pt-BR')
 
   const headers = {
-    cyberpunk: `RESUMO SEMANAL // ${first} -> ${last}`,
-    fallout: `RELATORIO SEMANAL VAULT-TEC // ${first} -> ${last}`,
-    darkest: `CRONICA DA SEMANA // ${first} -> ${last}`,
-    liquidglass: `WEEKLY FLOW // ${first} -> ${last}`,
-    nier: `YORHA WEEKLY LOG // ${first} -> ${last}`,
-    darksouls: `LORDRAN WEEKLY CHRONICLE // ${first} -> ${last}`,
-    royale: `ROYALE WEEKLY WAR ROOM // ${first} -> ${last}`,
+    dark: `RESUMO SEMANAL // ${first} -> ${last}`,
+    light: `RESUMO SEMANAL // ${first} -> ${last}`,
   }
 
-  const lines = [headers[themeId] || headers.cyberpunk, '']
+  const lines = [headers[themeId] || headers.dark, '']
 
   logs.forEach((log) => {
     const d = new Date(log.log_date)

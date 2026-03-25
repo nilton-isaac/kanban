@@ -1,4 +1,4 @@
-import {
+﻿import {
   DndContext,
   DragOverlay,
   PointerSensor,
@@ -21,61 +21,8 @@ import {
   Pencil,
   GripVertical,
 } from 'lucide-react'
-import { useTheme } from '../contexts/ThemeContext'
 
-function buildQuadrants(isNier) {
-  if (isNier) {
-    return [
-      {
-        id: 'q1',
-        urgent: true,
-        important: true,
-        label: 'FAZER AGORA',
-        color: '#3f3b36',
-        bg: 'rgba(79,75,70,0.10)',
-        border: 'rgba(79,75,70,0.45)',
-        num: 'I',
-        icon: Zap,
-        hint: 'Crises, deadlines, problemas críticos',
-      },
-      {
-        id: 'q2',
-        urgent: false,
-        important: true,
-        label: 'AGENDAR',
-        color: '#4f4b46',
-        bg: 'rgba(99,93,86,0.10)',
-        border: 'rgba(99,93,86,0.45)',
-        num: 'II',
-        icon: CalendarDays,
-        hint: 'Planejamento, desenvolvimento, estratégia',
-      },
-      {
-        id: 'q3',
-        urgent: true,
-        important: false,
-        label: 'DELEGAR',
-        color: '#5c554b',
-        bg: 'rgba(110,102,92,0.10)',
-        border: 'rgba(110,102,92,0.45)',
-        num: 'III',
-        icon: Users,
-        hint: 'Interrupções, reuniões desnecessárias',
-      },
-      {
-        id: 'q4',
-        urgent: false,
-        important: false,
-        label: 'ELIMINAR',
-        color: '#6a6258',
-        bg: 'rgba(130,121,109,0.10)',
-        border: 'rgba(130,121,109,0.45)',
-        num: 'IV',
-        icon: Trash2,
-        hint: 'Distrações, tarefas sem valor',
-      },
-    ]
-  }
+function buildQuadrants() {
 
   return [
     {
@@ -84,11 +31,11 @@ function buildQuadrants(isNier) {
       important: true,
       label: 'FAZER AGORA',
       color: 'var(--neon-pink)',
-      bg: 'rgba(255,0,255,0.05)',
-      border: 'rgba(255,0,255,0.5)',
+      bg: 'color-mix(in srgb, var(--neon-pink) 8%, transparent)',
+      border: 'color-mix(in srgb, var(--neon-pink) 36%, transparent)',
       num: 'I',
       icon: Zap,
-      hint: 'Crises, deadlines, problemas críticos',
+      hint: 'Crises, deadlines, problemas crÃ­ticos',
     },
     {
       id: 'q2',
@@ -96,11 +43,11 @@ function buildQuadrants(isNier) {
       important: true,
       label: 'AGENDAR',
       color: 'var(--neon-cyan)',
-      bg: 'rgba(0,243,255,0.05)',
-      border: 'rgba(0,243,255,0.5)',
+      bg: 'color-mix(in srgb, var(--neon-cyan) 8%, transparent)',
+      border: 'color-mix(in srgb, var(--neon-cyan) 36%, transparent)',
       num: 'II',
       icon: CalendarDays,
-      hint: 'Planejamento, desenvolvimento, estratégia',
+      hint: 'Planejamento, desenvolvimento, estratÃ©gia',
     },
     {
       id: 'q3',
@@ -108,23 +55,23 @@ function buildQuadrants(isNier) {
       important: false,
       label: 'DELEGAR',
       color: 'var(--neon-yellow)',
-      bg: 'rgba(252,238,10,0.05)',
-      border: 'rgba(252,238,10,0.5)',
+      bg: 'color-mix(in srgb, var(--neon-yellow) 10%, transparent)',
+      border: 'color-mix(in srgb, var(--neon-yellow) 36%, transparent)',
       num: 'III',
       icon: Users,
-      hint: 'Interrupções, reuniões desnecessárias',
+      hint: 'InterrupÃ§Ãµes, reuniÃµes desnecessÃ¡rias',
     },
     {
       id: 'q4',
       urgent: false,
       important: false,
       label: 'ELIMINAR',
-      color: '#444',
-      bg: 'rgba(255,255,255,0.02)',
-      border: '#333',
+      color: 'var(--text-muted)',
+      bg: 'var(--surface-soft)',
+      border: 'var(--line-strong)',
       num: 'IV',
       icon: Trash2,
-      hint: 'Distrações, tarefas sem valor',
+      hint: 'DistraÃ§Ãµes, tarefas sem valor',
     },
   ]
 }
@@ -134,9 +81,7 @@ function getQuadrant(card, quadrants) {
 }
 
 export default function EisenhowerMatrix({ cards, onEditCard, onDeleteCard, onUpdateCard, onInlineEdit }) {
-  const { theme } = useTheme()
-  const isNier = theme === 'nier'
-  const quadrants = useMemo(() => buildQuadrants(isNier), [isNier])
+  const quadrants = useMemo(() => buildQuadrants(), [])
   const [activeCard, setActiveCard] = useState(null)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
@@ -187,7 +132,7 @@ export default function EisenhowerMatrix({ cards, onEditCard, onDeleteCard, onUp
               <span key={label} style={{ fontSize: '11px', fontFamily: 'var(--font-body)', color }}>{label}</span>
             ))}
           </div>
-          <span style={{ fontSize: '11px', color: isNier ? '#5f5a53' : '#444', fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>
+          <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', marginLeft: 'auto' }}>
             Arraste cards entre quadrantes para reclassificar
           </span>
         </div>
@@ -209,18 +154,17 @@ export default function EisenhowerMatrix({ cards, onEditCard, onDeleteCard, onUp
               onEditCard={onEditCard}
               onDeleteCard={onDeleteCard}
               onInlineEdit={onInlineEdit}
-              isNier={isNier}
             />
           ))}
         </div>
       </div>
 
-      <DragOverlay>{activeCard ? <MatrixCardPreview card={activeCard} isNier={isNier} /> : null}</DragOverlay>
+      <DragOverlay>{activeCard ? <MatrixCardPreview card={activeCard} /> : null}</DragOverlay>
     </DndContext>
   )
 }
 
-function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isNier }) {
+function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit }) {
   const { setNodeRef, isOver } = useDroppable({ id: quadrant.id })
   const QuadrantIcon = quadrant.icon
 
@@ -229,11 +173,11 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isN
       style={{
         display: 'flex',
         flexDirection: 'column',
-        background: isOver ? quadrant.bg : isNier ? 'rgba(74,70,66,0.18)' : 'rgba(5,5,15,0.6)',
-        border: `1px solid ${isOver ? quadrant.border : isNier ? 'rgba(79,75,70,0.42)' : '#1a1a2e'}`,
+        background: isOver ? quadrant.bg : 'var(--surface-elevated)',
+        border: `1px solid ${isOver ? quadrant.border : 'var(--panel-border)'}`,
         borderTop: `3px solid ${quadrant.color}`,
         transition: 'all 0.2s',
-        boxShadow: isOver ? `0 0 20px ${quadrant.color}30` : isNier ? 'inset 0 0 0 1px rgba(255,255,255,0.12)' : 'none',
+        boxShadow: isOver ? `0 0 20px color-mix(in srgb, ${quadrant.color} 28%, transparent)` : 'var(--shadow-md)',
         minHeight: '280px',
       }}
     >
@@ -270,7 +214,7 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isN
             {cards.length}
           </span>
         </div>
-        <p style={{ fontSize: '10px', fontFamily: 'var(--font-body)', color: isNier ? '#5f5a53' : '#444', marginTop: 4 }}>
+        <p style={{ fontSize: '10px', fontFamily: 'var(--font-body)', color: 'var(--text-secondary)', marginTop: 4 }}>
           {quadrant.hint}
         </p>
       </div>
@@ -285,7 +229,6 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isN
               onEdit={() => onEditCard(card)}
               onDelete={() => onDeleteCard(card.id)}
               onInlineEdit={onInlineEdit}
-              isNier={isNier}
             />
           ))}
         </SortableContext>
@@ -300,7 +243,7 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isN
               border: `1px dashed ${quadrant.color}33`,
               borderRadius: '2px',
               minHeight: '80px',
-              color: isNier ? '#5b564f' : '#2a2a2a',
+              color: 'var(--text-muted)',
               fontSize: '11px',
               fontFamily: 'var(--font-body)',
             }}
@@ -313,7 +256,7 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit, isN
   )
 }
 
-function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNier }) {
+function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit }) {
   const [hovered, setHovered] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(card.title)
@@ -354,10 +297,10 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
       <div style={{ padding: '10px 12px' }}>
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5">
-            <span style={{ fontSize: '9px', color: isNier ? '#5b564f' : '#333', fontFamily: 'var(--font-body)' }}>#{card.id.slice(-4)}</span>
+            <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>#{card.id.slice(-4)}</span>
             {card.status === 'done' && <CheckCircle2 size={12} color="var(--neon-green)" />}
             {card.status === 'blocked' && <OctagonAlert size={12} color="var(--neon-pink)" />}
-            {card.status === 'todo' && <Circle size={11} color={isNier ? '#6b655e' : '#555'} />}
+            {card.status === 'todo' && <Circle size={11} color="var(--text-muted)" />}
           </div>
           <div className="flex items-center gap-1" style={{ opacity: hovered ? 1 : 0, transition: 'opacity 0.15s' }}>
             <button
@@ -380,7 +323,7 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
             >
               <Trash2 size={12} />
             </button>
-            <div {...attributes} {...listeners} style={{ cursor: 'grab', color: isNier ? '#635d56' : '#555', padding: '0 2px', display: 'inline-flex' }}>
+            <div {...attributes} {...listeners} style={{ cursor: 'grab', color: 'var(--text-secondary)', padding: '0 2px', display: 'inline-flex' }}>
               <GripVertical size={13} />
             </div>
           </div>
@@ -402,9 +345,9 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
             onPointerDown={e => e.stopPropagation()}
             style={{
               width: '100%',
-              background: isNier ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)',
+              background: 'var(--field-bg)',
               border: `1px solid ${quadrantColor}`,
-              color: isNier ? '#2b2b2b' : 'var(--neon-cyan)',
+              color: 'var(--text-primary)',
               fontFamily: 'var(--font-body)',
               fontSize: '12px',
               padding: '3px 6px',
@@ -423,7 +366,7 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
             style={{
               fontSize: '12px',
               fontWeight: 'bold',
-              color: isNier ? '#2f2b27' : '#ddd',
+              color: 'var(--text-primary)',
               cursor: 'pointer',
               lineHeight: '1.3',
               marginBottom: 4,
@@ -446,7 +389,7 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
 
         {tasks.length > 0 && (
           <div style={{ marginTop: 4 }}>
-            <div style={{ height: 2, background: isNier ? '#bfb7a8' : '#111', borderRadius: 1, overflow: 'hidden' }}>
+            <div style={{ height: 2, background: 'var(--line-soft)', borderRadius: 1, overflow: 'hidden' }}>
               <div
                 style={{
                   height: '100%',
@@ -456,7 +399,7 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
                 }}
               />
             </div>
-            <span style={{ fontSize: '9px', color: isNier ? '#5f5a53' : '#444', fontFamily: 'var(--font-body)' }}>
+            <span style={{ fontSize: '9px', color: 'var(--text-secondary)', fontFamily: 'var(--font-body)' }}>
               {doneTasks}/{tasks.length} tasks
             </span>
           </div>
@@ -492,21 +435,21 @@ function MatrixCard({ card, quadrantColor, onEdit, onDelete, onInlineEdit, isNie
   )
 }
 
-function MatrixCardPreview({ card, isNier }) {
+function MatrixCardPreview({ card }) {
   return (
     <div
       style={{
         width: '200px',
         padding: '10px 12px',
-        background: isNier ? 'rgba(235,229,215,0.95)' : 'rgba(10,15,30,0.98)',
-        border: `2px dashed ${isNier ? '#6d665e' : 'var(--neon-yellow)'}`,
-        clipPath: isNier ? 'none' : 'polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%)',
-        boxShadow: isNier ? '3px 3px 0 rgba(43,43,43,0.25)' : '0 0 20px rgba(252,238,10,0.3)',
+        background: 'var(--surface-contrast)',
+        border: '2px dashed var(--panel-border-strong)',
+        clipPath: 'none',
+        boxShadow: 'var(--shadow-lg)',
         transform: 'rotate(1.5deg)',
         pointerEvents: 'none',
       }}
     >
-      <p style={{ fontSize: '12px', fontWeight: 'bold', color: isNier ? '#2f2b27' : '#ddd', fontFamily: 'var(--font-heading)' }}>
+      <p style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-primary)', fontFamily: 'var(--font-heading)' }}>
         {card.title}
       </p>
     </div>

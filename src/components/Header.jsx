@@ -1,193 +1,266 @@
-import { useState, useEffect } from 'react'
-import { ClipboardList, CalendarDays, Check, Palette, LogOut, AlertTriangle, Sword } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ClipboardList, CalendarDays, LogOut, AlertTriangle } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 import { THEMES } from '../themes'
 import { ThemeIcon } from '../lib/themeIcons'
-import { GamificationStrip } from './GamificationHUD'
-import { computeLevel } from '../lib/gamification'
 
-export default function Header({ viewMode, onViewModeChange, session, onStandup, onNextDay, nextDayDone, onLogout, syncError, archivedCount, gameState }) {
+const NAV_ITEMS = [
+  { id: 'kanban', label: 'Kanban' },
+  { id: 'eisenhower', label: 'Matriz' },
+  { id: 'archived', label: 'Arquivo' },
+]
+
+export default function Header({
+  viewMode,
+  onViewModeChange,
+  session,
+  onStandup,
+  onNextDay,
+  nextDayDone,
+  onLogout,
+  syncError,
+  archivedCount,
+}) {
   const [time, setTime] = useState(new Date())
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false)
   const { theme, setTheme } = useTheme()
+  const userInitial = session?.user?.email?.charAt(0).toUpperCase() || '?'
 
   useEffect(() => {
     const id = setInterval(() => setTime(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
 
-  const userInitial = session?.user?.email?.charAt(0).toUpperCase() || '?'
-  const t = THEMES[theme]
-
-  const disableScanline = theme === 'nier' || theme === 'darksouls' || theme === 'royale'
-
   return (
-    <header style={{
-      position: 'relative', width: '100%', overflow: 'hidden', flexShrink: 0,
-      height: '145px',
-      borderBottom: '1px solid var(--neon-cyan)',
-      boxShadow: '0 0 20px rgba(0,0,0,0.3)',
-      background: 'linear-gradient(to bottom, var(--bg-dark), var(--bg-dark))',
-    }}>
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        backgroundImage: 'linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
-      {!disableScanline && (
-        <>
-          <div style={{ position: 'absolute', left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, var(--neon-cyan), transparent)', animation: 'scanLine 4s linear infinite', pointerEvents: 'none' }} />
-          <style>{`@keyframes scanLine { 0%{top:0%;opacity:1} 95%{top:100%;opacity:.3} 100%{top:0%;opacity:0} }`}</style>
-        </>
-      )}
-
-      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg-dark) 0%, transparent 80%)' }} />
-
-      <div style={{ position: 'absolute', bottom: 12, left: 24, zIndex: 10 }}>
-        <h1 className="glitch-wrapper" data-text="KANBAN_NINE" style={{
-          fontFamily: 'var(--font-heading)', fontWeight: 900, color: '#fff',
-          fontSize: 'clamp(20px, 3.5vw, 36px)', letterSpacing: '4px',
-          textShadow: '0 0 20px var(--neon-cyan)',
-        }}>
-          KANBAN_NINE
-        </h1>
-        <p style={{ marginTop: 2, fontSize: '10px', letterSpacing: '2px', fontFamily: 'var(--font-body)', color: 'var(--neon-cyan)' }}>
-          <ThemeIcon themeId={theme} size={12} style={{ display: 'inline', verticalAlign: 'text-top', marginRight: 4 }} />
-          {t?.label} // KANBAN NINE v2.2
-        </p>
-      </div>
-
-      <div style={{ position: 'absolute', bottom: 14, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-          <div style={{ display: 'flex', border: '1px solid rgba(0,243,255,0.2)', overflow: 'hidden', background: 'rgba(0,0,0,0.5)' }}>
-            {[
-              { id: 'kanban', label: 'KANBAN' },
-              { id: 'eisenhower', label: 'EISENHOWER' },
-              { id: 'archived', label: 'ARQUIVO' },
-              { id: 'dungeon', label: '⚔️ DUNGEON' },
-            ].map(({ id, label }, idx, arr) => (
-              <button key={id} onClick={() => onViewModeChange(id)} style={{
-                padding: '6px 16px',
-                background: viewMode === id
-                  ? id === 'dungeon' ? 'rgba(255,0,128,0.15)' : 'rgba(0,243,255,0.12)'
-                  : 'transparent',
-                border: 'none',
-                borderRight: idx < arr.length - 1 ? '1px solid rgba(0,243,255,0.2)' : 'none',
-                color: viewMode === id
-                  ? id === 'dungeon' ? 'var(--neon-pink)' : 'var(--neon-cyan)'
-                  : '#444',
-                fontFamily: 'var(--font-heading)', fontSize: '10px', letterSpacing: '1px', cursor: 'pointer',
-                transition: 'all 0.2s', textTransform: 'uppercase',
-                boxShadow: viewMode === id
-                  ? `inset 0 -2px 0 ${id === 'dungeon' ? 'var(--neon-pink)' : 'var(--neon-cyan)'}`
-                  : 'none',
-                position: 'relative',
-              }}>
-                {label}
-                {id === 'archived' && archivedCount > 0 && (
-                  <span style={{
-                    position: 'absolute', top: 2, right: 2,
-                    width: 6, height: 6, borderRadius: '50%',
-                    background: 'var(--neon-yellow)',
-                    boxShadow: '0 0 4px var(--neon-yellow)',
-                  }} />
-                )}
-              </button>
-            ))}
-          </div>
-          {/* XP strip */}
-          {gameState && <GamificationStrip gameState={gameState} />}
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', top: 10, right: 20, zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--font-body)', color: 'var(--neon-yellow)' }}>{time.toLocaleDateString('pt-BR')}</div>
-          <div style={{ fontSize: '15px', fontFamily: 'var(--font-heading)', color: 'var(--neon-pink)', letterSpacing: '2px' }}>{time.toLocaleTimeString('pt-BR')}</div>
-        </div>
-
-        <div style={{ display: 'flex', gap: 5, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button onClick={onStandup} title="Gerar Standup" style={hdrBtn('var(--neon-cyan)')}>
-            <ClipboardList size={12} /> STANDUP
-          </button>
-          <button onClick={() => onViewModeChange('dungeon')} title="Entrar na Dungeon" style={hdrBtn('var(--neon-pink)')}>
-            <Sword size={12} /> DUNGEON
-          </button>
-
-          <button onClick={onNextDay} title="Virar o dia" style={hdrBtn(nextDayDone ? 'var(--neon-green)' : 'var(--neon-yellow)')}>
-            {nextDayDone ? <><Check size={12} /> VIRADO</> : <><CalendarDays size={12} /> PROX. DIA</>}
-          </button>
-
-          <div style={{ position: 'relative' }}>
-            <button
-              onClick={() => setThemeMenuOpen(v => !v)}
-              onBlur={() => setTimeout(() => setThemeMenuOpen(false), 200)}
-              style={hdrBtn('var(--neon-purple)')}
+    <header
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 20,
+        padding: '22px 24px 18px',
+        borderBottom: '1px solid var(--panel-border)',
+        background: 'color-mix(in srgb, var(--panel-bg-strong) 82%, transparent)',
+        backdropFilter: 'blur(28px) saturate(160%)',
+        boxShadow: 'var(--shadow-md)',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ display: 'grid', gap: 6, minWidth: 'min(100%, 320px)' }}>
+          <span
+            style={{
+              fontSize: '11px',
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+              fontFamily: 'var(--font-body)',
+            }}
+          >
+            Synth KV Workspace
+          </span>
+          <div>
+            <h1
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'clamp(24px, 4vw, 38px)',
+                lineHeight: 0.96,
+                letterSpacing: '-0.05em',
+                color: 'var(--text-primary)',
+                margin: 0,
+              }}
             >
-              <Palette size={12} /> <ThemeIcon themeId={theme} size={12} /> TEMA
-            </button>
-            {themeMenuOpen && (
-              <div style={{ position: 'absolute', right: 0, top: '110%', background: 'var(--panel-bg)', border: '1px solid #333', zIndex: 200, minWidth: '180px' }}>
-                {Object.values(THEMES).map(th => (
-                  <button key={th.id} onClick={() => { setTheme(th.id); setThemeMenuOpen(false) }}
-                    style={{
-                      display: 'block', width: '100%', padding: '10px 14px', textAlign: 'left',
-                      background: theme === th.id ? 'rgba(255,255,255,0.05)' : 'none',
-                      border: 'none', cursor: 'pointer',
-                      color: theme === th.id ? 'var(--neon-cyan)' : '#777',
-                      fontFamily: 'var(--font-body)', fontSize: '12px',
-                      borderLeft: theme === th.id ? '2px solid var(--neon-cyan)' : '2px solid transparent',
-                    }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                      <ThemeIcon themeId={th.id} size={12} />
-                      {th.label}
-                    </span>
-                  </button>
-                ))}
+              Synth Kanban
+            </h1>
+            <p
+              style={{
+                marginTop: 8,
+                fontSize: '12px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              Glass workflow com foco em clareza, ritmo e glow ciano-violeta
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gap: 12, justifyItems: 'end', flex: 1, minWidth: 'min(100%, 420px)' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <div
+              style={{
+                padding: '10px 14px',
+                border: '1px solid var(--panel-border)',
+                borderRadius: 18,
+                background: 'var(--surface-elevated)',
+                minWidth: 152,
+                textAlign: 'right',
+              }}
+            >
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
+                {time.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
               </div>
+              <div style={{ fontSize: '18px', color: 'var(--text-primary)', fontFamily: 'var(--font-heading)', letterSpacing: '-0.04em' }}>
+                {time.toLocaleTimeString('pt-BR')}
+              </div>
+            </div>
+
+            <button onClick={onStandup} style={actionBtnStyle()}>
+              <ClipboardList size={14} /> Standup
+            </button>
+            <button onClick={onNextDay} style={actionBtnStyle(nextDayDone ? 'var(--neon-green)' : 'var(--neon-yellow)')}>
+              <CalendarDays size={14} /> {nextDayDone ? 'Dia virado' : 'Próx. dia'}
+            </button>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                gap: 6,
+                padding: 6,
+                borderRadius: 999,
+                border: '1px solid var(--panel-border)',
+                background: 'var(--surface-elevated)',
+              }}
+            >
+              {Object.values(THEMES).map((item) => {
+                const active = item.id === theme
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setTheme(item.id)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: active ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 24%, transparent), color-mix(in srgb, var(--brand-violet) 24%, transparent))' : 'transparent',
+                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '11px',
+                    }}
+                    title={item.label}
+                  >
+                    <ThemeIcon themeId={item.id} size={14} />
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div
+              title={session.user?.email}
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: '50%',
+                border: '1px solid var(--panel-border)',
+                background: 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 20%, transparent), color-mix(in srgb, var(--brand-violet) 26%, transparent))',
+                color: 'var(--text-primary)',
+                display: 'grid',
+                placeItems: 'center',
+                fontSize: '12px',
+                fontWeight: 700,
+                fontFamily: 'var(--font-body)',
+              }}
+            >
+              {userInitial}
+            </div>
+
+            <button onClick={onLogout} style={actionBtnStyle('var(--neon-pink)')}>
+              <LogOut size={14} /> Sair
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, width: '100%', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                gap: 6,
+                padding: 6,
+                borderRadius: 999,
+                border: '1px solid var(--panel-border)',
+                background: 'var(--surface-elevated)',
+              }}
+            >
+              {NAV_ITEMS.map(({ id, label }) => {
+                const active = viewMode === id
+                return (
+                  <button
+                    key={id}
+                    onClick={() => onViewModeChange(id)}
+                    style={{
+                      position: 'relative',
+                      padding: '9px 14px',
+                      border: 'none',
+                      borderRadius: 999,
+                      cursor: 'pointer',
+                      background: active ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 18%, transparent), color-mix(in srgb, var(--brand-violet) 20%, transparent))' : 'transparent',
+                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {label}
+                    {id === 'archived' && archivedCount > 0 && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          width: 7,
+                          height: 7,
+                          borderRadius: '50%',
+                          background: 'var(--neon-yellow)',
+                          boxShadow: '0 0 10px color-mix(in srgb, var(--neon-yellow) 62%, transparent)',
+                        }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {syncError ? (
+              <p
+                style={{
+                  margin: 0,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: '11px',
+                  color: 'var(--neon-orange)',
+                  fontFamily: 'var(--font-body)',
+                }}
+              >
+                <AlertTriangle size={13} />
+                {syncError}
+              </p>
+            ) : (
+              <p style={{ margin: 0, fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-body)' }}>
+                {session.user?.email}
+              </p>
             )}
           </div>
-
-          {session && (
-            <>
-              <div title={session.user?.email} style={{
-                width: 26, height: 26, borderRadius: '50%', background: 'var(--neon-cyan)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '11px', fontWeight: 'bold', color: '#000', cursor: 'default',
-              }}>{userInitial}</div>
-              <button onClick={onLogout} style={{ ...hdrBtn('var(--neon-pink)'), fontSize: '9px', padding: '4px 8px' }}>
-                <LogOut size={11} /> SAIR
-              </button>
-            </>
-          )}
         </div>
-
-        {syncError && (
-          <p style={{ fontSize: '9px', color: 'var(--neon-pink)', fontFamily: 'var(--font-body)', maxWidth: '200px', textAlign: 'right' }}>
-            <AlertTriangle size={10} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-top' }} />
-            {syncError}
-          </p>
-        )}
       </div>
     </header>
   )
 }
 
-function hdrBtn(color) {
+function actionBtnStyle(color = 'var(--neon-cyan)') {
   return {
-    padding: '5px 10px',
-    background: 'rgba(0,0,0,0.5)',
-    border: `1px solid ${color}55`,
-    color,
-    fontFamily: 'var(--font-heading)',
-    fontSize: '10px',
-    letterSpacing: '0.5px',
-    cursor: 'pointer',
-    transition: 'all 0.2s',
-    whiteSpace: 'nowrap',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: 7,
+    padding: '10px 14px',
+    borderRadius: 16,
+    cursor: 'pointer',
+    border: `1px solid color-mix(in srgb, ${color} 32%, transparent)`,
+    background: 'var(--surface-elevated)',
+    color,
+    fontFamily: 'var(--font-body)',
+    fontSize: '11px',
   }
 }

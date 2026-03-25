@@ -1,5 +1,5 @@
 -- ============================================================
--- CyberDaily Kanban - Supabase Schema
+-- Synth Kanban - Supabase Schema
 -- Execute in Supabase Dashboard > SQL Editor
 -- ============================================================
 
@@ -9,9 +9,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT,
-  theme TEXT NOT NULL DEFAULT 'cyberpunk',
+  theme TEXT NOT NULL DEFAULT 'dark',
   standup_template TEXT,
   standup_template_date TEXT,
+  standup_preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -49,13 +50,11 @@ CREATE TABLE IF NOT EXISTS public.kanban_cards (
   tasks JSONB NOT NULL DEFAULT '[]'::jsonb,
   excluded_from_standup BOOLEAN NOT NULL DEFAULT FALSE,
   position INTEGER NOT NULL DEFAULT 0,
+  archived BOOLEAN NOT NULL DEFAULT FALSE,
+  archived_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-ALTER TABLE public.kanban_cards
-  ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
 
 -- Daily standup logs
 CREATE TABLE IF NOT EXISTS public.standup_logs (
@@ -85,6 +84,21 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON public.profiles TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.kanban_columns TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.kanban_cards TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.standup_logs TO authenticated;
+
+-- Shared updated_at trigger
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SET search_path = public;
+
+DROP TRIGGER IF EXISTS cards_updated_at ON public.kanban_cards;
+CREATE TRIGGER cards_updated_at
+  BEFORE UPDATE ON public.kanban_cards
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_updated_at();
 
 -- Row Level Security
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -142,86 +156,3 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
-
--- ============================================================
--- GAMIFICATION TABLES
--- ============================================================
-
--- Player gamification state (XP, level, class, dungeon progress)
-CREATE TABLE IF NOT EXISTS public.player_game_state (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  total_xp INTEGER NOT NULL DEFAULT 0,
-  level INTEGER NOT NULL DEFAULT 1,
-  class_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
-  character_name TEXT NOT NULL DEFAULT 'Herói',
-  equipped_weapon JSONB,
-  inventory JSONB NOT NULL DEFAULT '[]'::jsonb,
-  completed_tasks INTEGER NOT NULL DEFAULT 0,
-  streak INTEGER NOT NULL DEFAULT 0,
-  last_task_date TEXT,
-  dungeon_floor INTEGER NOT NULL DEFAULT 1,
-  gold INTEGER NOT NULL DEFAULT 0,
-  character_hp INTEGER,
-  character_max_hp INTEGER,
-  character_mp INTEGER,
-  character_max_mp INTEGER,
-  character_stats JSONB,
-  unlocked_rewards JSONB NOT NULL DEFAULT '[]'::jsonb,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  UNIQUE(user_id)
-);
-
--- Dungeon battle history
-CREATE TABLE IF NOT EXISTS public.dungeon_battle_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  enemy_id TEXT NOT NULL,
-  enemy_name TEXT NOT NULL,
-  floor INTEGER NOT NULL DEFAULT 1,
-  result TEXT NOT NULL DEFAULT 'win',
-  xp_gained INTEGER NOT NULL DEFAULT 0,
-  gold_gained INTEGER NOT NULL DEFAULT 0,
-  turns INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_player_game_state_user ON public.player_game_state(user_id);
-CREATE INDEX IF NOT EXISTS idx_dungeon_logs_user ON public.dungeon_battle_logs(user_id, created_at DESC);
-
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.player_game_state TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.dungeon_battle_logs TO authenticated;
-
-ALTER TABLE public.player_game_state ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.dungeon_battle_logs ENABLE ROW LEVEL SECURITY;
-
-DROP POLICY IF EXISTS "game_state: own data" ON public.player_game_state;
-CREATE POLICY "game_state: own data"
-  ON public.player_game_state FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS "dungeon_logs: own data" ON public.dungeon_battle_logs;
-CREATE POLICY "dungeon_logs: own data"
-  ON public.dungeon_battle_logs FOR ALL
-  USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP TRIGGER IF EXISTS game_state_updated_at ON public.player_game_state;
-CREATE TRIGGER game_state_updated_at
-  BEFORE UPDATE ON public.player_game_state
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
-
--- Auto-update updated_at on cards
-CREATE OR REPLACE FUNCTION public.update_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SET search_path = public;
-
-DROP TRIGGER IF EXISTS cards_updated_at ON public.kanban_cards;
-CREATE TRIGGER cards_updated_at
-  BEFORE UPDATE ON public.kanban_cards
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_updated_at();

@@ -98,7 +98,6 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
   const status = STATUS_ICONS[card.status] || STATUS_ICONS.todo
   const priorityColor = PRIORITY_COLORS[card.priority] || PRIORITY_COLORS.medium
   const originalColumn = columns.find(c => c.id === card.columnId)
-  const isNier = theme === 'nier'
   const time = formatArchivedTime(card.archivedAt)
   const tasksDone = (card.tasks || []).filter(t => t.done).length
   const tasksTotal = (card.tasks || []).length
@@ -127,7 +126,7 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
         <span style={{
           fontSize: '10px',
           fontFamily: 'var(--font-body)',
-          color: '#444',
+          color: 'var(--text-muted)',
           minWidth: 34,
           flexShrink: 0,
         }}>{time}</span>
@@ -151,7 +150,7 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
         flex: 1,
         fontSize: '13px',
         fontFamily: 'var(--font-body)',
-        color: isNier ? '#2f2b27' : '#ccc',
+        color: 'var(--text-primary)',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap',
@@ -168,7 +167,7 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
 
       {/* Subtasks */}
       {tasksTotal > 0 && (
-        <span style={{ fontSize: '10px', color: tasksDone === tasksTotal ? 'var(--neon-green)' : '#444', fontFamily: 'monospace', flexShrink: 0 }}>
+        <span style={{ fontSize: '10px', color: tasksDone === tasksTotal ? 'var(--neon-green)' : 'var(--text-muted)', fontFamily: 'monospace', flexShrink: 0 }}>
           {tasksDone}/{tasksTotal}
         </span>
       )}
@@ -212,7 +211,7 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
       </div>
 
       {/* ID */}
-      <span style={{ fontSize: '9px', color: '#2a2a2a', fontFamily: 'monospace', flexShrink: 0 }}>
+      <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontFamily: 'monospace', flexShrink: 0 }}>
         #{card.id.slice(-4)}
       </span>
     </div>
@@ -224,8 +223,6 @@ function ArchivedCardRow({ card, columns, onUnarchive, onView, theme }) {
 function WeekBlock({ weekKey, days, columns, onUnarchive, onView, theme, defaultOpen }) {
   const [open, setOpen] = useState(defaultOpen)
   const totalCards = days.reduce((s, d) => s + d.cards.length, 0)
-  const isNier = theme === 'nier'
-
   return (
     <div style={{
       marginBottom: 16,
@@ -255,7 +252,7 @@ function WeekBlock({ weekKey, days, columns, onUnarchive, onView, theme, default
           fontFamily: 'var(--font-heading)',
           fontSize: '11px',
           letterSpacing: '2px',
-          color: isNier ? '#2f2b27' : '#aaa',
+          color: 'var(--text-secondary)',
           flex: 1,
         }}>
           SEMANA DE {getWeekRange(weekKey)}
@@ -298,10 +295,10 @@ function WeekBlock({ weekKey, days, columns, onUnarchive, onView, theme, default
                   <span style={{
                     fontFamily: 'var(--font-body)',
                     fontSize: '10px',
-                    color: '#444',
+                    color: 'var(--text-secondary)',
                     letterSpacing: '0.5px',
                   }}>{date}</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#333', fontFamily: 'monospace' }}>
+                  <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                     {cards.length}
                   </span>
                 </div>
@@ -332,23 +329,16 @@ function WeekBlock({ weekKey, days, columns, onUnarchive, onView, theme, default
 
 export default function ArchivedView({ cards, columns, onUnarchive, onView, onClearArchive }) {
   const { theme } = useTheme()
-  const isNier = theme === 'nier'
   const [confirmClear, setConfirmClear] = useState(false)
 
   const archivedCards = cards.filter(c => c.archived)
 
   const THEME_LABELS = {
-    cyberpunk:   { title: 'ARQUIVO DE MISSÕES',    subtitle: '// HISTÓRICO DE OPERAÇÕES CONCLUÍDAS' },
-    fallout:     { title: 'REGISTROS DO PIP-BOY',  subtitle: '>_ MISSÕES ARQUIVADAS NO VAULT-TEC' },
-    darkest:     { title: 'TOMO DA GUILDA',        subtitle: '* Registros de façanhas passadas *' },
-    liquidglass: { title: 'ARQUIVO',               subtitle: 'Histórico de tarefas realizadas' },
-    frostpunk:   { title: 'DIÁRIO DA CIDADE',      subtitle: '— Decisões e tarefas do passado —' },
-    nier:        { title: 'MEMÓRIAS ARQUIVADAS',   subtitle: 'Registros de missões concluídas' },
-    darksouls:   { title: 'CRÔNICAS DO CINZEIRO',  subtitle: '— Relíquias de batalhas passadas —' },
-    royale:      { title: 'ARQUIVO REAL',          subtitle: '— Decretos e feitos realizados —' },
+    dark:  { title: 'ARQUIVO CENTRAL', subtitle: 'Histórico das entregas concluídas e movidas do fluxo principal.' },
+    light: { title: 'ARQUIVO CENTRAL', subtitle: 'Histórico das entregas concluídas e movidas do fluxo principal.' },
   }
 
-  const labels = THEME_LABELS[theme] || THEME_LABELS.cyberpunk
+  const labels = THEME_LABELS[theme] || THEME_LABELS.dark
 
   if (archivedCards.length === 0) {
     return (
@@ -357,12 +347,12 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
         alignItems: 'center', justifyContent: 'center',
         padding: 40, gap: 16,
       }}>
-        <Archive size={48} style={{ color: '#2a2a2a' }} />
+        <Archive size={48} style={{ color: 'var(--text-muted)' }} />
         <p style={{
           fontFamily: 'var(--font-heading)',
           fontSize: '14px',
           letterSpacing: '3px',
-          color: '#333',
+          color: 'var(--text-secondary)',
           textAlign: 'center',
         }}>
           {labels.title}
@@ -370,7 +360,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
         <p style={{
           fontFamily: 'var(--font-body)',
           fontSize: '12px',
-          color: '#2a2a2a',
+          color: 'var(--text-muted)',
           textAlign: 'center',
         }}>
           Nenhuma tarefa arquivada ainda.<br />
@@ -397,7 +387,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
           <h2 style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'clamp(16px, 2.5vw, 24px)',
-            color: isNier ? '#2f2b27' : '#fff',
+            color: 'var(--text-primary)',
             letterSpacing: '3px',
             textShadow: '0 0 18px var(--neon-cyan)',
             marginBottom: 4,
@@ -428,21 +418,21 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
               <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading)', color: 'var(--neon-cyan)' }}>
                 {archivedCards.length}
               </div>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: '#444', letterSpacing: '1px' }}>TAREFAS</div>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: 'var(--text-muted)', letterSpacing: '1px' }}>TAREFAS</div>
             </div>
             <div style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.05)' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading)', color: 'var(--neon-yellow)' }}>
                 {grouped.length}
               </div>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: '#444', letterSpacing: '1px' }}>SEMANAS</div>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: 'var(--text-muted)', letterSpacing: '1px' }}>SEMANAS</div>
             </div>
             <div style={{ width: 1, height: 30, background: 'rgba(255,255,255,0.05)' }} />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '20px', fontFamily: 'var(--font-heading)', color: 'var(--neon-green)' }}>
                 {archivedCards.filter(c => c.status === 'done').length}
               </div>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: '#444', letterSpacing: '1px' }}>CONCLUÍDAS</div>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--font-body)', color: 'var(--text-muted)', letterSpacing: '1px' }}>CONCLUÍDAS</div>
             </div>
           </div>
 
@@ -452,7 +442,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
               onClick={() => setConfirmClear(true)}
               style={{
                 padding: '7px 12px',
-                background: 'rgba(0,0,0,0.5)',
+                background: 'var(--surface-elevated)',
                 border: '1px solid rgba(255,50,50,0.25)',
                 color: '#663333',
                 fontFamily: 'var(--font-heading)',
@@ -473,7 +463,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
               >SIM</button>
               <button
                 onClick={() => setConfirmClear(false)}
-                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid #333', color: '#555', fontFamily: 'var(--font-heading)', fontSize: '10px', cursor: 'pointer' }}
+                style={{ padding: '5px 10px', background: 'transparent', border: '1px solid var(--panel-border)', color: 'var(--text-secondary)', fontFamily: 'var(--font-heading)', fontSize: '10px', cursor: 'pointer' }}
               >NÃO</button>
             </div>
           )}
@@ -489,7 +479,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
         marginBottom: 8,
         fontSize: '9px',
         fontFamily: 'var(--font-body)',
-        color: '#333',
+        color: 'var(--text-muted)',
         letterSpacing: '1px',
         borderBottom: '1px solid rgba(255,255,255,0.03)',
       }}>

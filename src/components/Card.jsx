@@ -1,7 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useState } from 'react'
-import { useTheme } from '../contexts/ThemeContext'
 
 const STATUS_ICONS = {
   todo:     { icon: '○', color: '#555' },
@@ -19,8 +18,6 @@ const PRIORITY_DOTS = {
 }
 
 export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }) {
-  const { theme } = useTheme()
-  const isNier = theme === 'nier'
   const [hovered, setHovered] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(card.title)
@@ -72,7 +69,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
             height: '110px',
             marginBottom: '8px',
             overflow: 'hidden',
-            borderBottom: '1px solid rgba(0,243,255,0.2)',
+            borderBottom: '1px solid var(--panel-border)',
             position: 'relative',
           }}
         >
@@ -96,7 +93,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
       >
         {/* Status + Priority */}
         <div className="flex items-center gap-1.5">
-          <span style={{ color: '#333', fontSize: '10px', fontFamily: 'monospace' }}>
+          <span style={{ color: 'var(--text-muted)', fontSize: '10px', fontFamily: 'monospace' }}>
             #{card.id.slice(-4)}
           </span>
           <span title={card.status} style={{ color: status.color, fontSize: '12px', lineHeight: 1 }}>
@@ -147,7 +144,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
             title="Arrastar"
             style={{
               cursor: isDragging ? 'grabbing' : 'grab',
-              color: hovered ? '#666' : '#2a2a2a',
+              color: hovered ? 'var(--text-secondary)' : 'var(--text-muted)',
               fontSize: '16px',
               padding: '2px 4px',
               lineHeight: 1,
@@ -183,7 +180,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
               setIsEditingTitle(true)
             }}
             className="font-bold leading-tight cursor-pointer transition-colors"
-            style={{ fontSize: '13px', color: isNier ? '#2f2b27' : '#ddd' }}
+            style={{ fontSize: '13px', color: 'var(--text-primary)' }}
             title="Click para abrir · Double-click para editar nome"
           >
             {card.title}
@@ -196,7 +193,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
         <p
           className="px-3 text-xs font-mono mb-2 leading-relaxed"
           style={{
-            color: '#555',
+            color: 'var(--text-secondary)',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
@@ -211,14 +208,14 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
       {tasks.length > 0 && (
         <div className="px-3 mb-2">
           <div className="flex items-center justify-between mb-1">
-            <span style={{ fontSize: '10px', color: '#444', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
               TASKS
             </span>
-            <span style={{ fontSize: '10px', color: taskProgress === 1 ? 'var(--neon-green)' : '#555', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '10px', color: taskProgress === 1 ? 'var(--neon-green)' : 'var(--text-secondary)', fontFamily: 'monospace' }}>
               {doneTasks}/{tasks.length}
             </span>
           </div>
-          <div style={{ height: 3, background: '#1a1a2e', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ height: 3, background: 'var(--line-soft)', borderRadius: 2, overflow: 'hidden' }}>
             <div
               style={{
                 height: '100%',
@@ -250,7 +247,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
       {/* Footer */}
       <div
         className="px-3 pb-3 flex items-center justify-between"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.04)', paddingTop: '8px' }}
+        style={{ borderTop: '1px solid var(--line-soft)', paddingTop: '8px' }}
       >
         {/* Assignees */}
         <div className="flex items-center gap-1">
@@ -270,7 +267,7 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
             </div>
           ))}
           {card.assignees && card.assignees.length > 3 && (
-            <span style={{ fontSize: '10px', color: '#555', fontFamily: 'monospace' }}>+{card.assignees.length - 3}</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>+{card.assignees.length - 3}</span>
           )}
         </div>
 
@@ -278,13 +275,13 @@ export default function Card({ card, onEdit, onDelete, onInlineEdit, onArchive }
           {card.dueDate && (
             <span style={{
               fontSize: '10px', fontFamily: 'monospace',
-              color: isOverdue(card.dueDate) ? 'var(--neon-pink)' : '#555',
+              color: isOverdue(card.dueDate) ? 'var(--neon-pink)' : 'var(--text-secondary)',
             }}>
               {formatDate(card.dueDate)}
             </span>
           )}
           {card.images && card.images.length > 0 && (
-            <span style={{ fontSize: '10px', color: '#444', fontFamily: 'monospace' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
               🖼 {card.images.length}
             </span>
           )}

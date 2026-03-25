@@ -1,24 +1,29 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import { applyTheme, normalizeThemeId } from '../themes'
+import { createContext, useContext, useEffect, useState } from 'react'
+import { applyTheme, DEFAULT_THEME_ID, normalizeThemeId } from '../themes'
 
-const ThemeContext = createContext({ theme: 'cyberpunk', setTheme: () => {} })
+const THEME_KEY = 'synth-theme'
+const LEGACY_THEME_KEY = 'cyberdaily-theme'
+
+const ThemeContext = createContext({ theme: DEFAULT_THEME_ID, setTheme: () => {} })
+
+function getStoredTheme() {
+  const next = localStorage.getItem(THEME_KEY)
+  const legacy = localStorage.getItem(LEGACY_THEME_KEY)
+  return normalizeThemeId(next || legacy || DEFAULT_THEME_ID)
+}
 
 export function ThemeProvider({ children }) {
-  const [theme, setThemeState] = useState(() => {
-    const savedTheme = localStorage.getItem('cyberdaily-theme') || 'cyberpunk'
-    return normalizeThemeId(savedTheme)
-  })
-
-  const setTheme = (id) => {
-    const normalizedId = normalizeThemeId(id)
-    setThemeState(normalizedId)
-    localStorage.setItem('cyberdaily-theme', normalizedId)
-    applyTheme(normalizedId)
-  }
+  const [theme, setThemeState] = useState(() => getStoredTheme())
 
   useEffect(() => {
     applyTheme(theme)
-  }, []) // eslint-disable-line
+    localStorage.setItem(THEME_KEY, theme)
+    localStorage.setItem(LEGACY_THEME_KEY, theme)
+  }, [theme])
+
+  const setTheme = (id) => {
+    setThemeState(normalizeThemeId(id))
+  }
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

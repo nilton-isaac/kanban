@@ -285,15 +285,15 @@ export default function StandupModal({ columns, cards, userId, onSaveLog, onClos
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
-                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>
                     <input type="checkbox" checked={preferences.showCompletedTasks} onChange={(e) => updatePreference('showCompletedTasks', e.target.checked)} />
                     Mostrar tasks concluidas
                   </label>
-                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>
                     <input type="checkbox" checked={preferences.showPendingTasks} onChange={(e) => updatePreference('showPendingTasks', e.target.checked)} />
                     Mostrar tasks pendentes
                   </label>
-                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: '#bbb', fontSize: '12px' }}>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>
                     <input type="checkbox" checked={preferences.includeTaskLinks} onChange={(e) => updatePreference('includeTaskLinks', e.target.checked)} />
                     Incluir hyperlinks das tasks
                   </label>

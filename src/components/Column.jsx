@@ -84,7 +84,7 @@ export default function Column({
                 background: 'none',
                 border: 'none',
                 cursor: 'grab',
-                color: '#666',
+                color: 'var(--text-secondary)',
                 fontSize: '14px',
                 lineHeight: 1,
                 padding: 0,
@@ -115,9 +115,9 @@ export default function Column({
               ...
             </button>
             {menuOpen && (
-              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#0d1020', border: '1px solid #333', zIndex: 100, minWidth: '150px' }}>
+              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--surface-raised)', border: '1px solid var(--panel-border)', zIndex: 100, minWidth: '150px', borderRadius: 16, boxShadow: 'var(--shadow-lg)' }}>
                 <button onClick={() => { setEditTitle(column.title); setEditing(true); setMenuOpen(false) }} style={menuItemStyle}>Renomear</button>
-                <div style={{ padding: '4px 12px 2px', fontSize: '10px', color: '#444', fontFamily: 'monospace' }}>COR</div>
+                <div style={{ padding: '4px 12px 2px', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>COR</div>
                 {['pink', 'cyan', 'yellow', 'green', 'orange', 'purple'].map(c => (
                   <button
                     key={c}
@@ -128,7 +128,7 @@ export default function Column({
                     {c}
                   </button>
                 ))}
-                <div style={{ borderTop: '1px solid #1a1a2e', margin: '4px 0' }} />
+                <div style={{ borderTop: '1px solid var(--line-soft)', margin: '4px 0' }} />
                 <button onClick={() => { setMenuOpen(false); setConfirmClear(true) }} style={{ ...menuItemStyle, color: 'var(--neon-yellow)' }}>
                   Limpar cards
                 </button>
@@ -166,7 +166,7 @@ export default function Column({
         className="flex-1 overflow-y-auto p-3 space-y-3"
         style={{
           minHeight: '80px',
-          background: isOver ? 'rgba(0,243,255,0.02)' : 'transparent',
+          background: isOver ? 'color-mix(in srgb, var(--brand-cyan) 8%, transparent)' : 'transparent',
           transition: 'background 0.2s',
         }}
       >
@@ -184,7 +184,7 @@ export default function Column({
           ))}
         </SortableContext>
         {cards.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '24px 0', color: '#2a2a2a', border: '1px dashed #1a1a2e', fontSize: '11px', fontFamily: 'monospace', background: 'rgba(0,0,0,0.2)' }}>
+          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', border: '1px dashed var(--line-strong)', fontSize: '11px', fontFamily: 'monospace', background: 'var(--surface-soft)', borderRadius: 16 }}>
             Sem tarefas
           </div>
         )}
@@ -207,7 +207,7 @@ const menuItemStyle = {
   background: 'none',
   border: 'none',
   cursor: 'pointer',
-  color: '#aaa',
+  color: 'var(--text-secondary)',
   fontFamily: 'var(--font-body)',
   fontSize: '12px',
 }
