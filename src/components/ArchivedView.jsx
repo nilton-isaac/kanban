@@ -342,10 +342,10 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
 
   if (archivedCards.length === 0) {
     return (
-      <div className="workspace-stage workspace-stage--docs" style={{
+      <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        gap: 16,
+        padding: 40, gap: 16,
       }}>
         <Archive size={48} style={{ color: 'var(--text-muted)' }} />
         <p style={{
@@ -373,7 +373,7 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
   const grouped = groupCardsByWeekAndDay(archivedCards)
 
   return (
-    <div className="workspace-stage workspace-stage--docs" style={{ overflowY: 'auto' }}>
+    <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
       {/* Header */}
       <div style={{
         display: 'flex',
@@ -388,15 +388,17 @@ export default function ArchivedView({ cards, columns, onUnarchive, onView, onCl
             fontFamily: 'var(--font-heading)',
             fontSize: 'clamp(16px, 2.5vw, 24px)',
             color: 'var(--text-primary)',
-            letterSpacing: '-0.04em',
+            letterSpacing: '3px',
+            textShadow: '0 0 18px var(--neon-cyan)',
             marginBottom: 4,
           }}>
             {labels.title}
           </h2>
           <p style={{
             fontFamily: 'var(--font-body)',
-            fontSize: '12px',
-            color: 'var(--text-secondary)',
+            fontSize: '11px',
+            color: 'var(--neon-cyan)',
+            letterSpacing: '1.5px',
           }}>
             {labels.subtitle}
           </p>

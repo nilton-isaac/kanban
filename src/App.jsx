@@ -52,8 +52,6 @@ export default function App() {
   const [imagePreview, setImagePreview] = useState(null)
   const [nextDayConfirm, setNextDayConfirm] = useState(false)
   const [nextDayDone, setNextDayDone] = useState(false)
-  const [audioReactiveOpen, setAudioReactiveOpen] = useState(false)
-  const [audioReactiveState, setAudioReactiveState] = useState('idle')
 
   const syncTimer = useRef(null)
   const isCloud = !!session?.user
@@ -327,11 +325,7 @@ export default function App() {
 
   return (
     <div className="app-shell flex flex-col h-full min-h-screen">
-      <ThemeEffects
-        open={audioReactiveOpen}
-        onClose={() => setAudioReactiveOpen(false)}
-        onStateChange={setAudioReactiveState}
-      />
+      <ThemeEffects />
       <Header
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -342,8 +336,6 @@ export default function App() {
         onLogout={() => supabase.auth.signOut()}
         syncError={syncError}
         archivedCount={cards.filter(c => c.archived).length}
-        onOpenAudioReactive={() => setAudioReactiveOpen(true)}
-        audioReactiveState={audioReactiveState}
       />
 
       {viewMode === 'kanban' ? (

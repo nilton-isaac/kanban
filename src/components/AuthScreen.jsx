@@ -92,7 +92,7 @@ export default function AuthScreen() {
                 textTransform: 'uppercase',
               }}
             >
-              Documentation + whiteboard workspace with a central Synth layer
+              Workspace de entrega com glass layers e glow central
             </p>
           </div>
         </div>
