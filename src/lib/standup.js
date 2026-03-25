@@ -1,5 +1,4 @@
-﻿
-import { getStandupThemeId } from '../themes'
+﻿import { normalizeThemeId } from '../themes'
 
 const STANDUP_DEBUG = true
 
@@ -56,7 +55,7 @@ const THEMES_STANDUP = {
 }
 
 function getTheme(themeId) {
-  return getStandupThemeId(themeId)
+  return normalizeThemeId(themeId)
 }
 
 function normalizeKey(value) {

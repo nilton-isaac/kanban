@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { ClipboardList, CalendarDays, LogOut, AlertTriangle } from 'lucide-react'
-import ThemeSwitcher from './ThemeSwitcher'
+import { useTheme } from '../contexts/ThemeContext'
+import { THEMES } from '../themes'
+import { ThemeIcon } from '../lib/themeIcons'
 
 const NAV_ITEMS = [
   { id: 'kanban', label: 'Kanban' },
@@ -20,6 +22,7 @@ export default function Header({
   archivedCount,
 }) {
   const [time, setTime] = useState(new Date())
+  const { theme, setTheme } = useTheme()
   const userInitial = session?.user?.email?.charAt(0).toUpperCase() || '?'
 
   useEffect(() => {
@@ -108,7 +111,43 @@ export default function Header({
               <CalendarDays size={14} /> {nextDayDone ? 'Dia virado' : 'Próx. dia'}
             </button>
 
-            <ThemeSwitcher align="end" />
+            <div
+              style={{
+                display: 'inline-flex',
+                gap: 6,
+                padding: 6,
+                borderRadius: 999,
+                border: '1px solid var(--panel-border)',
+                background: 'var(--surface-elevated)',
+              }}
+            >
+              {Object.values(THEMES).map((item) => {
+                const active = item.id === theme
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setTheme(item.id)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 12px',
+                      borderRadius: 999,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: active ? 'linear-gradient(135deg, color-mix(in srgb, var(--brand-cyan) 24%, transparent), color-mix(in srgb, var(--brand-violet) 24%, transparent))' : 'transparent',
+                      color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '11px',
+                    }}
+                    title={item.label}
+                  >
+                    <ThemeIcon themeId={item.id} size={14} />
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
 
             <div
               title={session.user?.email}

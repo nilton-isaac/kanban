@@ -449,7 +449,7 @@ h6,
 }
 
 .audio-reactive-panel {
-  position: fixed;
+  position: absolute;
   right: 20px;
   bottom: 20px;
   width: min(360px, calc(100vw - 40px));
@@ -461,7 +461,6 @@ h6,
   -webkit-backdrop-filter: blur(28px) saturate(150%);
   box-shadow: var(--shadow-lg);
   pointer-events: auto;
-  z-index: 30;
 }
 
 .audio-reactive-panel.is-live {
@@ -574,14 +573,13 @@ h6,
 
 @media (max-width: 780px) {
   .audio-reactive-panel {
-    right: 12px;
-    left: 12px;
-    bottom: 12px;
+    position: static;
     width: auto;
+    margin: 0 16px 16px;
   }
 
   .theme-effects-root {
-    position: fixed;
+    position: absolute;
     inset: 0;
   }
 
