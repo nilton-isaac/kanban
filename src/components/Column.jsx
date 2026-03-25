@@ -1,19 +1,16 @@
 import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { GripVertical, MoreHorizontal, Paintbrush, Plus, Trash2, Wand2 } from 'lucide-react'
 import Card from './Card'
 
 const COLOR_MAP = {
-  pink: { border: 'var(--neon-pink)', bg: 'color-mix(in srgb, var(--neon-pink) 8%, transparent)' },
-  cyan: { border: 'var(--neon-cyan)', bg: 'color-mix(in srgb, var(--neon-cyan) 8%, transparent)' },
-  yellow: { border: 'var(--neon-yellow)', bg: 'color-mix(in srgb, var(--neon-yellow) 10%, transparent)' },
-  green: { border: 'var(--neon-green)', bg: 'color-mix(in srgb, var(--neon-green) 8%, transparent)' },
-  orange: { border: 'var(--neon-orange)', bg: 'color-mix(in srgb, var(--neon-orange) 10%, transparent)' },
-  purple: { border: 'var(--neon-purple)', bg: 'color-mix(in srgb, var(--neon-purple) 10%, transparent)' },
+  pink: { border: 'var(--neon-pink)', text: 'var(--neon-pink)', bg: 'rgba(255,0,255,0.05)', badge: 'var(--neon-pink)' },
+  cyan: { border: 'var(--neon-cyan)', text: 'var(--neon-cyan)', bg: 'rgba(0,243,255,0.05)', badge: 'var(--neon-cyan)' },
+  yellow: { border: 'var(--neon-yellow)', text: 'var(--neon-yellow)', bg: 'rgba(252,238,10,0.05)', badge: 'var(--neon-yellow)' },
+  green: { border: 'var(--neon-green)', text: 'var(--neon-green)', bg: 'rgba(0,255,136,0.05)', badge: 'var(--neon-green)' },
+  orange: { border: 'var(--neon-orange)', text: 'var(--neon-orange)', bg: 'rgba(255,102,0,0.05)', badge: 'var(--neon-orange)' },
+  purple: { border: 'var(--neon-purple)', text: 'var(--neon-purple)', bg: 'rgba(155,0,255,0.05)', badge: 'var(--neon-purple)' },
 }
-
-const COLUMN_COLORS = ['pink', 'cyan', 'yellow', 'green', 'orange', 'purple']
 
 export default function Column({
   column,
@@ -38,281 +35,147 @@ export default function Column({
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
 
   const saveTitle = () => {
-    if (editTitle.trim()) {
-      onUpdateColumn(column.id, { title: editTitle.trim().toUpperCase() })
-    }
+    if (editTitle.trim()) onUpdateColumn(column.id, { title: editTitle.trim().toUpperCase() })
     setEditing(false)
   }
 
   return (
-    <section
-      className="kanban-column"
+    <div
+      className="kanban-column flex flex-col rounded-t-lg flex-shrink-0"
       style={{
-        width: 316,
-        maxHeight: 'calc(100vh - 250px)',
+        width: '300px',
+        maxHeight: 'calc(100vh - 230px)',
         borderTopColor: colors.border,
-        background: 'color-mix(in srgb, var(--doc-surface) 88%, transparent)',
-        boxShadow: isOver ? `0 18px 46px color-mix(in srgb, ${colors.border} 18%, transparent)` : 'var(--shadow-md)',
-        transition: 'box-shadow 0.22s ease, transform 0.22s ease',
+        boxShadow: isOver ? `0 0 20px ${colors.border}40` : undefined,
+        transition: 'box-shadow 0.2s',
       }}
     >
       <div
-        style={{
-          padding: '16px 18px 14px',
-          borderBottom: '1px solid var(--line-soft)',
-          background: colors.bg,
-          display: 'grid',
-          gap: 12,
-        }}
+        className="p-3 flex justify-between items-center flex-shrink-0"
+        style={{ borderBottom: `1px solid ${colors.border}55`, background: colors.bg }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', minWidth: 0, flex: 1 }}>
+        {editing ? (
+          <input
+            autoFocus
+            value={editTitle}
+            onChange={e => setEditTitle(e.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={e => {
+              if (e.key === 'Enter') saveTitle()
+              if (e.key === 'Escape') setEditing(false)
+            }}
+            className="cyber-input flex-1 p-1 text-sm rounded-sm mr-2"
+            style={{ fontFamily: 'var(--font-heading)', fontSize: '13px', color: colors.text }}
+          />
+        ) : (
+          <div
+            className="flex items-center gap-2 flex-1 min-w-0"
+            onDoubleClick={() => {
+              setEditTitle(column.title)
+              setEditing(true)
+            }}
+            title="Double-click para renomear"
+          >
             <button
               type="button"
               title="Arrastar coluna"
               {...dragHandleProps}
               style={{
-                marginTop: 1,
-                background: 'transparent',
+                background: 'none',
                 border: 'none',
-                color: 'var(--text-muted)',
                 cursor: 'grab',
+                color: 'var(--text-secondary)',
+                fontSize: '14px',
+                lineHeight: 1,
                 padding: 0,
-                display: 'inline-flex',
+                marginRight: '2px',
               }}
             >
-              <GripVertical size={16} />
+              ::
             </button>
-
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span
-                  style={{
-                    fontSize: '10px',
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'var(--text-muted)',
-                    fontFamily: 'var(--font-body)',
-                  }}
-                >
-                  {column.index}
-                </span>
-
-                <span
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: colors.border,
-                    boxShadow: `0 0 18px color-mix(in srgb, ${colors.border} 32%, transparent)`,
-                  }}
-                />
-              </div>
-
-              {editing ? (
-                <input
-                  autoFocus
-                  value={editTitle}
-                  onChange={(event) => setEditTitle(event.target.value)}
-                  onBlur={saveTitle}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') saveTitle()
-                    if (event.key === 'Escape') setEditing(false)
-                  }}
-                  className="cyber-input"
-                  style={{ width: '100%', padding: '10px 12px', fontSize: '13px' }}
-                />
-              ) : (
-                <>
-                  <h2
-                    style={{
-                      margin: 0,
-                      fontSize: '18px',
-                      letterSpacing: '-0.04em',
-                      color: 'var(--text-primary)',
-                      fontFamily: 'var(--font-heading)',
-                    }}
-                  >
-                    {column.title}
-                  </h2>
-                  <p
-                    style={{
-                      margin: '4px 0 0',
-                      color: 'var(--text-secondary)',
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-body)',
-                    }}
-                  >
-                    {cards.length} {cards.length === 1 ? 'card em foco' : 'cards em foco'}
-                  </p>
-                </>
-              )}
-            </div>
+            <span className="text-xs font-mono" style={{ color: colors.text, opacity: 0.5 }}>{column.index}.</span>
+            <h2 className="font-orbitron font-bold truncate" style={{ color: colors.text, fontSize: '14px' }}>
+              {column.title}
+            </h2>
           </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                minWidth: 34,
-                padding: '7px 10px',
-                borderRadius: 999,
-                border: `1px solid color-mix(in srgb, ${colors.border} 22%, transparent)`,
-                background: 'color-mix(in srgb, var(--surface-raised) 82%, transparent)',
-                color: 'var(--text-primary)',
-                textAlign: 'center',
-                fontSize: '11px',
-                fontFamily: 'var(--font-body)',
-              }}
+        )}
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          <span
+            className="text-xs px-1.5 py-0.5 rounded font-bold font-mono"
+            style={{ background: colors.badge, color: '#000', minWidth: '20px', textAlign: 'center' }}
+          >
+            {cards.length}
+          </span>
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              onBlur={() => setTimeout(() => setMenuOpen(false), 150)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#555', fontSize: '18px', lineHeight: 1, padding: '0 4px' }}
             >
-              {cards.length}
-            </span>
-
-            <div style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((value) => !value)}
-                onBlur={() => setTimeout(() => setMenuOpen(false), 140)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  padding: 0,
-                  display: 'inline-flex',
-                }}
-                aria-label="Abrir menu da coluna"
-              >
-                <MoreHorizontal size={18} />
-              </button>
-
-              {menuOpen ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 8px)',
-                    right: 0,
-                    width: 220,
-                    padding: 10,
-                    borderRadius: 18,
-                    border: '1px solid var(--panel-border)',
-                    background: 'color-mix(in srgb, var(--panel-bg-strong) 92%, transparent)',
-                    boxShadow: 'var(--shadow-lg)',
-                    zIndex: 90,
-                  }}
-                >
+              ...
+            </button>
+            {menuOpen && (
+              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--surface-raised)', border: '1px solid var(--panel-border)', zIndex: 100, minWidth: '150px', borderRadius: 16, boxShadow: 'var(--shadow-lg)' }}>
+                <button onClick={() => { setEditTitle(column.title); setEditing(true); setMenuOpen(false) }} style={menuItemStyle}>Renomear</button>
+                <div style={{ padding: '4px 12px 2px', fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>COR</div>
+                {['pink', 'cyan', 'yellow', 'green', 'orange', 'purple'].map(c => (
                   <button
-                    type="button"
-                    onClick={() => {
-                      setEditTitle(column.title)
-                      setEditing(true)
-                      setMenuOpen(false)
-                    }}
-                    style={menuItemStyle}
+                    key={c}
+                    onClick={() => { onUpdateColumn(column.id, { color: c }); setMenuOpen(false) }}
+                    style={{ ...menuItemStyle, display: 'flex', alignItems: 'center', gap: 8 }}
                   >
-                    <Wand2 size={14} />
-                    Renomear
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: `var(--neon-${c})`, display: 'inline-block' }} />
+                    {c}
                   </button>
-
-                  <div style={{ margin: '8px 0 6px', padding: '0 6px', color: 'var(--text-muted)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', fontFamily: 'var(--font-body)' }}>
-                    Cor da coluna
-                  </div>
-
-                  <div style={{ display: 'grid', gap: 6 }}>
-                    {COLUMN_COLORS.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => {
-                          onUpdateColumn(column.id, { color: item })
-                          setMenuOpen(false)
-                        }}
-                        style={menuItemStyle}
-                      >
-                        <Paintbrush size={14} />
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: `var(--neon-${item})`, display: 'inline-block' }} />
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div style={{ height: 1, margin: '10px 0', background: 'var(--line-soft)' }} />
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      setConfirmClear(true)
-                    }}
-                    style={{ ...menuItemStyle, color: 'var(--neon-yellow)' }}
-                  >
-                    <Trash2 size={14} />
-                    Limpar cards
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      setConfirmDelete(true)
-                    }}
-                    style={{ ...menuItemStyle, color: 'var(--neon-pink)' }}
-                  >
-                    <Trash2 size={14} />
-                    Excluir coluna
-                  </button>
-                </div>
-              ) : null}
-            </div>
+                ))}
+                <div style={{ borderTop: '1px solid var(--line-soft)', margin: '4px 0' }} />
+                <button onClick={() => { setMenuOpen(false); setConfirmClear(true) }} style={{ ...menuItemStyle, color: 'var(--neon-yellow)' }}>
+                  Limpar cards
+                </button>
+                <button onClick={() => { setMenuOpen(false); setConfirmDelete(true) }} style={{ ...menuItemStyle, color: 'var(--neon-pink)' }}>
+                  Excluir coluna
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {confirmClear ? (
-        <div className="workspace-inline-alert">
-          <span>Limpar {cards.length} cards e manter a coluna?</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="workspace-inline-alert__ok" onClick={() => { onClearColumn(column.id); setConfirmClear(false) }}>
-              Sim
-            </button>
-            <button type="button" className="workspace-inline-alert__cancel" onClick={() => setConfirmClear(false)}>
-              Nao
-            </button>
-          </div>
+      {confirmClear && (
+        <div className="p-2 flex items-center gap-2 flex-shrink-0" style={{ background: 'rgba(252,238,10,0.08)', borderBottom: '1px solid rgba(252,238,10,0.2)' }}>
+          <span style={{ fontSize: '11px', color: 'var(--neon-yellow)', fontFamily: 'monospace' }}>
+            Limpar {cards.length} cards e manter coluna?
+          </span>
+          <button onClick={() => { onClearColumn(column.id); setConfirmClear(false) }} style={smallBtnStyle('#fcee0a')}>Sim</button>
+          <button onClick={() => setConfirmClear(false)} style={smallBtnStyle('#555')}>Nao</button>
         </div>
-      ) : null}
+      )}
 
-      {confirmDelete ? (
-        <div className="workspace-inline-alert is-danger">
-          <span>Excluir a coluna permanentemente?</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="workspace-inline-alert__danger" onClick={() => onDeleteColumn(column.id)}>
-              Excluir
-            </button>
-            <button type="button" className="workspace-inline-alert__cancel" onClick={() => setConfirmDelete(false)}>
-              Cancelar
-            </button>
-          </div>
+      {confirmDelete && (
+        <div className="p-2 flex items-center gap-2 flex-shrink-0" style={{ background: 'rgba(255,0,255,0.08)', borderBottom: '1px solid rgba(255,0,255,0.2)' }}>
+          <span style={{ fontSize: '11px', color: 'var(--neon-pink)', fontFamily: 'monospace' }}>
+            Excluir coluna permanentemente?
+          </span>
+          <button onClick={() => onDeleteColumn(column.id)} style={smallBtnStyle('#ff00ff')}>Sim</button>
+          <button onClick={() => setConfirmDelete(false)} style={smallBtnStyle('#555')}>Nao</button>
         </div>
-      ) : null}
+      )}
 
       <div
         ref={setNodeRef}
+        className="flex-1 overflow-y-auto p-3 space-y-3"
         style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '14px',
-          display: 'grid',
-          gap: 12,
-          minHeight: 110,
-          background: isOver ? 'color-mix(in srgb, var(--brand-cyan) 6%, transparent)' : 'transparent',
-          transition: 'background 0.2s ease',
+          minHeight: '80px',
+          background: isOver ? 'color-mix(in srgb, var(--brand-cyan) 8%, transparent)' : 'transparent',
+          transition: 'background 0.2s',
         }}
       >
-        <SortableContext items={cards.map((card) => card.id)} strategy={verticalListSortingStrategy}>
-          {cards.map((card) => (
+        <SortableContext items={cards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+          {cards.map(card => (
             <Card
               key={card.id}
               card={card}
+              columnColor={column.color}
               onEdit={() => onEditCard(card)}
               onDelete={() => onDeleteCard(card.id)}
               onArchive={onArchiveCard ? () => onArchiveCard(card.id) : undefined}
@@ -320,34 +183,44 @@ export default function Column({
             />
           ))}
         </SortableContext>
-
-        {cards.length === 0 ? (
-          <div className="workspace-empty-drop">
-            <span>Arraste cards aqui ou crie uma nova tarefa.</span>
+        {cards.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', border: '1px dashed var(--line-strong)', fontSize: '11px', fontFamily: 'monospace', background: 'var(--surface-soft)', borderRadius: 16 }}>
+            Sem tarefas
           </div>
-        ) : null}
+        )}
       </div>
 
-      <div style={{ padding: '14px', borderTop: '1px solid var(--line-soft)' }}>
-        <button type="button" onClick={onAddCard} className="cyber-btn" style={{ width: '100%', justifyContent: 'center' }}>
-          <Plus size={16} /> Nova tarefa
+      <div className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${colors.border}33` }}>
+        <button onClick={onAddCard} className="cyber-btn w-full py-2 text-xs flex items-center justify-center gap-1" style={{ color: colors.text, borderColor: colors.border }}>
+          <span style={{ fontSize: '16px', lineHeight: 1 }}>+</span> ADD TASK
         </button>
       </div>
-    </section>
+    </div>
   )
 }
 
 const menuItemStyle = {
+  display: 'block',
   width: '100%',
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '10px 12px',
-  borderRadius: 14,
+  padding: '7px 12px',
+  textAlign: 'left',
+  background: 'none',
   border: 'none',
-  background: 'transparent',
-  color: 'var(--text-secondary)',
   cursor: 'pointer',
+  color: 'var(--text-secondary)',
   fontFamily: 'var(--font-body)',
   fontSize: '12px',
+}
+
+function smallBtnStyle(color) {
+  return {
+    padding: '2px 10px',
+    background: 'none',
+    border: `1px solid ${color}`,
+    color,
+    cursor: 'pointer',
+    fontSize: '11px',
+    fontFamily: 'var(--font-body)',
+    borderRadius: '2px',
+  }
 }

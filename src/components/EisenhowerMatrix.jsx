@@ -119,15 +119,15 @@ export default function EisenhowerMatrix({ cards, onEditCard, onDeleteCard, onUp
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveCard(null)}
     >
-      <div className="workspace-stage workspace-stage--board" style={{ overflowY: 'auto', minHeight: 0 }}>
+      <div style={{ flex: 1, padding: '24px', overflowY: 'auto', minHeight: 0 }}>
         <div className="flex items-center gap-4 mb-5">
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', color: 'var(--text-primary)', letterSpacing: '-0.04em', margin: 0 }}>
-            Matriz de Eisenhower
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '14px', color: 'var(--neon-cyan)', letterSpacing: '3px' }}>
+            MATRIZ DE EISENHOWER
           </h2>
           <div className="flex gap-3">
             {[
               { label: 'Urgente ->', color: 'var(--neon-pink)' },
-              { label: 'Importante ^', color: 'var(--brand-cyan)' },
+              { label: 'Importante ^', color: 'var(--neon-cyan)' },
             ].map(({ label, color }) => (
               <span key={label} style={{ fontSize: '11px', fontFamily: 'var(--font-body)', color }}>{label}</span>
             ))}
@@ -204,11 +204,11 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit }) {
             style={{
               fontSize: '11px',
               fontFamily: 'var(--font-body)',
-               background: `color-mix(in srgb, ${quadrant.color} 12%, transparent)`,
-               color: quadrant.color,
-               border: `1px solid color-mix(in srgb, ${quadrant.color} 28%, transparent)`,
-               padding: '4px 10px',
-               borderRadius: '999px',
+              background: quadrant.color + '22',
+              color: quadrant.color,
+              border: `1px solid ${quadrant.color}55`,
+              padding: '1px 8px',
+              borderRadius: '2px',
             }}
           >
             {cards.length}
@@ -241,7 +241,7 @@ function Quadrant({ quadrant, cards, onEditCard, onDeleteCard, onInlineEdit }) {
               alignItems: 'center',
               justifyContent: 'center',
               border: `1px dashed ${quadrant.color}33`,
-               borderRadius: 18,
+              borderRadius: '2px',
               minHeight: '80px',
               color: 'var(--text-muted)',
               fontSize: '11px',
